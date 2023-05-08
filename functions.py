@@ -48,11 +48,12 @@ def import_input_excel(path):
     return sim_list, weather_series, df_dck, b18_series
 
 
-def find_and_replace_param(path_file, parameters):
+def find_and_replace_param(path_file, pattern, parameters):
     """
 
     Parameters
     ----------
+    pattern :
     path_file :
     parameters :
 
@@ -81,7 +82,7 @@ def find_and_replace_param(path_file, parameters):
         text = file.read()  # read file
 
         # find, then replace parameter values
-        text = re.sub(r'(@\w+)\s*=\s*([\d.]+)', lambda match: replace_param(match, parameters), text)
+        text = re.sub(pattern=pattern, repl=lambda match: replace_param(match, parameters), string=text)
 
     with open(path_file, 'w') as file:
         file.write(text)  # overwrite file
