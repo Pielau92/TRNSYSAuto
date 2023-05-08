@@ -1,5 +1,5 @@
 import sys
-# sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compatibility issues with pywinauto
+sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compatibility issues with pywinauto
 import os
 import shutil
 import functions
@@ -8,11 +8,11 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog
 
-current_time = datetime.now().strftime("%d.%m.%Y_%H.%M")    # current time
+current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')    # current time
 
 # region paths and directories
 
-# ask directory with base folder "Basisordner" in it
+# ask directory with base folder 'Basisordner' in it
 root = tk.Tk()
 root.withdraw()
 current_dir = filedialog.askdirectory()
@@ -21,14 +21,14 @@ current_dir = filedialog.askdirectory()
 path_sim_series = os.path.join(current_dir, current_time)   # path of simulation series folder
 path_base = os.path.join(current_dir, 'Basisordner')        # path of base folder (templates, load profiles, weather...)
 path_exe = 'C:\TRNSYS18\Exe\TrnEXE64.exe'                   # path of the simulation .exe file
+path_excel = os.path.join(path_base, 'Simulationsvarianten.xlsx')
 
 os.makedirs(path_sim_series)  # create new directory for simulation series
 
 # endregion
 
 # import Excel file
-path_excel = os.path.join(path_base, 'Simulationsvarianten.xlsx')
-sim_list, weather_series, df_dck, df_b18 = functions.import_input_excel(path_excel)
+sim_list, weather_series, df_dck, b18_series = functions.import_input_excel(path_excel)
 
 for sim in sim_list:
 
@@ -38,22 +38,32 @@ for sim in sim_list:
     os.makedirs(path_sim)                           # create new directory for simulation
     # shutil.copytree(path_base, path_sim)          # copy all files from base to simulation folder
 
-    # list of specified file names to be copied
-    file_names = ["Building.b18", "Building.dck", "Lastprofil.txt", weather_series[sim] + '.txt']
+    # region source/destination file paths for copying process
+    src_file = [
+        os.path.join(path_base, 'templateDck.dck'),
+        os.path.join(path_base, 'Lastprofil.txt'),
+        os.path.join(path_base, 'b18', b18_series[sim]),
+        os.path.join(path_base, 'Wetterdaten', weather_series[sim])]
+
+    dst_file = [
+        os.path.join(path_sim, 'templateDck.dck'),
+        os.path.join(path_sim, 'Lastprofil.txt'),
+        os.path.join(path_sim, b18_series[sim]),
+        os.path.join(path_sim, weather_series[sim])]
+
+    # endregion
 
     # copy specified files into simulation folder
-    for file_name in file_names:
-        src_file = os.path.join(path_base, file_name)  # source path
-        dst_file = os.path.join(path_sim, file_name)  # destination path
-        shutil.copy(src_file, dst_file)  # copy file
+    for index in range(len(src_file)):
+        shutil.copy(src_file[index], dst_file[index])  # copy file
 
-    functions.find_and_replace_param(path_sim + '/Building.b18', df_b18.loc[sim])  # replace parameters in .b18 File
-    functions.find_and_replace_param(path_sim + '/Building.dck', df_dck.loc[sim])  # replace parameters in .dck File
+    # replace parameters in .dck File
+    functions.find_and_replace_param(dst_file[0], df_dck.loc[sim])
 
     # endregion
 
     # perform simulation
-    # functions.start_sim(path_exe, os.path.join(path_sim, 'Building.dck'))
+    functions.start_sim(path_exe, os.path.join(path_sim, dst_file[0]))
 
 
 
