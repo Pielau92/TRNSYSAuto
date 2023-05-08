@@ -4,6 +4,7 @@ import os
 import shutil
 import functions
 import tkinter as tk
+import re
 
 from datetime import datetime
 from tkinter import filedialog
@@ -58,14 +59,38 @@ for sim in sim_list:
         shutil.copy(src_file[index], dst_file[index])  # copy file
 
     # replace parameters in .dck File
-    functions.find_and_replace_param(dst_file[0], df_dck.loc[sim])
+    functions.find_and_replace_param(dst_file[0], r'(@\w+)\s*=\s*([\d.]+)', df_dck.loc[sim])
+
+    # region find and replace .b18/.b17 file name
+
+    with open(dst_file[0], 'r') as file:
+        text = file.read()  # read file
+        new_text = re.sub(r'(\*ASSIGN "b17")', r'ASSIGN "' + b18_series[sim] + '"', text)
+    with open(dst_file[0], 'w') as file:
+        file.write(new_text)  # overwrite file
+
+    # endregion
+
+    # region find and replace weather data file name
+
+    with open(dst_file[0], 'r') as file:
+        text = file.read()  # read file
+        new_text = re.sub(r'(\*ASSIGN "tm2")', r'ASSIGN "' + weather_series[sim] + '"', text)
+    with open(dst_file[0], 'w') as file:
+        file.write(new_text)  # overwrite file
+
+    # endregion
+
+    functions.find_and_replace_param(dst_file[0], r'(\*ASSIGN "b17")', df_dck.loc[sim])
+
+    # new_text = re.sub(pattern, r'* ASSIGN "replacement"', text)
 
     # endregion
 
     # perform simulation
     functions.start_sim(path_exe, os.path.join(path_sim, dst_file[0]))
 
-
+# text = re.sub(r'(*\w+)\s*=\s*([\d.]+)',
 
 
 
