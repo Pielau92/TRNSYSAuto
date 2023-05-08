@@ -1,0 +1,1390 @@
+*********************************************************************************
+*  TRNBuild   3.0.294
+*********************************************************************************
+*   BUILDING DESCRIPTIONS FILE TRNSYS
+*   FOR BUILDING:   D:\aufraumen\Dissertation\Trnsys\Diss_3Zonen\Bruckverdichtet_3Zonen31cc_NEHbetstatTabs.b17
+*   GET BY WORKING WITH TRNBuild 1.0 for Windows
+*********************************************************************************
+*
+*--------------------------------------------------------------------------------
+*  C o m m e n t s
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  P r o j e c t
+*--------------------------------------------------------------------------------
+*+++ PROJECT
+*+++ TITLE=UNDEFINED
+*+++ DESCRIPTION=UNDEFINED
+*+++ CREATED=UNDEFINED
+*+++ ADDRESS=UNDEFINED
+*+++ CITY=UNDEFINED
+*+++ SWITCH=UNDEFINED
+*--------------------------------------------------------------------------------
+*  P r o p e r t i e s
+*--------------------------------------------------------------------------------
+PROPERTIES
+ DENSITY=1.204 : CAPACITY=1.012 : PRESSURE=101325.000 : HVAPOR=2454.0 : SIGMA=2.041e-007 : RTEMP=293.15
+*--- convective heat transfer coefficient calculation ---------------------
+ KFLOORUP=7.2 : EFLOORUP=0.31 : KFLOORDOWN=3.888 : EFLOORDOWN=0.31
+ KCEILUP=7.2 : ECEILUP=0.31 : KCEILDOWN=3.888 : ECEILDOWN=0.31
+ KVERTICAL=5.76 : EVERTICAL=0.3
+*--- radiance parameters -------------------
+ SCENE_ROTATION_ANGLE=0 : GROUND_IDS= : GROUND_REFLECTANCE=0.2 : SHADER_REFLECTANCE=0
+ CALC_MODE=RAD : LATITUDE=48 : LONGITUDE=-9.2 : TIME_ZONE=-15 : SITE_ELEVATION=200
+ AB=5 : AD=1000 : AS=20 : AR=300 : AA=0.1
+ LR=6 : ST=0.15 : SJ=1 : LW=0.004 : DJ=0 : DS=0.2 : DR=2 : DP=512
+*--- comfort parameters -------------------
+ DIAM-SENSOR=0.07 : EPS-SENSOR=0.82 : REFL-SENSOR=0.47 : ELV_AIRSPEED1=0.3 : ELV_AIRSPEED2=0.7 : ELV_AIRSPEED3=1.2
+*--- other -------------------
+ FSCAL_TREGENZA=MEDIUM : SHM_MODE=0 : SURFGRID=0.2
+*--- daylight  -------------------
+ UDIMIN=100 : UDIMAX=2000 : DAMIN=300
+*
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+TYPES
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*
+*--------------------------------------------------------------------------------
+*  L a y e r s
+*--------------------------------------------------------------------------------
+LAYER HLZ
+ CONDUCTIVITY=  1.404 : CAPACITY=      1 : DENSITY=   1280 : PERT=      0 : PENRT=      0
+LAYER EPS
+ CONDUCTIVITY=  0.144 : CAPACITY=    1.5 : DENSITY=     18 : PERT=      0 : PENRT=      0
+LAYER STAHLBETON
+ CONDUCTIVITY=   8.28 : CAPACITY=      1 : DENSITY=   2300 : PERT=      0 : PENRT=      0
+LAYER ESTRICH
+ CONDUCTIVITY=   5.04 : CAPACITY=      1 : DENSITY=   2000 : PERT=      0 : PENRT=      0
+LAYER OSB
+ CONDUCTIVITY=  0.468 : CAPACITY=    1.7 : DENSITY=    680 : PERT=      0 : PENRT=      0
+LAYER GIPSKARTON
+ CONDUCTIVITY=  0.756 : CAPACITY=    2.1 : DENSITY=    900 : PERT=      0 : PENRT=      0
+LAYER MW
+ CONDUCTIVITY=  0.144 : CAPACITY=      1 : DENSITY=     25 : PERT=      0 : PENRT=      0
+LAYER FERTIGPARKETT
+ CONDUCTIVITY=  0.612 : CAPACITY=      2 : DENSITY=    740 : PERT=      0 : PENRT=      0
+LAYER ERDE
+ CONDUCTIVITY=    7.2 : CAPACITY=      2 : DENSITY=   1500 : PERT=      0 : PENRT=      0
+LAYER ASPAHLT
+ CONDUCTIVITY=    3.6 : CAPACITY=      1 : DENSITY=   1500 : PERT=      0 : PENRT=      0
+LAYER DECKSCHICHT
+ CONDUCTIVITY=   2.88 : CAPACITY=      1 : DENSITY=   1800 : PERT=      0 : PENRT=      0
+LAYER FLIESE
+ CONDUCTIVITY=   6.12 : CAPACITY=      1 : DENSITY=   1800 : PERT=      0 : PENRT=      0
+LAYER WEICHFASERPLATTE
+ CONDUCTIVITY=   0.18 : CAPACITY=      2 : DENSITY=    270 : PERT=      0 : PENRT=      0
+LAYER HOLZ
+ CONDUCTIVITY=  0.468 : CAPACITY=      2 : DENSITY=    500 : PERT=      0 : PENRT=      0
+LAYER KIES
+ CONDUCTIVITY=   2.52 : CAPACITY=      1 : DENSITY=   1800 : PERT=      0 : PENRT=      0
+LAYER VOLLZIEGEL
+ CONDUCTIVITY=   2.52 : CAPACITY=      1 : DENSITY=   1800 : PERT=      0 : PENRT=      0
+LAYER HLZ027
+ CONDUCTIVITY=  0.972 : CAPACITY=      1 : DENSITY=    850 : PERT=      0 : PENRT=      0
+LAYER GLAS
+ CONDUCTIVITY=    3.6 : CAPACITY=      1 : DENSITY=   2500 : PERT=      0 : PENRT=      0
+LAYER TDPT3
+ RESISTANCE=  0.208333 : PERT=      0 : PENRT=      0
+LAYER WD_AW
+ RESISTANCE=  1.54931 : PERT=      0 : PENRT=      0
+LAYER WD_IW
+ RESISTANCE=  1.38889 : PERT=      0 : PENRT=      0
+LAYER WD_KD
+ RESISTANCE=  0.951389 : PERT=      0 : PENRT=      0
+LAYER WD_DA
+ RESISTANCE=  1.78472 : PERT=      0 : PENRT=      0
+LAYER WB
+ RESISTANCE=  0.0347479 : PERT=      0 : PENRT=      0
+LAYER BETONKERNAKTIVIERUNG
+ PSPACING=    0.2 : PDIAMETER=   0.02 : PWALLTHICKNESS=  0.001 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18 : PERT=      0 : PENRT=      0
+LAYER HEIZKUHLMATTE
+ PSPACING=   0.01 : PDIAMETER= 0.0035 : PWALLTHICKNESS= 0.0005 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18 : PERT=      0 : PENRT=      0
+LAYER ACTIVELAYER_FB
+ PSPACING=    0.1 : PDIAMETER=  0.016 : PWALLTHICKNESS=  0.002 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18 : PERT=      0 : PENRT=      0
+LAYER FBH_TROCKEN
+ PSPACING=   0.05 : PDIAMETER=   0.01 : PWALLTHICKNESS=  0.002 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18 : PERT=      0 : PENRT=      0
+*--------------------------------------------------------------------------------
+*  I n p u t s
+*--------------------------------------------------------------------------------
+INPUTS INT01 INT02 INT03 TERD1 TERD2 TERD3 PERS1 PERS2 PERS3 COMP1 COMP2 COMP3 LICHT1 LICHT2 LICHT3 ILF1 ILF2 ILF3 INF1 INF2 INF3 VENT1 VENT2 VENT3 TZU1 TZU2 TZU3 ABSZU1 ABSZU2 ABSZU3 SCHATTS1 SCHATTS2 SCHATTS3 SCHATTW1 SCHATTW2 SCHATTW3 SCHATTO1 SCHATTO2 SCHATTO3 SCHATTN1 SCHATTN2 SCHATTN3 SCHATTI1 SCHATTI2 SCHATTI3 CLO1 CLO2 CLO3 MET1 MET2 MET3 VEL1 VEL2 VEL3 HEIZ1 HEIZ2 HEIZ3 HEIZMAX1 HEIZMAX2 ;
+ HEIZMAX3 TKUEHL1 TKUEHL2 TKUEHL3 KUEHLMAX1 KUEHLMAX2 KUEHLMAX3 RELMIN1 RELMIN2 RELMIN3 ABSMAX1 ABSMAX2 ABSMAX3 TINBTA1 TINBTA2 TINBTA3 MINBTA1 MINBTA2 MINBTA3 WIND DRUCK QDAMPF TINBTAO1 TINBTAO2 TINBTAO3
+INPUTS_DESCRIPTION
+ INT01 : any : Input
+ INT02 : any : Input
+ INT03 : any : Input
+ TERD1 : any : Input
+ TERD2 : any : Input
+ TERD3 : any : Input
+ PERS1 : any : Input
+ PERS2 : any : Input
+ PERS3 : any : Input
+ COMP1 : any : Input
+ COMP2 : any : Input
+ COMP3 : any : Input
+ LICHT1 : any : Input
+ LICHT2 : any : Input
+ LICHT3 : any : Input
+ ILF1 : any : Input
+ ILF2 : any : Input
+ ILF3 : any : Input
+ INF1 : any : Input
+ INF2 : any : Input
+ INF3 : any : Input
+ VENT1 : any : Input
+ VENT2 : any : Input
+ VENT3 : any : Input
+ TZU1 : any : Input
+ TZU2 : any : Input
+ TZU3 : any : Input
+ ABSZU1 : any : Input
+ ABSZU2 : any : Input
+ ABSZU3 : any : Input
+ SCHATTS1 : any : Input
+ SCHATTS2 : any : Input
+ SCHATTS3 : any : Input
+ SCHATTW1 : any : Input
+ SCHATTW2 : any : Input
+ SCHATTW3 : any : Input
+ SCHATTO1 : any : Input
+ SCHATTO2 : any : Input
+ SCHATTO3 : any : Input
+ SCHATTN1 : any : Input
+ SCHATTN2 : any : Input
+ SCHATTN3 : any : Input
+ SCHATTI1 : any : Input
+ SCHATTI2 : any : Input
+ SCHATTI3 : any : Input
+ CLO1 : any : Input
+ CLO2 : any : Input
+ CLO3 : any : Input
+ MET1 : any : Input
+ MET2 : any : Input
+ MET3 : any : Input
+ VEL1 : any : Input
+ VEL2 : any : Input
+ VEL3 : any : Input
+ HEIZ1 : any : Input
+ HEIZ2 : any : Input
+ HEIZ3 : any : Input
+ HEIZMAX1 : any : Input
+ HEIZMAX2 : any : Input
+ HEIZMAX3 : any : Input
+ TKUEHL1 : any : Input
+ TKUEHL2 : any : Input
+ TKUEHL3 : any : Input
+ KUEHLMAX1 : any : Input
+ KUEHLMAX2 : any : Input
+ KUEHLMAX3 : any : Input
+ RELMIN1 : any : Input
+ RELMIN2 : any : Input
+ RELMIN3 : any : Input
+ ABSMAX1 : any : Input
+ ABSMAX2 : any : Input
+ ABSMAX3 : any : Input
+ TINBTA1 : any : Input
+ TINBTA2 : any : Input
+ TINBTA3 : any : Input
+ MINBTA1 : any : Input
+ MINBTA2 : any : Input
+ MINBTA3 : any : Input
+ WIND : any : Input
+ DRUCK : any : Input
+ QDAMPF : any : Input
+ TINBTAO1 : any : Input
+ TINBTAO2 : any : Input
+ TINBTAO3 : any : Input
+*--------------------------------------------------------------------------------
+*  S c h e d u l e s
+*--------------------------------------------------------------------------------
+SCHEDULE NATLUFT
+ HOURS =0.000 6.000 20.000 24.0
+ VALUES=1. 0 1. 1. 
+SCHEDULE WEEKEND
+ HOURS =0.000 8.000 22.000 24.0
+ VALUES=0 1. 0 0 
+SCHEDULE WOHN1
+ HOURS =0.000 7.000 9.000 16.000 22.000 24.0
+ VALUES=0 1. 0 1. 0 0 
+SCHEDULE WORKDAY
+ HOURS =0.000 8.000 9.000 17.000 18.000 24.0
+ VALUES=0 0.5 1. 0.5 0 0 
+SCHEDULE WORKDAYHALLE
+ HOURS =0.000 24.0
+ VALUES=1. 1. 
+SCHEDULE WEEKEND
+ HOURS =0.000 1.000 24.0
+ VALUES=0 0 0 
+SCHEDULE DAYNIGHT
+ HOURS =0.000 6.000 18.000 24.0
+ VALUES=0 1. 0 0 
+SCHEDULE LUFT
+ HOURS =0.000 6.000 20.000 24.0
+ VALUES=0 1. 0 0 
+SCHEDULE ARBEIT
+ HOURS =0.000 24.0
+ VALUES=1. 1. 
+SCHEDULE FREI
+ HOURS =0.000 24.0
+ VALUES=0 0 
+SCHEDULE RESTAURANTE
+ HOURS =0.000 11.000 12.000 14.000 15.000 24.0
+ VALUES=0 0.2 1. 0.2 0 0 
+SCHEDULE VERANSTALTUNG
+ HOURS =0.000 17.000 18.000 20.000 24.0
+ VALUES=0 0.5 1. 0 0 
+SCHEDULE SEMINAR
+ HOURS =0.000 9.000 12.000 13.000 16.000 24.0
+ VALUES=0 1. 0 1. 0 0 
+SCHEDULE WORKDAYHALLE_HALB
+ HOURS =0.000 6.000 24.0
+ VALUES=1. 0 0 
+SCHEDULE BTA
+ HOURS =0.000 8.000 9.000 17.000 18.000 24.0
+ VALUES=1. 1. 1. 1. 1. 1. 
+SCHEDULE ATRIUMVA
+ HOURS =0.000 17.000 18.000 21.000 23.000 24.0
+ VALUES=0 0.5 1. 0.5 0 0 
+SCHEDULE VERANSTWOC
+ HOURS =0.000 9.000 12.000 14.000 17.000 24.0
+ VALUES=0 0.15 0 0.15 0 0 
+SCHEDULE ATRIUMWO
+ HOURS =0.000 8.000 9.000 17.000 18.000 24.0
+ VALUES=0 0.01 0.02 0.01 0 0 
+SCHEDULE RESTVA
+ HOURS =0.000 11.000 14.000 21.000 23.000 24.0
+ VALUES=0 1. 0 1. 0 0 
+SCHEDULE GANZ
+ HOURS =0.000 24.0
+ VALUES=1. 1. 
+SCHEDULE KUECHE
+ HOURS =0.000 10.000 13.000 24.0
+ VALUES=0 1. 0 0 
+SCHEDULE KUECHDO
+ HOURS =0.000 10.000 13.000 18.000 21.000 24.0
+ VALUES=0 1. 0 1. 0 0 
+SCHEDULE BISTRO
+ HOURS =0.000 9.000 10.000 13.000 17.000 24.0
+ VALUES=0 1. 1. 1. 0 0 
+SCHEDULE VERANSTDOP
+ HOURS =0.000 9.000 12.000 14.000 17.000 24.0
+ VALUES=0 0.3 0 0.3 0 0 
+SCHEDULE KUEHLVOR
+ HOURS =0.000 5.000 9.000 24.0
+ VALUES=0 0 0 0 
+SCHEDULE VERANGROSS
+ HOURS =0.000 8.000 9.000 13.000 14.000 18.000 24.0
+ VALUES=0 0.5 1. 0 1. 0 0 
+SCHEDULE ATRIUMFR
+ HOURS =0.000 8.000 9.000 15.000 17.000 18.000 24.0
+ VALUES=0 0.01 0.02 1. 0.01 0 0 
+SCHEDULE NACHT
+ HOURS =0.000 6.000 23.000 24.0
+ VALUES=1. 0 1. 1. 
+SCHEDULE WNATLUFT
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=NATLUFT NATLUFT NATLUFT NATLUFT NATLUFT NATLUFT NATLUFT
+SCHEDULE WOHNWOCHE
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=WOHN1 WOHN1 WOHN1 WOHN1 WOHN1 WEEKEND WEEKEND
+SCHEDULE WLUFT
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=LUFT LUFT LUFT LUFT LUFT LUFT LUFT
+SCHEDULE USE
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=WORKDAY WORKDAY WORKDAY WORKDAY WORKDAY WEEKEND WEEKEND
+SCHEDULE WOCHE
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=ARBEIT ARBEIT ARBEIT ARBEIT ARBEIT FREI FREI
+SCHEDULE WRESTAURANTE
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=RESTAURANTE RESTAURANTE RESTAURANTE RESTVA RESTAURANTE FREI FREI
+SCHEDULE WVERANSTALTUNG
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=VERANSTWOC VERANSTDOP VERANSTWOC VERANSTALTUNG VERANGROSS VERANGROSS FREI
+SCHEDULE WSEMINAR
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=SEMINAR SEMINAR SEMINAR SEMINAR SEMINAR FREI FREI
+SCHEDULE BTA_WEEK
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=BTA BTA BTA BTA BTA BTA BTA
+SCHEDULE WKUECHE
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=KUECHE KUECHE KUECHE KUECHDO KUECHE FREI FREI
+SCHEDULE WKUEHLVOR
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=KUEHLVOR KUEHLVOR KUEHLVOR KUEHLVOR KUEHLVOR FREI FREI
+SCHEDULE WSCHLAFT
+ DAYS=1 2 3 4 5 6 7
+ HOURLY=NACHT NACHT NACHT NACHT NACHT NACHT NACHT
+*--------------------------------------------------------------------------------
+*  C O N S T R U C T I O N (Wall, Floor, Ceiling,..)
+*--------------------------------------------------------------------------------
+CONSTRUCTION DE1O
+ LAYERS   = FERTIGPARKETT ESTRICH TDPT3 STAHLBETON STAHLBETON STAHLBETON STAHLBETON 
+ THICKNESS= 0.015         0.07    0     0.05       0.05       0.05       0.05       
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = 11 : HBACK= 1e-005
+CONSTRUCTION DE1U
+ LAYERS   = STAHLBETON STAHLBETON STAHLBETON STAHLBETON TDPT3 ESTRICH FERTIGPARKETT 
+ THICKNESS= 0.05       0.05       0.05       0.05       0     0.07    0.015         
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = 11 : HBACK= 1e-005
+CONSTRUCTION DE1O_BTA
+ LAYERS   = FERTIGPARKETT ESTRICH ESTRICH TDPT3 STAHLBETON BETONKERNAKTIVIERUNG STAHLBETON 
+ THICKNESS= 0.015         0.04    0.01    0     0.13       0                    0.07       
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = FLOOR : HBACK= CEILING
+CONSTRUCTION DE1U_BTA
+ LAYERS   = STAHLBETON BETONKERNAKTIVIERUNG STAHLBETON TDPT3 ESTRICH ESTRICH FERTIGPARKETT 
+ THICKNESS= 0.07       0                    0.13       0     0.01    0.04    0.015         
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = CEILING : HBACK= FLOOR
+CONSTRUCTION AW1
+ LAYERS   = DECKSCHICHT STAHLBETON WD_AW DECKSCHICHT 
+ THICKNESS= 0.006       0.18       0     0.01        
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = 11 : HBACK= 64
+CONSTRUCTION IW1
+ LAYERS   = DECKSCHICHT STAHLBETON DECKSCHICHT 
+ THICKNESS= 0.01        0.18       0.01        
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = 11 : HBACK= 11
+CONSTRUCTION IW2
+ LAYERS   = DECKSCHICHT STAHLBETON DECKSCHICHT 
+ THICKNESS= 0.01        0.18       0.01        
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = 11 : HBACK= 11
+CONSTRUCTION DA1
+ LAYERS   = DECKSCHICHT STAHLBETON STAHLBETON STAHLBETON STAHLBETON WD_DA KIES  
+ THICKNESS= 0.015       0.05       0.05       0.05       0.05       0     0.05  
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = 11 : HBACK= 64
+CONSTRUCTION DA1_BTA
+ LAYERS   = DECKSCHICHT STAHLBETON STAHLBETON STAHLBETON STAHLBETON WD_DA KIES  
+ THICKNESS= 0.015       0.05       0.05       0.05       0.05       0     0.05  
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = 11 : HBACK= 64
+CONSTRUCTION KD1
+ LAYERS   = FERTIGPARKETT ESTRICH TDPT3 STAHLBETON WD_KD DECKSCHICHT 
+ THICKNESS= 0.015         0.07    0     0.2        0     0.015       
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = FLOOR : HBACK= 0.0001
+CONSTRUCTION KD1_BTA
+ LAYERS   = FERTIGPARKETT ESTRICH TDPT3 STAHLBETON WD_KD DECKSCHICHT 
+ THICKNESS= 0.015         0.07    0     0.2        0     0.015       
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = FLOOR : HBACK= 0.0001
+CONSTRUCTION IIWSPEICHER
+ LAYERS   = WEICHFASERPLATTE 
+ THICKNESS= 0.02             
+ ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ EPS-FRONT= 0.9   : EPS-BACK= 0.9  
+ HFRONT   = 11 : HBACK= 11
+*--------------------------------------------------------------------------------
+*  W i n d o w s
+*--------------------------------------------------------------------------------
+WINDOW EXT_WINDOW1
+ WINID=14002 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=5 : WWID=0 : WHEIG=0 : FFRAME=0.306667 : UFRAME=14.4979 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
+WINDOW EXT_WINDOW2
+ WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0.77 : WHEIG=1.08 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
+WINDOW ADJ_WINDOW
+ WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0 : WHEIG=0 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
+WINDOW ADJ_WINDOW2
+ WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0.77 : WHEIG=1.08 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
+*--------------------------------------------------------------------------------
+*  G a i n s / L o s s e s
+*--------------------------------------------------------------------------------
+GAIN GAIN001
+ CONVECTIVE=INPUT 1*INT01 : RADIATIVE=0 : HUMIDITY=0.07642 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN GAIN002
+ CONVECTIVE=INPUT 1*INT02 : RADIATIVE=0 : HUMIDITY=0.07464 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN GAIN003
+ CONVECTIVE=INPUT 1*INT03 : RADIATIVE=0 : HUMIDITY=0.10338 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN PERSON
+ CONVECTIVE=144 : RADIATIVE=144 : HUMIDITY=0.05 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN COMPSTANDARD
+ CONVECTIVE=178.2 : RADIATIVE=19.8 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN COMPKUNDEN
+ CONVECTIVE=307.8 : RADIATIVE=34.2 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN COMPKREATION
+ CONVECTIVE=583.2 : RADIATIVE=64.8 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN COMPMEDIEN
+ CONVECTIVE=777.6 : RADIATIVE=86.4 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN LICHT
+ CONVECTIVE=1.8 : RADIATIVE=1.8 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN COMPUTER
+ CONVECTIVE=3.24 : RADIATIVE=0.36 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN FEUCHTE
+ CONVECTIVE=3.6 : RADIATIVE=0 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN PERSON_HALLE
+ CONVECTIVE=180 : RADIATIVE=180 : HUMIDITY=0.05 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN BEFEUCHT1KG
+ CONVECTIVE=INPUT 1*QDAMPF : RADIATIVE=0 : HUMIDITY=1 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+GAIN PFLANZ
+ CONVECTIVE=INPUT 0.5*QDAMPF : RADIATIVE=0 : HUMIDITY=1 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+*--------------------------------------------------------------------------------
+*  C o m f o r t
+*--------------------------------------------------------------------------------
+COMFORT COMF1
+ CLOTHING=INPUT 1*CLO1 : MET=INPUT 1*MET1 : WORK=0 : VELOCITY=INPUT 1*VEL1 : ELV_AIRSPEED=0 : FSHADE=1 : FPROJECT=0
+COMFORT COMF2
+ CLOTHING=INPUT 1*CLO2 : MET=INPUT 1*MET2 : WORK=0 : VELOCITY=INPUT 1*VEL2 : ELV_AIRSPEED=0 : FSHADE=1 : FPROJECT=0
+COMFORT COMF3
+ CLOTHING=INPUT 1*CLO3 : MET=INPUT 1*MET3 : WORK=0 : VELOCITY=INPUT 1*VEL3 : ELV_AIRSPEED=0 : FSHADE=1 : FPROJECT=0
+*--------------------------------------------------------------------------------
+*  I n f i l t r a t i o n
+*--------------------------------------------------------------------------------
+INFILTRATION INF1
+ AIRCHANGE=INPUT 1*INF1
+INFILTRATION INF2
+ AIRCHANGE=INPUT 1*INF2
+INFILTRATION INF3
+ AIRCHANGE=INPUT 1*INF3
+*--------------------------------------------------------------------------------
+*  V e n t i l a t i o n
+*--------------------------------------------------------------------------------
+VENTILATION VENT1
+ TEMPERATURE=INPUT 1*TZU1
+ AIRCHANGE=INPUT 1*VENT1
+ SPECFANPOWER=0
+ SENSHR=0
+ ABSMINHUM=INPUT 1*ABSZU1
+ ABSMAXHUM=INPUT 1*ABSZU1
+ CALCQAHU=0
+VENTILATION VENT2
+ TEMPERATURE=INPUT 1*TZU2
+ AIRCHANGE=INPUT 1*VENT2
+ SPECFANPOWER=0
+ SENSHR=0
+ ABSMINHUM=INPUT 1*ABSZU2
+ ABSMAXHUM=INPUT 1*ABSZU2
+ CALCQAHU=0
+VENTILATION VENT3
+ TEMPERATURE=INPUT 1*TZU3
+ AIRCHANGE=INPUT 1*VENT3
+ SPECFANPOWER=0
+ SENSHR=0
+ ABSMINHUM=INPUT 1*ABSZU3
+ ABSMAXHUM=INPUT 1*ABSZU3
+ CALCQAHU=0
+*--------------------------------------------------------------------------------
+*  C o o l i n g
+*--------------------------------------------------------------------------------
+COOLING KUEHL1
+ ON=INPUT 1*TKUEHL1
+ POWER=INPUT 3.6*KUEHLMAX1
+ ABSHUMIDITY=INPUT 1*ABSMAX1
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
+COOLING KUEHL2
+ ON=INPUT 1*TKUEHL2
+ POWER=INPUT 3.6*KUEHLMAX2
+ ABSHUMIDITY=INPUT 1*ABSMAX2
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
+COOLING KUEHL3
+ ON=INPUT 1*TKUEHL3
+ POWER=INPUT 3.6*KUEHLMAX3
+ ABSHUMIDITY=INPUT 1*ABSMAX3
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
+*--------------------------------------------------------------------------------
+*  H e a t i n g
+*--------------------------------------------------------------------------------
+HEATING HEIZ1
+ ON=INPUT 1*HEIZ1
+ POWER=INPUT 3.6*HEIZMAX1
+ HUMIDITY=INPUT 1*RELMIN1
+ RRAD=0
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
+HEATING HEIZ2
+ ON=INPUT 1*HEIZ2
+ POWER=INPUT 3.6*HEIZMAX2
+ HUMIDITY=INPUT 1*RELMIN2
+ RRAD=0
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
+HEATING HEIZ3
+ ON=INPUT 1*HEIZ3
+ POWER=INPUT 3.6*HEIZMAX3
+ HUMIDITY=INPUT 1*RELMIN3
+ RRAD=0
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
+*--------------------------------------------------------------------------------
+*  D a y l i g h t   C o n t r o l 
+*--------------------------------------------------------------------------------
+*
+*--------------------------------------------------------------------------------
+*  Z o n e s
+*--------------------------------------------------------------------------------
+ZONES ZONE1 ZONE2 ZONE3
+*--------------------------------------------------------------------------------
+*  O r i e n t a t i o n s
+*--------------------------------------------------------------------------------
+HEMISPHERE NORTHERN
+ORIENTATIONS HORI SUED WEST NORD OST ORI21 ORI22 ORI23 ORI24
+INTERNAL_CALCULATION HORI SUED WEST NORD OST ORI21 ORI22 ORI23 ORI24
+*
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+BUILDING
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*
+*--------------------------------------------------------------------------------
+*  Z o n e  ZONE1  /  A i r n o d e  ZONE1
+*--------------------------------------------------------------------------------
+ZONE ZONE1
+RADIATIONMODE
+ BEAM=STANDARD : DIFFUSE=STANDARD : LONGWAVE=STANDARD : GEOMODE=MANUAL : FSOLAIR=0
+DAYLIGHTMODE
+ DLSHADE =-1
+AIRNODE ZONE1
+WALL         =DE1O_BTA   : SURF= 20 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO1 : MFLOW = INPUT 1*MINBTA1 : NLOOP = 2 : MFLOWMIN = 16
+WALL         =IW1        : SURF= 37 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =IW2        : SURF= 38 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=52 : FRONT : COUPL=200
+WALL         =IW1        : SURF= 40 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =AW1        : SURF= 41 : AREA=         8 : EXTERNAL : ORI=SUED : FSKY=0.5
+WINDOW=EXT_WINDOW1 : SURF= 42 : AREA=       4.5 : EXTERNAL : ORI=SUED : FSKY=0.5 : ESHADE=INPUT 1*SCHATTS1
+WALL         =DE1U_BTA   : SURF= 69 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA1 : MFLOW = INPUT 1*MINBTA1 : NLOOP = 2 : MFLOWMIN = 16
+WALL         =IIWSPEICHER : SURF=  1 : AREA=       100 : INTERNAL
+ REGIME
+ GAIN        = GAIN001    : SCALE= 0 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PERSON     : SCALE= INPUT 1*PERS1 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = COMPUTER   : SCALE= INPUT 20*COMP1 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = LICHT      : SCALE= INPUT 20*LICHT1 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PFLANZ     : SCALE= INPUT 20*ILF1 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ COMFORT     = COMF1      : COMFID=   1 : MRT= INTERNAL : GEOPOS= 0
+ INFILTRATION= INF1
+ VENTILATION = VENT1
+ COOLING     = KUEHL1
+ HEATING     = HEIZ1
+ CAPACITANCE = 67.5    : VOLUME= 56.25   : REFAREA= 1       : TINITIAL= 21      : PHINITIAL= 40     
+ KSURF       = 0.163   : KDEEP = 1      
+ MSURF       = 438.1   : MDEEP = 170    
+ BSURF       = 496.5   : BDEEP = 165.5  
+*--------------------------------------------------------------------------------
+*  Z o n e  ZONE2  /  A i r n o d e  ZONE2
+*--------------------------------------------------------------------------------
+ZONE ZONE2
+RADIATIONMODE
+ BEAM=STANDARD : DIFFUSE=STANDARD : LONGWAVE=STANDARD : GEOMODE=MANUAL : FSOLAIR=0
+DAYLIGHTMODE
+ DLSHADE =-1
+AIRNODE ZONE2
+WALL         =DE1U_BTA   : SURF= 35 : AREA=         8 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA2 : MFLOW = INPUT 1*MINBTA2 : NLOOP = 1 : MFLOWMIN = 16
+WALL         =IW1        : SURF= 19 : AREA=         5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =IW1        : SURF= 21 : AREA=         5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =IW2        : SURF= 52 : AREA=      12.5 : ADJACENT=ZONE1 : ADJ_SURF=38 : BACK : COUPL=233.75
+WALL         =DE1O_BTA   : SURF= 70 : AREA=         8 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO2 : MFLOW = INPUT 1*MINBTA2 : NLOOP = 1 : MFLOWMIN = 16
+WALL         =IW2        : SURF= 29 : AREA=      12.5 : ADJACENT=ZONE3 : ADJ_SURF=31 : FRONT : COUPL=233.75
+WALL         =IIWSPEICHER : SURF=  4 : AREA=        40 : INTERNAL
+ REGIME
+ GAIN        = GAIN001    : SCALE= 0 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PERSON     : SCALE= INPUT 1*PERS2 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = COMPUTER   : SCALE= INPUT 8*COMP2 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = LICHT      : SCALE= INPUT 8*LICHT2 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PFLANZ     : SCALE= INPUT 8*ILF2 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ COMFORT     = COMF2      : COMFID=   1 : MRT= INTERNAL : GEOPOS= 0
+ INFILTRATION= INF2
+ VENTILATION = VENT2
+ COOLING     = KUEHL2
+ HEATING     = HEIZ2
+ CAPACITANCE = 22.5    : VOLUME= 18.75   : REFAREA= 1       : TINITIAL= 21      : PHINITIAL= 40     
+ KSURF       = 0.14    : KDEEP = 1      
+ MSURF       = 207.7   : MDEEP = 69.6   
+ BSURF       = 249     : BDEEP = 83     
+*--------------------------------------------------------------------------------
+*  Z o n e  ZONE3  /  A i r n o d e  ZONE3
+*--------------------------------------------------------------------------------
+ZONE ZONE3
+RADIATIONMODE
+ BEAM=STANDARD : DIFFUSE=STANDARD : LONGWAVE=STANDARD : GEOMODE=MANUAL : FSOLAIR=0
+DAYLIGHTMODE
+ DLSHADE =-1
+AIRNODE ZONE3
+WALL         =IW1        : SURF=  2 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =IW1        : SURF=  3 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =AW1        : SURF=  6 : AREA=         8 : EXTERNAL : ORI=NORD : FSKY=0.5
+WINDOW=EXT_WINDOW1 : SURF=  9 : AREA=       4.5 : EXTERNAL : ORI=NORD : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI3 : ESHADE=INPUT 1*SCHATTN3
+WALL         =DE1O_BTA   : SURF= 73 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
+WALL         =DE1U_BTA   : SURF= 74 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
+WALL         =IW2        : SURF= 31 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=29 : BACK : COUPL=200
+WALL         =IIWSPEICHER : SURF=  5 : AREA=       100 : INTERNAL
+ REGIME
+ GAIN        = GAIN003    : SCALE= 0 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PERSON     : SCALE= INPUT 1*PERS3 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = COMPUTER   : SCALE= INPUT 20*COMP3 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = LICHT      : SCALE= INPUT 20*LICHT3 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PFLANZ     : SCALE= INPUT 20*ILF3 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ COMFORT     = COMF3      : COMFID=   1 : MRT= INTERNAL : GEOPOS= 0
+ INFILTRATION= INF3
+ VENTILATION = VENT3
+ COOLING     = KUEHL3
+ HEATING     = HEIZ3
+ CAPACITANCE = 67.5    : VOLUME= 56.25   : REFAREA= 1       : TINITIAL= 21      : PHINITIAL= 40     
+ KSURF       = 0.163   : KDEEP = 1      
+ MSURF       = 438.1   : MDEEP = 170    
+ BSURF       = 496.5   : BDEEP = 165.5  
+*--------------------------------------------------------------------------------
+*  O u t p u t s
+*--------------------------------------------------------------------------------
+OUTPUTS
+ TRANSFER : TIMEBASE=1.000
+ AIRNODES = ZONE1 ZONE2 ZONE3 
+ NTYPES =   1 : TAIR - air temperature of airnode
+        =   9 : RELHUM - relativ humidity of airnode air
+        =  29 : ABSHUM - absolute humidity of airnode air
+        =  30 : QHEAT - sensible heating demand of airnode (positive values)
+        =  31 : QCOOL - sensible cooling demand of airnode (positive values)
+        =   4 : QINF - sensible infiltration energy gain of airnode
+        =   5 : QVENT - sensible ventilation energy gain of airnode
+        =   6 : QCOUP - sensible coupling energy gain of airnode
+        =  12 : QSOLTR - total shortwave solar radiation transmitted through external windows of airnode (but not kept 100 % in airnode)
+        =  98 : QDEHUM - latent energy demand of airnode by dehumidification (positive values)
+        =  99 : QHUM - latent energy demand of airnode by humidification (positive values)
+        =  25 : TOP - obsolete use new comfort outputs (Version 16: Operative temperature)
+        =  62 : PMV - obsolete use new comfort outputs (Version 16: Predicted mean vote)
+        =  63 : PPD - obsolete use new comfort outputs (Version 16: Percentage of person dissatisfied)
+ AIRNODES = ZONE1 
+ NTYPES =  28 : SCHEDULE = WORKDAY, WORKDAYHALLE, USE, WOHNWOCHE, WNATLUFT, NATLUFT, LUFT, WLUFT, WEEKEND, DAYNIGHT, ARBEIT, FREI, WOCHE, WRESTAURANTE, WVERANSTALTUNG, WSEMINAR, BTA_WEEK, WKUECHE, WSCHLAFT,  : - - values of all schedules
+ AIRNODES = ZONE1 ZONE2 ZONE3 
+ NTYPES = 901 : BAL_1 - solar balance for all zones
+        = 902 : BAL_2 - solar balance for a sum of zones
+        = 904 : BAL_4 - energy balance for all zones
+        = 905 : BAL_5 - energy balance for a sum of zones
+        = 907 : BAL_7 - moisture balance for all airnodes
+        = 908 : BAL_8 - moisture balance for a sum of airnodes
+ AIRNODES = ZONE1 
+ NTYPES =  58 : SURF = 69, 20,  : TOFL - fluid outlet temperature of active layer
+        =  59 : SURF = 69, 20,  : QALFL - energy input by fluid of active layer
+        = 112 : SURF = 69, 20,  : MFLAL - Inlet mass flow rate of active layer
+        =  17 : SURF = 69, 20,  : TSI - inside surface temperature
+        =  19 : SURF = 69, 20,  : QCOMI - energy from  inside surface incl. conv. to the air and l-wave radiation to other surfaces
+        =  21 : SURF = 69, 20,  : QABSI - total radiation absorbed (and transmitted) at all inside surf. of airnode (inc. solar gains, radiative heat and int. rad. gains, but not l-wave radiation from other walls
+ AIRNODES = ZONE2 
+ NTYPES =  58 : SURF = 35, 70,  : TOFL - fluid outlet temperature of active layer
+        =  59 : SURF = 35, 70,  : QALFL - energy input by fluid of active layer
+        = 112 : SURF = 35, 70,  : MFLAL - Inlet mass flow rate of active layer
+        =  17 : SURF = 35, 70,  : TSI - inside surface temperature
+        =  19 : SURF = 35, 70,  : QCOMI - energy from  inside surface incl. conv. to the air and l-wave radiation to other surfaces
+        =  21 : SURF = 35, 70,  : QABSI - total radiation absorbed (and transmitted) at all inside surf. of airnode (inc. solar gains, radiative heat and int. rad. gains, but not l-wave radiation from other walls
+ AIRNODES = ZONE3 
+ NTYPES =  58 : SURF = 74, 73,  : TOFL - fluid outlet temperature of active layer
+        =  59 : SURF = 74, 73,  : QALFL - energy input by fluid of active layer
+        = 112 : SURF = 74, 73,  : MFLAL - Inlet mass flow rate of active layer
+        =  17 : SURF = 74, 73,  : TSI - inside surface temperature
+        =  19 : SURF = 74, 73,  : QCOMI - energy from  inside surface incl. conv. to the air and l-wave radiation to other surfaces
+        =  21 : SURF = 74, 73,  : QABSI - total radiation absorbed (and transmitted) at all inside surf. of airnode (inc. solar gains, radiative heat and int. rad. gains, but not l-wave radiation from other walls
+ AIRNODES = ZONE1 
+ NTYPES =  17 : SURF = 20, 37, 38, 40, 41, 69, 1, 42,  : TSI - inside surface temperature
+ AIRNODES = ZONE2 
+ NTYPES =  17 : SURF = 35, 19, 21, 52, 70, 29, 4,  : TSI - inside surface temperature
+ AIRNODES = ZONE3 
+ NTYPES =  17 : SURF = 2, 3, 6, 73, 74, 31, 5, 9,  : TSI - inside surface temperature
+ AIRNODES = ZONE1 ZONE2 ZONE3 
+ NTYPES =  23 : TSTAR - star node temperature of airnode
+        =  24 : TMSURF - weighted mean surface temperature of airnode
+*
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  T R N S F L O W Multizone Airflow Network (Model COMIS 3.1)
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+MULTIZONE_AIRFLOW_NETWORK
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*
+CALCFLOWS=0
+*--------------------------------------------------------------------------------
+*  A d d  T R N S F L O W  C o m m a n d s
+*--------------------------------------------------------------------------------
+*
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+POLLUTANTS
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*
+*
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+LINKTYPES
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*
+*--------------------------------------------------------------------------------
+*  C r a c k s
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  F a n s
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  S t r a i g h t   D u c t s
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  F l o w   C o n t r o l l e r s
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  L a r g e    V e r t i c a l   Openings (Windows+Doors)
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  T e s t   D a t a   C o m p o n e n t s
+*--------------------------------------------------------------------------------
+*
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+NODETYPES
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*
+*--------------------------------------------------------------------------------
+*  E x t e r n a l   N o d e s  (CP VALUES)
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  A u x i l i a r y   N o d e s
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  T h e r m a l  Z o n e   N o d e s
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*  W i n d   v e  l o c i t y   p r o f i l e
+*--------------------------------------------------------------------------------
+*
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+WIND_VELOPROF
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*
+*--------------------------------------------------------------------------------
+*  A i r l i n k   N e t w o r k
+*--------------------------------------------------------------------------------
+*
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+AIRLINK_NETWORK
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*
+*--------------------------------------------------------------------------------
+*  E n d
+*--------------------------------------------------------------------------------
+END
+
+_EXTENSION_WINPOOL_START_
+WINDOW 4.1  DOE-2 Data File : Multi Band Calculation
+Unit System : SI
+Name        : TRNSYS15 WINDOW LIB
+Desc        : Pilkington OPTITHERM S Besch.#3 4/16/4
+Window ID   : 12003
+Tilt        : 90.0
+Glazings    : 2
+Frame       : 11 TRNSYS WIN - 1        2.270
+Spacer      :  1 Class1                2.330  -0.010   0.138
+Total Height: 1600.0 mm
+Total Width : 1250.0 mm
+Glass Height: 1460.3 mm
+Glass Width : 1110.3 mm
+Mullion     : None
+Gap        Thick   Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
+1 Argon     16.0 0.01620  5.000  2.110  6.300  1.780 -0.0060  0.680 0.00066
+2              0       0      0      0      0      0       0      0       0
+3              0       0      0      0      0      0       0      0       0
+4              0       0      0      0      0      0       0      0       0
+5              0       0      0      0      0      0       0      0       0
+Angle     0    10    20    30    40    50    60    70    80    90 Hemis
+Tsol  0.485 0.485 0.483 0.480 0.474 0.462 0.434 0.361 0.189 0.000 0.434
+Abs1  0.137 0.138 0.140 0.144 0.149 0.155 0.161 0.165 0.162 0.000 0.151
+Abs2  0.109 0.109 0.109 0.110 0.110 0.108 0.103 0.089 0.061 0.000 0.102
+Abs3      0     0     0     0     0     0     0     0     0     0     0
+Abs4      0     0     0     0     0     0     0     0     0     0     0
+Abs5      0     0     0     0     0     0     0     0     0     0     0
+Abs6      0     0     0     0     0     0     0     0     0     0     0
+Rfsol 0.269 0.269 0.268 0.267 0.267 0.275 0.302 0.384 0.588 1.000 0.303
+Rbsol 0.314 0.314 0.314 0.314 0.315 0.321 0.342 0.409 0.593 1.000 0.344
+Tvis  0.769 0.768 0.766 0.759 0.745 0.713 0.640 0.489 0.236 0.000 0.663
+Rfvis 0.129 0.129 0.129 0.132 0.142 0.170 0.241 0.396 0.664 1.000 0.216
+Rbvis 0.138 0.118 0.118 0.120 0.129 0.154 0.218 0.359 0.606 1.000 0.197
+SHGC  0.586 0.585 0.584 0.581 0.575 0.562 0.531 0.446 0.249 0.000 0.529
+Tvis_daylight: 0.769
+Layer ID#         4046     4061        0        0        0        0
+Tir              0.000    0.000        0        0        0        0
+Emis F           0.840    0.040        0        0        0        0
+Emis B           0.840    0.840        0        0        0        0
+Thickness(mm)      4.0      4.0        0        0        0        0
+Cond(W/m2-C     ) 225.0    225.0        0        0        0        0
+Spectral File     None     None     None     None     None     None
+Overall and Center of Glass Ig U-values (W/m2-C)
+Outdoor Temperature                 -17.8 C      15.6 C      26.7 C      37.8 C
+Solar      WdSpd  hcout hrout  hin
+(W/m2)     (m/s)     (W/m2-C)
+0        0.00  12.25  3.24  7.55  1.33 1.33  1.01 1.01  1.03 1.03  1.14 1.14
+0        6.71  25.47  3.21  7.58  1.40 1.40  1.03 1.03  1.06 1.06  1.18 1.18
+783        0.00  12.25  3.38  7.34  1.38 1.38  1.09 1.09  1.10 1.10  1.15 1.15
+783        6.71  25.47  3.29  7.09  1.46 1.46  1.16 1.16  1.12 1.12  1.16 1.16
+WINDOW 4.1  DOE-2 Data File : Multi Band Calculation
+Unit System : SI
+Name        : TRNSYS15 WINDOW LIB
+Desc        : Pilkington OPTITHERM S2 Besch.#2 4/16/4
+Window ID   : 12006
+Tilt        : 90.0
+Glazings    : 2
+Frame       : 11 TRNSYS WIN - 1        2.270
+Spacer      :  1 Class1                2.330  -0.010   0.138
+Total Height: 1600.0 mm
+Total Width : 1250.0 mm
+Glass Height: 1460.3 mm
+Glass Width : 1110.3 mm
+Mullion     : None
+Gap        Thick   Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
+1 Argon     16.0 0.01620  5.000  2.110  6.300  1.780 -0.0060  0.680 0.00066
+2              0       0      0      0      0      0       0      0       0
+3              0       0      0      0      0      0       0      0       0
+4              0       0      0      0      0      0       0      0       0
+5              0       0      0      0      0      0       0      0       0
+Angle     0    10    20    30    40    50    60    70    80    90 Hemis
+Tsol  0.387 0.386 0.385 0.383 0.380 0.375 0.362 0.316 0.178 0.000 0.355
+Abs1  0.196 0.197 0.197 0.198 0.200 0.202 0.204 0.208 0.203 0.000 0.199
+Abs2  0.052 0.052 0.053 0.055 0.057 0.061 0.065 0.069 0.062 0.000 0.059
+Abs3      0     0     0     0     0     0     0     0     0     0     0
+Abs4      0     0     0     0     0     0     0     0     0     0     0
+Abs5      0     0     0     0     0     0     0     0     0     0     0
+Abs6      0     0     0     0     0     0     0     0     0     0     0
+Rfsol 0.365 0.365 0.365 0.364 0.363 0.363 0.369 0.407 0.557 1.000 0.377
+Rbsol 0.311 0.311 0.309 0.308 0.306 0.309 0.326 0.392 0.581 1.000 0.333
+Tvis  0.713 0.713 0.710 0.703 0.687 0.654 0.584 0.442 0.207 0.000 0.609
+Rfvis 0.110 0.110 0.110 0.112 0.119 0.142 0.199 0.327 0.563 1.000 0.181
+Rbvis 0.113 0.129 0.129 0.132 0.142 0.169 0.238 0.391 0.657 1.000 0.215
+SHGC  0.440 0.440 0.440 0.439 0.438 0.436 0.427 0.385 0.241 0.000 0.414
+Tvis_daylight: 0.713
+Layer ID#         4062F    4046        0        0        0        0
+Tir              0.000    0.000        0        0        0        0
+Emis F           0.840    0.840        0        0        0        0
+Emis B           0.020    0.840        0        0        0        0
+Thickness(mm)      4.0      4.0        0        0        0        0
+Cond(W/m2-C     ) 225.0    225.0        0        0        0        0
+Spectral File     None     None     None     None     None     None
+Overall and Center of Glass Ig U-values (W/m2-C)
+Outdoor Temperature                 -17.8 C      15.6 C      26.7 C      37.8 C
+Solar      WdSpd  hcout hrout  hin
+(W/m2)     (m/s)     (W/m2-C)
+0        0.00  12.25  3.23  7.53  1.29 1.29  0.94 0.94  0.96 0.96  1.07 1.07
+0        6.71  25.47  3.21  7.56  1.35 1.35  0.96 0.96  0.98 0.98  1.10 1.10
+783        0.00  12.25  3.41  6.26  1.22 1.22  0.98 0.98  1.01 1.01  1.17 1.17
+783        6.71  25.47  3.31  6.84  1.33 1.33  1.00 1.00  1.02 1.02  1.14 1.14
+WINDOW 4.1  DOE-2 Data File : Multi Band Calculation
+Unit System : SI
+Name        : TRNSYS15 WINDOW LIB
+Desc        : Pilkington OPTITHERM S Besch.#2#5 4/16/4/16/4
+Window ID   : 12008
+Tilt        : 90.0
+Glazings    : 3
+Frame       : 11 TRNSYS WIN - 1        2.270
+Spacer      :  1 Class1                2.330  -0.010   0.138
+Total Height: 1600.0 mm
+Total Width : 1250.0 mm
+Glass Height: 1460.3 mm
+Glass Width : 1110.3 mm
+Mullion     : None
+Gap        Thick   Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
+1 Argon     16.0 0.01620  5.000  2.110  6.300  1.780 -0.0060  0.680 0.00066
+2 Argon     16.0 0.01620  5.000  2.110  6.300  1.780 -0.0060  0.680 0.00066
+3              0       0      0      0      0      0       0      0       0
+4              0       0      0      0      0      0       0      0       0
+5              0       0      0      0      0      0       0      0       0
+Angle     0    10    20    30    40    50    60    70    80    90 Hemis
+Tsol  0.358 0.358 0.354 0.350 0.344 0.330 0.296 0.221 0.095 0.000 0.305
+Abs1  0.146 0.146 0.147 0.148 0.150 0.153 0.158 0.164 0.162 0.000 0.152
+Abs2  0.078 0.079 0.080 0.083 0.086 0.091 0.097 0.103 0.093 0.000 0.088
+Abs3  0.056 0.057 0.058 0.058 0.058 0.056 0.055 0.049 0.026 0.000 0.054
+Abs4      0     0     0     0     0     0     0     0     0     0     0
+Abs5      0     0     0     0     0     0     0     0     0     0     0
+Abs6      0     0     0     0     0     0     0     0     0     0     0
+Rfsol 0.361 0.361 0.361 0.361 0.362 0.369 0.393 0.463 0.624 1.000 0.391
+Rbsol 0.429 0.428 0.427 0.427 0.430 0.442 0.475 0.559 0.726 1.000 0.466
+Tvis  0.658 0.660 0.654 0.646 0.632 0.596 0.512 0.355 0.149 0.000 0.547
+Rfvis 0.174 0.173 0.174 0.178 0.190 0.221 0.299 0.453 0.678 1.000 0.264
+Rbvis 0.174 0.185 0.185 0.189 0.201 0.232 0.307 0.455 0.684 1.000 0.273
+SHGC  0.451 0.451 0.450 0.447 0.441 0.429 0.398 0.320 0.169 0.000 0.401
+Tvis_daylight: 0.658
+Layer ID#         4061F    4046     4061        0        0        0
+Tir              0.000    0.000    0.000        0        0        0
+Emis F           0.840    0.840    0.040        0        0        0
+Emis B           0.040    0.840    0.840        0        0        0
+Thickness(mm)      4.0      4.0      4.0        0        0        0
+Cond(W/m2-C     ) 225.0    225.0    225.0        0        0        0
+Spectral File     None     None     None     None     None     None
+Overall and Center of Glass Ig U-values (W/m2-C)
+Outdoor Temperature                 -17.8 C      15.6 C      26.7 C      37.8 C
+Solar      WdSpd  hcout hrout  hin
+(W/m2)     (m/s)     (W/m2-C)
+0        0.00  12.25  3.20  7.19  0.66 0.66  0.56 0.56  0.58 0.58  0.60 0.60
+0        6.71  25.47  3.19  7.20  0.67 0.67  0.57 0.57  0.59 0.59  0.61 0.61
+783        0.00  12.25  3.39  7.71  0.68 0.68  0.79 0.79  0.82 0.82  0.76 0.76
+783        6.71  25.47  3.29  7.64  0.70 0.70  0.75 0.75  0.78 0.78  0.77 0.77
+WINDOW 4.1  DOE-2 Data File : Multi Band Calculation
+Unit System : SI
+Name        : TRNSYS15 WINDOW LIB
+Desc        : Saint Gobain CLIMATOP FUTUR AR 4/16/4/16/4
+Window ID   : 13005
+Tilt        : 90.0
+Glazings    : 3
+Frame       : 11 TRNSYS WIN - 1        2.270
+Spacer      :  1 Class1                2.330  -0.010   0.138
+Total Height: 1600.0 mm
+Total Width : 1250.0 mm
+Glass Height: 1460.3 mm
+Glass Width : 1110.3 mm
+Mullion     : None
+Gap        Thick   Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
+1 Argon     16.0 0.01620  5.000  2.110  6.300  1.780 -0.0060  0.680 0.00066
+2 Argon     16.0 0.01620  5.000  2.110  6.300  1.780 -0.0060  0.680 0.00066
+3              0       0      0      0      0      0       0      0       0
+4              0       0      0      0      0      0       0      0       0
+5              0       0      0      0      0      0       0      0       0
+Angle     0    10    20    30    40    50    60    70    80    90 Hemis
+Tsol  0.330 0.333 0.324 0.314 0.303 0.281 0.235 0.156 0.063 0.000 0.261
+Abs1  0.195 0.197 0.207 0.215 0.218 0.225 0.246 0.273 0.241 0.001 0.226
+Abs2  0.014 0.014 0.014 0.015 0.015 0.015 0.015 0.015 0.013 0.000 0.015
+Abs3  0.065 0.066 0.070 0.073 0.073 0.074 0.076 0.071 0.043 0.000 0.070
+Abs4      0     0     0     0     0     0     0     0     0     0     0
+Abs5      0     0     0     0     0     0     0     0     0     0     0
+Abs6      0     0     0     0     0     0     0     0     0     0     0
+Rfsol 0.396 0.389 0.385 0.384 0.392 0.405 0.427 0.485 0.641 0.999 0.419
+Rbsol 0.396 0.389 0.385 0.384 0.392 0.405 0.427 0.485 0.641 0.999 0.419
+Tvis  0.670 0.678 0.660 0.639 0.612 0.563 0.459 0.288 0.107 0.000 0.521
+Rfvis 0.175 0.164 0.159 0.163 0.180 0.210 0.264 0.371 0.580 0.999 0.235
+Rbvis 0.175 0.164 0.159 0.163 0.180 0.210 0.264 0.371 0.580 0.999 0.235
+SHGC  0.402 0.406 0.401 0.393 0.383 0.362 0.319 0.236 0.115 0.000 0.338
+Tvis_daylight: 0.67
+Layer ID#         7202F    4054     7202        0        0        0
+Tir              0.000    0.000    0.000        0        0        0
+Emis F           0.840    0.840    0.040        0        0        0
+Emis B           0.040    0.840    0.840        0        0        0
+Thickness(mm)      4.0      4.0      4.0        0        0        0
+Cond(W/m2-C     ) 225.0    225.0    225.0        0        0        0
+Spectral File     None     None     None     None     None     None
+Overall and Center of Glass Ig U-values (W/m2-C)
+Outdoor Temperature                 -17.8 C      15.6 C      26.7 C      37.8 C
+Solar      WdSpd  hcout hrout  hin
+(W/m2)     (m/s)     (W/m2-C)
+0        0.00  12.25  3.20  7.19  0.66 0.66  0.56 0.56  0.58 0.58  0.60 0.60
+0        6.71  25.47  3.19  7.20  0.67 0.67  0.57 0.57  0.59 0.59  0.61 0.61
+783        0.00  12.25  3.40  7.51  0.66 0.66  0.60 0.60  0.62 0.62  0.65 0.65
+783        6.71  25.47  3.30  7.41  0.70 0.70  0.61 0.61  0.62 0.62  0.65 0.65
+WINDOW 4.1  DOE-2 Data File : Multi Band Calculation
+Unit System : SI
+Name        : TRNSYS15 WINDOW LIB
+Desc        : Interpane IPLUS Neutral R #2  4/16/4
+Window ID   : 14002
+Tilt        : 90.0
+Glazings    : 2
+Frame       : 11 TRNSYS WIN - 1        2.270
+Spacer      :  1 Class1                2.330  -0.010   0.138
+Total Height: 1600.0 mm
+Total Width : 1250.0 mm
+Glass Height: 1460.3 mm
+Glass Width : 1110.3 mm
+Mullion     : None
+Gap        Thick   Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
+1 Argon     16.0 0.01620  5.000  2.110  6.300  1.780 -0.0060  0.680 0.00066
+2              0       0      0      0      0      0       0      0       0
+3              0       0      0      0      0      0       0      0       0
+4              0       0      0      0      0      0       0      0       0
+5              0       0      0      0      0      0       0      0       0
+Angle     0    10    20    30    40    50    60    70    80    90 Hemis
+Tsol  0.462 0.465 0.458 0.450 0.438 0.415 0.364 0.266 0.125 0.000 0.386
+Abs1  0.243 0.246 0.254 0.260 0.262 0.266 0.283 0.302 0.259 0.002 0.265
+Abs2  0.028 0.028 0.028 0.029 0.029 0.030 0.029 0.026 0.019 0.000 0.028
+Abs3      0     0     0     0     0     0     0     0     0     0     0
+Abs4      0     0     0     0     0     0     0     0     0     0     0
+Abs5      0     0     0     0     0     0     0     0     0     0     0
+Abs6      0     0     0     0     0     0     0     0     0     0     0
+Rfsol 0.267 0.261 0.259 0.261 0.271 0.289 0.324 0.406 0.597 0.998 0.311
+Rbsol 0.317 0.312 0.311 0.312 0.319 0.336 0.375 0.470 0.661 0.999 0.362
+Tvis  0.758 0.762 0.752 0.738 0.720 0.682 0.597 0.434 0.203 0.000 0.633
+Rfvis 0.114 0.107 0.104 0.107 0.119 0.144 0.193 0.301 0.533 0.999 0.174
+Rbvis 0.132 0.126 0.125 0.129 0.143 0.173 0.238 0.384 0.655 1.000 0.214
+SHGC  0.499 0.502 0.496 0.488 0.476 0.454 0.403 0.304 0.155 0.000 0.424
+Tvis_daylight: 0.758
+Layer ID#         3302F    3300        0        0        0        0
+Tir              0.000    0.000        0        0        0        0
+Emis F           0.840    0.840        0        0        0        0
+Emis B           0.048    0.840        0        0        0        0
+Thickness(mm)      4.0      4.0        0        0        0        0
+Cond(W/m2-C     ) 200.0    200.0        0        0        0        0
+Spectral FileIPIPLR4.INTIP_KLAR4.INT     None     None     None     None
+Overall and Center of Glass Ig U-values (W/m2-C)
+Outdoor Temperature                 -17.8 C      15.6 C      26.7 C      37.8 C
+Solar      WdSpd  hcout hrout  hin
+(W/m2)     (m/s)     (W/m2-C)
+0        0.00  12.25  3.24  7.56  1.35 1.35  1.03 1.03  1.06 1.06  1.17 1.17
+0        6.71  25.47  3.21  7.58  1.41 1.41  1.06 1.06  1.08 1.08  1.21 1.21
+783        0.00  12.25  3.45  6.96  1.26 1.26  1.08 1.08  1.15 1.15  1.33 1.33
+783        6.71  25.47  3.33  7.21  1.38 1.38  1.09 1.09  1.14 1.14  1.31 1.31
+*** END OF LIBRARY ***
+************************************************************************************************************
+*WinID   Description                              Design         U-Value g-value T-sol Rf-sol T-vis-daylight
+************************************************************************************************************
+ 12003   Pilkington OPTITHERM S Besch.#3 4/16/4   4/16/4           1.06  0.586  0.485  0.269  0.769
+ 12006   Pilkington OPTITHERM S2 Besch.#2 4/16/4  4/16/4           0.98  0.44  0.387  0.365  0.713
+ 12008   Pilkington OPTITHERM S Besch.#2#5 4/16/4/16/4  4/16/4/16/4      0.59  0.451  0.358  0.361  0.658
+ 13005   Saint Gobain CLIMATOP FUTUR AR 4/16/4/16/4  4/16/4/16/4      0.59  0.402  0.33  0.396  0.67
+ 14002   Interpane IPLUS Neutral R #2  4/16/4     4/16/4           1.08  0.499  0.462  0.267  0.758
+_EXTENSION_WINPOOL_END_
+
+_EXTENSION_BuildingGeometry_START_
+vertex 1 269.611938378480 360.940125214115 9.000000000000
+vertex 2 267.385095639036 355.368664775973 9.000000000001
+vertex 3 272.956556077178 353.141822036528 9.000000000000
+vertex 4 275.183398816622 358.713282474671 9.000000000000
+vertex 5 272.956556077178 353.141822036528 0.000000000000
+vertex 6 275.183398816622 358.713282474671 0.000000000000
+vertex 7 274.146061240497 356.117910487235 2.100000000000
+vertex 8 274.146061240497 356.117910487235 1.000000000000
+vertex 9 274.890197855928 357.979706850313 1.000000000000
+vertex 10 274.890197855928 357.979706850313 2.100000000000
+vertex 11 274.146061240497 356.117910487235 8.092204555367
+vertex 12 274.146061240497 356.117910487235 6.992204555367
+vertex 13 274.890197855928 357.979706850313 6.992204555367
+vertex 14 274.890197855928 357.979706850313 8.092204555367
+vertex 15 273.253468442437 353.884683428281 2.100000000000
+vertex 16 273.253468442437 353.884683428281 1.000000000000
+vertex 17 273.997605057868 355.746479791359 1.000000000000
+vertex 18 273.997605057868 355.746479791359 2.100000000000
+vertex 19 273.253468442437 353.884683428281 5.100000000000
+vertex 20 273.253468442437 353.884683428281 4.000000000000
+vertex 21 273.997605057868 355.746479791359 4.000000000000
+vertex 22 273.997605057868 355.746479791359 5.100000000000
+vertex 23 273.253468442437 353.884683428281 8.092204555367
+vertex 24 273.253468442437 353.884683428281 6.992204555367
+vertex 25 273.997605057868 355.746479791359 6.992204555367
+vertex 26 273.997605057868 355.746479791359 8.092204555367
+vertex 27 274.146061240497 356.117910487235 5.100000000000
+vertex 28 274.146061240497 356.117910487235 4.000000000000
+vertex 29 274.890197855928 357.979706850313 4.000000000000
+vertex 30 274.890197855928 357.979706850313 5.100000000000
+vertex 31 267.385095639036 355.368664775973 0.000000000000
+vertex 32 269.611938378480 360.940125214115 0.000000000000
+vertex 33 268.426144619726 357.973322530804 8.092204555367
+vertex 34 268.426144619726 357.973322530804 6.992204555367
+vertex 35 267.682008004295 356.111526167726 6.992204555367
+vertex 36 267.682008004295 356.111526167726 8.092204555367
+vertex 37 269.318737417786 360.206549589758 8.092204555367
+vertex 38 269.318737417786 360.206549589758 6.992204555367
+vertex 39 268.574600802355 358.344753226680 6.992204555367
+vertex 40 268.574600802355 358.344753226680 8.092204555367
+vertex 41 268.426144619726 357.973322530804 5.100000000000
+vertex 42 268.426144619726 357.973322530804 4.000000000000
+vertex 43 267.682008004295 356.111526167726 4.000000000000
+vertex 44 267.682008004295 356.111526167726 5.100000000000
+vertex 45 269.318737417786 360.206549589758 5.100000000000
+vertex 46 269.318737417786 360.206549589758 4.000000000000
+vertex 47 268.574600802355 358.344753226680 4.000000000000
+vertex 48 268.574600802355 358.344753226680 5.100000000000
+vertex 49 269.318737417786 360.206549589758 2.100000000000
+vertex 50 269.318737417786 360.206549589758 1.000000000000
+vertex 51 268.574600802355 358.344753226680 1.000000000000
+vertex 52 268.574600802355 358.344753226680 2.100000000000
+vertex 53 268.426144619726 357.973322530804 2.100000000000
+vertex 54 268.426144619726 357.973322530804 1.000000000000
+vertex 55 267.682008004295 356.111526167725 1.000000000000
+vertex 56 267.682008004295 356.111526167726 2.100000000000
+vertex 57 272.397668597554 360.816703844392 3.400000000000
+vertex 58 272.397668597554 360.816703844392 0.400000000000
+vertex 59 280.905324093454 357.421796192768 0.400000000000
+vertex 60 280.905324093454 357.421796192768 3.400000000000
+vertex 61 278.118974040211 358.533665510986 2.500000000000
+vertex 62 278.118974040211 358.533665510986 1.400000000000
+vertex 63 279.976540742373 357.792419298841 1.400000000000
+vertex 64 279.976540742373 357.792419298841 2.500000000000
+vertex 65 276.261407338049 359.274911723131 2.500000000000
+vertex 66 276.261407338049 359.274911723131 1.400000000000
+vertex 67 277.190190689130 358.904288617058 1.400000000000
+vertex 68 277.190190689130 358.904288617058 2.500000000000
+vertex 69 284.967353336003 367.601261720616 0.400000000000
+vertex 70 276.459697840106 370.996169372241 0.400000000000
+vertex 71 276.459697840106 370.996169372241 3.400000000000
+vertex 72 273.509537915770 363.603053897634 2.500000000000
+vertex 73 273.509537915770 363.603053897634 1.400000000000
+vertex 74 273.138914809698 362.674270546553 1.400000000000
+vertex 75 273.138914809698 362.674270546553 2.500000000000
+vertex 76 274.832662404448 366.918810460994 2.500000000000
+vertex 77 274.832662404448 366.918810460994 1.400000000000
+vertex 78 274.462039298376 365.990027109913 1.400000000000
+vertex 79 274.462039298376 365.990027109913 2.500000000000
+vertex 80 275.718451627961 369.138602670078 2.500000000000
+vertex 81 275.718451627961 369.138602670078 1.400000000000
+vertex 82 275.347828521889 368.209819318997 1.400000000000
+vertex 83 275.347828521889 368.209819318997 2.500000000000
+vertex 84 284.967353336003 367.601261720616 3.400000000000
+vertex 85 284.014851953398 365.214288508337 2.500000000000
+vertex 86 284.014851953398 365.214288508337 1.400000000000
+vertex 87 284.385475059470 366.143071859419 1.400000000000
+vertex 88 284.385475059470 366.143071859419 2.500000000000
+vertex 89 282.969694794275 362.595119458288 2.500000000000
+vertex 90 282.969694794275 362.595119458288 0.400000000000
+vertex 91 283.303255589739 363.431024474261 0.400000000000
+vertex 92 283.303255589739 363.431024474261 2.500000000000
+vertex 93 281.388987246878 358.633858465929 2.500000000000
+vertex 94 281.388987246878 358.633858465929 1.400000000000
+vertex 95 282.132086574552 360.496069084846 1.400000000000
+vertex 96 282.132086574552 360.496069084846 2.500000000000
+vertex 97 279.896196239104 369.624863879772 2.500000000000
+vertex 98 279.896196239104 369.624863879772 0.400000000000
+vertex 99 279.060291223131 369.958424675238 0.400000000000
+vertex 100 279.060291223131 369.958424675238 2.500000000000
+vertex 101 282.636107124792 368.531525716858 2.500000000000
+vertex 102 282.636107124792 368.531525716858 1.400000000000
+vertex 103 281.707323773711 368.902148822931 1.400000000000
+vertex 104 281.707323773711 368.902148822931 2.500000000000
+vertex 105 278.224386207158 370.291985470703 2.500000000000
+vertex 106 278.224386207158 370.291985470703 1.800000000000
+vertex 107 277.620677028955 370.532890489651 1.800000000000
+vertex 108 277.620677028955 370.532890489651 2.500000000000
+vertex 109 282.936338714728 362.511528956691 10.500000000000
+vertex 110 284.967353336004 367.601261720614 7.994395280236
+vertex 111 276.459697840105 370.996169372241 7.994395280236
+vertex 112 274.428683218823 365.906436608319 10.499999999997
+vertex 113 276.459697840106 370.996169372240 3.400000000000
+vertex 114 272.397668597550 360.816703844393 7.994395280235
+vertex 115 273.509537915774 363.603053897634 8.500000000002
+vertex 116 273.509537915774 363.603053897634 7.400000000002
+vertex 117 273.138914809701 362.674270546553 7.400000000002
+vertex 118 273.138914809701 362.674270546553 8.500000000002
+vertex 119 275.718451627965 369.138602670076 8.500000000002
+vertex 120 275.718451627965 369.138602670076 7.400000000002
+vertex 121 275.347828521893 368.209819318996 7.400000000002
+vertex 122 275.347828521893 368.209819318996 8.500000000002
+vertex 123 274.832662404452 366.918810460992 5.500000000000
+vertex 124 274.832662404452 366.918810460992 4.400000000000
+vertex 125 274.462039298379 365.990027109911 4.400000000000
+vertex 126 274.462039298379 365.990027109911 5.500000000000
+vertex 127 274.613994771869 366.370828283854 8.500000000002
+vertex 128 274.613994771869 366.370828283854 7.400000000002
+vertex 129 274.243371665797 365.442044932774 7.400000000002
+vertex 130 274.243371665797 365.442044932774 8.500000000002
+vertex 131 275.718451627965 369.138602670075 5.500000000000
+vertex 132 275.718451627965 369.138602670075 4.400000000000
+vertex 133 275.347828521893 368.209819318995 4.400000000000
+vertex 134 275.347828521893 368.209819318995 5.500000000000
+vertex 135 273.509537915773 363.603053897633 5.500000000000
+vertex 136 273.509537915773 363.603053897633 4.400000000000
+vertex 137 273.138914809701 362.674270546553 4.400000000000
+vertex 138 273.138914809701 362.674270546553 5.500000000000
+vertex 139 284.967353336001 367.601261720616 3.400000000000
+vertex 140 278.224386207158 370.291985470703 5.500000000000
+vertex 141 278.224386207158 370.291985470703 4.800000000000
+vertex 142 277.620677028955 370.532890489650 4.800000000000
+vertex 143 277.620677028955 370.532890489650 5.500000000000
+vertex 144 282.636107124791 368.531525716857 5.500000000000
+vertex 145 282.636107124791 368.531525716857 4.400000000000
+vertex 146 281.707323773711 368.902148822930 4.400000000000
+vertex 147 281.707323773711 368.902148822930 5.500000000000
+vertex 148 279.896196239104 369.624863879771 5.500000000000
+vertex 149 279.896196239104 369.624863879771 4.400000000000
+vertex 150 279.060291223131 369.958424675237 4.400000000000
+vertex 151 279.060291223131 369.958424675237 5.500000000000
+vertex 152 280.905324093460 357.421796192788 7.994395280256
+vertex 153 281.388987246877 358.633858465930 5.500000000000
+vertex 154 281.388987246877 358.633858465930 4.400000000000
+vertex 155 282.132086574551 360.496069084846 4.400000000000
+vertex 156 282.132086574551 360.496069084846 5.500000000000
+vertex 157 284.014851953396 365.214288508337 8.470000000000
+vertex 158 284.014851953396 365.214288508337 7.370000000000
+vertex 159 284.385475059469 366.143071859419 7.370000000000
+vertex 160 284.385475059469 366.143071859419 8.470000000000
+vertex 161 282.969694794274 362.595119458289 5.500000000000
+vertex 162 282.969694794274 362.595119458289 3.400000000000
+vertex 163 283.303255589738 363.431024474262 3.400000000000
+vertex 164 283.303255589738 363.431024474262 5.500000000000
+vertex 165 284.014851953397 365.214288508337 5.500000000000
+vertex 166 284.014851953397 365.214288508337 4.400000000000
+vertex 167 284.385475059469 366.143071859419 4.400000000000
+vertex 168 284.385475059469 366.143071859419 5.500000000000
+vertex 169 281.761463468480 359.567285733768 8.500000000000
+vertex 170 281.761463468480 359.567285733768 7.400000000000
+vertex 171 282.132086574551 360.496069084847 7.400000000000
+vertex 172 282.132086574551 360.496069084847 8.500000000000
+vertex 173 278.118974040209 358.533665510981 5.500000000000
+vertex 174 278.118974040209 358.533665510981 4.400000000000
+vertex 175 279.976540742372 357.792419298838 4.400000000000
+vertex 176 279.976540742372 357.792419298838 5.500000000000
+vertex 177 276.261407338046 359.274911723123 5.500000000000
+vertex 178 276.261407338046 359.274911723123 4.400000000000
+vertex 179 277.190190689128 358.904288617052 4.400000000000
+vertex 180 277.190190689128 358.904288617052 5.500000000000
+
+_EXTENSION_BuildingGeometry_END_
+
+
+_EXTENSION_VirtualSurfaceGeometry_START_
+_EXTENSION_VirtualSurfaceGeometry_END_
+
+
+_EXTENSION_ExternalShadingGeometry_START_
+vertex 181 314.726516290900 334.453721916232 11.000000000000
+vertex 182 309.596382246603 336.505793988528 8.000000000000
+vertex 183 305.251077645399 325.642630180375 8.000000000000
+vertex 184 310.381211689696 323.590558108080 11.000000000000
+vertex 185 309.596382246603 336.505793988528 0.000000000000
+vertex 186 305.251077645399 325.642630180375 0.000000000000
+vertex 187 281.451237491694 346.148156036060 7.500000000000
+vertex 188 281.451237491694 346.148156036060 0.000000000000
+vertex 189 269.809342148653 350.821837435306 0.000000000000
+vertex 190 269.809342148653 350.821837435306 7.500000000000
+vertex 191 273.521385303070 349.331624155355 11.000000000000
+vertex 192 265.910571654980 341.110204532562 7.500000000000
+vertex 193 269.622614809398 339.619991252611 11.000000000000
+vertex 194 322.425687695894 352.286993130245 10.500000000000
+vertex 195 317.783310000102 354.143960908537 7.000000000000
+vertex 196 313.655270628959 343.823955290793 7.000000000000
+vertex 197 318.297648324751 341.966987512500 10.500000000000
+vertex 198 317.783310000102 354.143960908537 0.000000000000
+vertex 199 313.655270628959 343.823955290793 0.000000000000
+vertex 200 258.099994158448 364.772471301790 8.000000000000
+vertex 201 258.099994158448 364.772471301790 0.000000000000
+vertex 202 262.154484674682 374.911874965407 0.000000000000
+vertex 203 262.154484674682 374.911874965407 8.000000000000
+vertex 204 253.533903342838 366.598335279825 11.000000000000
+vertex 205 257.588393859073 376.737738943442 11.000000000000
+vertex 206 260.299527884478 397.064847956097 8.000000000000
+vertex 207 260.299527884478 397.064847956097 0.000000000000
+vertex 208 259.920461958129 396.084261243473 0.000000000000
+vertex 209 259.920461958129 396.084261243473 8.000000000000
+vertex 210 265.128785713444 394.070876762920 0.000000000000
+vertex 211 265.128785713444 394.070876762920 8.000000000000
+vertex 212 268.386510235399 402.498121623433 0.000000000000
+vertex 213 268.386510235399 402.498121623433 8.000000000000
+vertex 214 266.757647974422 398.284499193177 11.000000000000
+vertex 215 250.454005272041 400.870836861949 8.000000000000
+vertex 216 250.454005272041 400.870836861949 0.000000000000
+vertex 217 250.074939345693 399.890250149324 8.000000000000
+vertex 218 251.703801606670 404.103872579581 11.000000000000
+vertex 219 313.496420241752 372.469420818084 6.000000000000
+vertex 220 313.496420241752 372.469420818084 0.000000000000
+vertex 221 325.050104524902 367.824972920780 0.000000000000
+vertex 222 325.050104524902 367.824972920780 6.000000000000
+vertex 223 326.550943016421 371.558509064242 0.000000000000
+vertex 224 326.550943016421 371.558509064242 6.000000000000
+vertex 225 318.314586670147 374.869429371254 8.000000000000
+vertex 226 318.314586670147 374.869429371254 6.000000000000
+vertex 227 327.602256338340 371.135893227793 0.000000000000
+vertex 228 327.602256338340 371.135893227793 8.000000000000
+vertex 229 322.958421504244 373.002661299523 11.000000000000
+vertex 230 315.654113207779 377.836970171780 6.000000000000
+vertex 231 315.654113207779 377.836970171780 0.000000000000
+vertex 232 289.592157339987 383.295523935127 6.000000000000
+vertex 233 289.592157339987 383.295523935127 0.000000000000
+vertex 234 295.056212718131 381.065297250170 0.000000000000
+vertex 235 295.056212718131 381.065297250170 6.000000000000
+vertex 236 292.324185029059 382.180410592648 7.500000000000
+vertex 237 279.625053326768 391.174462417149 8.000000000000
+vertex 238 279.625053326768 391.174462417149 0.000000000000
+vertex 239 290.977509717665 386.689637260436 0.000000000000
+vertex 240 290.977509717665 386.689637260436 8.000000000000
+vertex 241 285.301281522216 388.932049838793 11.000000000000
+vertex 242 290.977509717665 386.689637260436 6.000000000000
+vertex 243 251.371073465769 342.664398855546 9.000000000000
+vertex 244 251.371073465769 342.664398855546 0.000000000000
+vertex 245 253.597916205214 348.235859293688 0.000000000000
+vertex 246 253.597916205214 348.235859293688 9.000000000000
+vertex 247 248.026455767072 350.462702033133 0.000000000000
+vertex 248 248.026455767072 350.462702033133 9.000000000000
+vertex 249 256.133905831817 354.637822984280 9.000000000000
+vertex 250 256.133905831817 354.637822984280 0.000000000000
+vertex 251 258.360748571261 360.209283422422 0.000000000000
+vertex 252 258.360748571261 360.209283422422 9.000000000000
+vertex 253 260.587591310706 365.780743860564 0.000000000000
+vertex 254 260.587591310706 365.780743860564 9.000000000000
+vertex 255 255.016130872564 368.007586600009 0.000000000000
+vertex 256 255.016130872564 368.007586600009 9.000000000000
+vertex 257 319.323520363763 342.187218726860 9.000000000000
+vertex 258 319.323520363763 342.187218726860 0.000000000000
+vertex 259 317.096677624318 336.615758288718 0.000000000000
+vertex 260 317.096677624318 336.615758288718 9.000000000000
+vertex 261 312.333845258271 324.642334159984 9.000000000000
+vertex 262 312.333845258271 324.642334159984 0.000000000000
+vertex 263 310.107002518826 319.070873721842 0.000000000000
+vertex 264 310.107002518826 319.070873721842 9.000000000000
+vertex 265 267.385095639036 355.368664775973 9.000000000000
+vertex 266 265.158252899591 349.797204337831 9.000000000000
+vertex 267 270.729713337733 347.570361598386 9.000000000000
+vertex 268 272.956556077178 353.141822036528 9.000000000000
+vertex 269 270.729713337733 347.570361598386 0.000000000000
+vertex 270 272.956556077178 353.141822036528 0.000000000000
+vertex 271 284.967353336003 367.601261720616 3.400000000000
+vertex 272 282.613896612446 361.703487441251 3.400000000000
+vertex 273 283.264044958201 361.444051266998 3.400000000000
+vertex 274 285.617501681759 367.341825546363 3.400000000000
+vertex 275 283.264044958201 361.444051266998 4.399999999998
+vertex 276 285.617501681759 367.341825546363 4.400000000000
+vertex 277 283.264044958199 361.444051266999 6.400000000000
+vertex 278 283.264044958199 361.444051266999 6.000000000000
+vertex 279 285.617501681759 367.341825546363 6.000000000000
+vertex 280 285.617501681759 367.341825546363 6.400000000000
+vertex 281 283.264044958199 361.444051266999 7.399999999999
+vertex 282 285.617501681759 367.341825546363 7.400000000000
+vertex 283 282.613896612444 361.703487441250 6.400000000000
+vertex 284 284.967353336003 367.601261720615 6.400000000000
+
+shader 10001 181 182 183 184
+shader 10002 182 185 186 183
+shader 10003 187 188 189 190 191
+shader 10004 191 190 192 193
+shader 10005 194 195 196 197
+shader 10006 195 198 199 196
+shader 10007 200 201 202 203
+shader 10008 204 200 203 205
+shader 10009 206 207 208 209
+shader 10010 209 208 210 211
+shader 10011 211 210 212 213 214
+shader 10012 215 216 207 206
+shader 10013 215 217 209 206
+shader 10014 218 217 211 214
+shader 10015 219 220 221 222
+shader 10016 222 221 223 224
+shader 10017 225 226 224 223 227 228 229
+shader 10018 230 231 220 219
+shader 10019 232 233 234 235 236
+shader 10020 237 238 239 240 241
+shader 10021 242 239 233 232
+shader 10022 243 244 245 246
+shader 10023 246 245 247 248
+shader 10024 249 250 251 252
+shader 10025 252 251 253 254
+shader 10026 254 253 255 256
+shader 10027 257 258 259 260
+shader 10028 261 262 263 264
+shader 10029 265 266 267 268
+shader 10030 267 269 270 268
+shader 10031 271 272 273 274
+shader 10032 275 273 274 276
+shader 10033 277 278 279 280
+shader 10034 281 277 280 282
+shader 10035 280 277 283 284
+_EXTENSION_ExternalShadingGeometry_END_
+
+
+_EXTENSION_GeoPositionGeometry_START_
+_EXTENSION_GeoPositionGeometry_END_
+
+
+_EXTENSION_DaylightSensorPoints_START_
+_EXTENSION_DaylightSensorPoints_END_
+
+
+_EXTENSION_AdditionalDaylightGeometry_START_
+_EXTENSION_AdditionalDaylightGeometry_END_
+
+
+_EXTENSION_VAMPARAMS_START_
+_EXTENSION_VAMPARAMS_END_
+
+
+
