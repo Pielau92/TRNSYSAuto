@@ -44,7 +44,7 @@ EQSOLVER 0				! EQUATION SOLVER statement
 *ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabs.b17" 32
 *ASSIGN "Bruckverdichtet_3Zonen31cc_PHLeichtstatTabs.b17" 32
 *ASSIGN "Bruckverdichtet_3Zonen34cc_PHbetstatTabsBung.b17" 32   !Pierre, hier werden die b17, bzw. b18 files eingelesen
-ASSIGN "Bruckverdichtet_3Zonen34cc_BestbetstatTabsBung.b17" 32 !Pierre Var2
+*ASSIGN "Bruckverdichtet_3Zonen34cc_BestbetstatTabsBung.b17" 32 !Pierre Var2
 *ASSIGN "Bruckverdichtet_3Zonen31cc_NEHbetstatTabsBung.b17" 32
 *ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabsBung.b17" 32
 
@@ -53,12 +53,15 @@ ASSIGN "Bruckverdichtet_3Zonen34cc_BestbetstatTabsBung.b17" 32 !Pierre Var2
 *ASSIGN "AT-Vienna-Schwechat-Air-110360.tm2" 30
 *ASSIGN "Wien-Hohe_Warte-wien2015ergaenzt-hour.tm2" 30 
 *ASSIGN "AT-Wien-Hohe-Warte-110350.tm2" 30 !Pierre, hier werden die Wetterdatenfiles eingelesen, bevorzugt tm2
-ASSIGN "Mannheim_DWD_warm-hour.tm2" 30 !Pierre Var2
+*ASSIGN "Mannheim_DWD_warm-hour.tm2" 30 !Pierre Var2
 *ASSIGN "WienBoku-WienBoku2013-hour.tm2" 30
 *ASSIGN "WienBoku2015V2-hour.tm2" 30
 *ASSIGN "WienBoku2015-hour.tmy3" 30
 *ASSIGN "WienBoku2015bis2019-hourohneSchalt.tmy3" 30   
 *ASSIGN "WienBoku2017-hour.tmy3" 30
+*ASSIGN "b17" 32
+*ASSIGN "tm2" 30
+
 ASSIGN "Windetc20190804.txt" 134   !unit 131
 ASSIGN "SzenarioAneu.txt" 135		!unit 132
 

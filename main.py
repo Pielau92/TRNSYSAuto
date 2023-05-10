@@ -44,13 +44,25 @@ for sim in sim_list:
         os.path.join(path_base, 'templateDck.dck'),
         os.path.join(path_base, 'Lastprofil.txt'),
         os.path.join(path_base, 'b18', b18_series[sim]),
-        os.path.join(path_base, 'Wetterdaten', weather_series[sim])]
+        os.path.join(path_base, 'Wetterdaten', weather_series[sim]),
+        os.path.join(path_base, 'SzenarioAneu.txt'),
+        os.path.join(path_base, 'Qelww_CHR55025.txt'),
+        os.path.join(path_base, 'Windetc20190804.txt'),
+        os.path.join(path_base, 'StrahlungBruck.txt'),
+        os.path.join(path_base, 'Output.xlsx'),
+        os.path.join(path_base, 'Simulationsvarianten.xlsx')]
 
     dst_file = [
         os.path.join(path_sim, 'templateDck.dck'),
         os.path.join(path_sim, 'Lastprofil.txt'),
         os.path.join(path_sim, b18_series[sim]),
-        os.path.join(path_sim, weather_series[sim])]
+        os.path.join(path_sim, weather_series[sim]),
+        os.path.join(path_sim, 'SzenarioAneu.txt'),
+        os.path.join(path_sim, 'Qelww_CHR55025.txt'),
+        os.path.join(path_sim, 'Windetc20190804.txt'),
+        os.path.join(path_sim, 'StrahlungBruck.txt'),
+        os.path.join(path_sim, 'Output_' + sim + '.xlsx'),
+        os.path.join(path_sim, 'Simulationsvarianten.xlsx')]
 
     # endregion
 
@@ -89,12 +101,6 @@ for sim in sim_list:
 
     # perform simulation
     functions.start_sim(path_exe, os.path.join(path_sim, dst_file[0]))
-
-# text = re.sub(r'(*\w+)\s*=\s*([\d.]+)',
-
-
-
-
 
 # Output-Files (.txt) in eine Excel-Datei (vorbereitetes Auswertungs-Excel) laden
 # ?
