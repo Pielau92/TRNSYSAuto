@@ -33,6 +33,8 @@ sim_list, weather_series, df_dck, b18_series = functions.import_input_excel(path
 
 for sim in sim_list:
 
+    shutil.copy(os.path.join(path_base, 'Simulationsvarianten.xlsx'), path_sim_series)  # copy Input Excel file
+
     # region create simulation folders
 
     path_sim = os.path.join(path_sim_series, sim)   # path of simulation folder
@@ -48,9 +50,7 @@ for sim in sim_list:
         os.path.join(path_base, 'SzenarioAneu.txt'),
         os.path.join(path_base, 'Qelww_CHR55025.txt'),
         os.path.join(path_base, 'Windetc20190804.txt'),
-        os.path.join(path_base, 'StrahlungBruck.txt'),
-        os.path.join(path_base, 'Output.xlsx'),
-        os.path.join(path_base, 'Simulationsvarianten.xlsx')]
+        os.path.join(path_base, 'StrahlungBruck.txt')]
 
     dst_file = [
         os.path.join(path_sim, 'templateDck.dck'),
@@ -60,9 +60,7 @@ for sim in sim_list:
         os.path.join(path_sim, 'SzenarioAneu.txt'),
         os.path.join(path_sim, 'Qelww_CHR55025.txt'),
         os.path.join(path_sim, 'Windetc20190804.txt'),
-        os.path.join(path_sim, 'StrahlungBruck.txt'),
-        os.path.join(path_sim, 'Output_' + sim + '.xlsx'),
-        os.path.join(path_sim, 'Simulationsvarianten.xlsx')]
+        os.path.join(path_sim, 'StrahlungBruck.txt')]
 
     # endregion
 
@@ -102,5 +100,10 @@ for sim in sim_list:
     # perform simulation
     functions.start_sim(path_exe, os.path.join(path_sim, dst_file[0]))
 
-# Output-Files (.txt) in eine Excel-Datei (vorbereitetes Auswertungs-Excel) laden
-# ?
+    # delete redundant files
+    # os.remove(os.path.join(path_sim, 'templateDck.lst'))
+    # os.remove(os.path.join(path_sim, 'out11.txt'))
+    # os.remove(os.path.join(path_sim, 'out8.txt'))
+    # os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
+
+
