@@ -1,7 +1,8 @@
 import pandas as pd
 import re
-from pywinauto import application, keyboard, Desktop
-import pywinauto
+from pywinauto import application   #, keyboard, Desktop
+#   import pywinauto
+
 
 def import_input_excel(path):
     """
@@ -16,39 +17,43 @@ def import_input_excel(path):
     sim_list : list of strings
         List of simulation names
     weather_series : pandas.Series
-        Series with the weather data file name for each simulation
-    parameters_df : pandas.DataFrame
-        DataFrame with parameters and their respective value, which are used to overwrite the text files
+        Series with the weather data file name, for each simulation
+    df_dck : pandas.DataFrame
+        Dataframe with the simulation parameters to be replaced in the .dck File, for each simulation
+    b18_series : pandas.Series
+        Series with the .b18 data file name, for each simulation
 
     """
 
     excel_data = pd.ExcelFile(path)  # read input Excel file
 
     df = excel_data.parse('Simulationsvarianten', index_col=0)  # Excel data as DataFrame
-    # df = df.transpose()
-    df_weather = df[df.index == 'Wetterdaten'].transpose()
-    df_weather.columns = df_weather.iloc[0]
-    df_weather = df_weather[1:]
 
+    # transpose data
+    df_weather = df[df.index == 'Wetterdaten'].transpose()
+    b18_series = df[df.index == 'b18'].transpose()
     df_dck = df[df.index == 'dck'].transpose()
+
+    # convert to series
+    weather_series = df_weather[1:].squeeze()
+    b18_series = b18_series[1:].squeeze()
+
+    # use first row as header
     df_dck.columns = df_dck.iloc[0]
     df_dck = df_dck[1:]
 
-    df_b18 = df[df.index == 'b18'].transpose()
-    df_b18.columns = df_b18.iloc[0]
-    df_b18 = df_b18[1:]
+    # list of simulation variants
+    sim_list = df.columns[1:].astype(str).tolist()
 
-    sim_list = df_weather.index.astype(str).tolist()
-    weather_series = df_weather.Wetterdaten
-
-    return sim_list, weather_series, df_dck, df_b18
+    return sim_list, weather_series, df_dck, b18_series
 
 
-def find_and_replace_param(path_file, parameters):
+def find_and_replace_param(path_file, pattern, parameters):
     """
 
     Parameters
     ----------
+    pattern :
     path_file :
     parameters :
 
@@ -77,7 +82,7 @@ def find_and_replace_param(path_file, parameters):
         text = file.read()  # read file
 
         # find, then replace parameter values
-        text = re.sub(r'(@\w+)\s*=\s*([\d.]+)', lambda match: replace_param(match, parameters), text)
+        text = re.sub(pattern=pattern, repl=lambda match: replace_param(match, parameters), string=text)
 
     with open(path_file, 'w') as file:
         file.write(text)  # overwrite file
