@@ -30,7 +30,7 @@ TOLERANCES 0.001 0.001			! Integration	 Convergence
 LIMITS 30 30000 30				! Max iterations	Max warnings	Trace limit
 DFQ 1					! TRNSYS numerical integration solver method
 WIDTH 72				! TRNSYS output file width, number of characters
-LIST 					! NOLIST statement
+NOLIST 					! NOLIST statement
 					! MAP statement
 SOLVER 0 1 1				! Solver statement	Minimum relaxation factor	Maximum relaxation factor
 NAN_CHECK 0				! Nan DEBUG statement
@@ -41,7 +41,8 @@ EQSOLVER 0				! EQUATION SOLVER statement
 
 *ASSIGN "Bruckverdichtet_3Zonen31cc_PHbetstatTabs.b17" 32
 *ASSIGN "Bruckverdichtet_3Zonen31cc_NEHbetstatTabs.b17" 32
-*ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabs.b17" 32
+*ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1.b17" 32
+*ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1_westbandG1.b17" 32
 *ASSIGN "Bruckverdichtet_3Zonen31cc_PHLeichtstatTabs.b17" 32
 *ASSIGN "Bruckverdichtet_3Zonen34cc_PHbetstatTabsBung.b17" 32   !Pierre, hier werden die b17, bzw. b18 files eingelesen
 *ASSIGN "Bruckverdichtet_3Zonen34cc_BestbetstatTabsBung.b17" 32 !Pierre Var2
@@ -54,6 +55,10 @@ EQSOLVER 0				! EQUATION SOLVER statement
 *ASSIGN "Wien-Hohe_Warte-wien2015ergaenzt-hour.tm2" 30 
 *ASSIGN "AT-Wien-Hohe-Warte-110350.tm2" 30 !Pierre, hier werden die Wetterdatenfiles eingelesen, bevorzugt tm2
 *ASSIGN "Mannheim_DWD_warm-hour.tm2" 30 !Pierre Var2
+*ASSIGN "TRY2045_Potsdam_Stadtzentrum_523938130651_Somm.tm2" 30
+*ASSIGN "TRY2045_Mannheim_Stadtzentrum_494902084637_Somm.tm2" 30
+*ASSIGN "Mannheim2-hour.tm2" 30
+*ASSIGN "Potsdam-hour.tm2" 30
 *ASSIGN "WienBoku-WienBoku2013-hour.tm2" 30
 *ASSIGN "WienBoku2015V2-hour.tm2" 30
 *ASSIGN "WienBoku2015-hour.tmy3" 30
@@ -67,36 +72,101 @@ ASSIGN "SzenarioAneu.txt" 135		!unit 132
 
 assign "Qelww_CHR55025.txt" 62   !Lasten und Elektro neu
 
-Equations 3
 
-@fen1=0   !Anzahl öffenbar Fenster Zone 1, wenn vorhanden !Pierre Variante mit 3
+Equations 9  !Varianten Arbeitshilfen, Beleuchtung, Personen
+@Persanz1 = 2 
+Persanz2 = 0 
+@Persanz3 = 2 
+@Companz1=15 !A0  5 !A2  W/m²
+@Companz2=0   !gang
+@Companz3=15 !A0  5 !A2  W/m²
+@TQ1 = 0.03	!gut  
+@TQ3 = 0.03 !gut
+@LichtLeistung = 8.29	!Licht0  10 !Licht1 [W/m²]
+
+
+Equations 3  !Varianten Lüftung L Nachtlüftung
+
+@fen1=0.461538461538462    !0.461538461538462 gekippt oder 3 ganz geöffnet
 fen2=0   !Anzahl öffenbar Fenster Zone 2, wenn vorhanden
-@fen3=0   !Anzahl öffenbar Fenster Zone 3, wenn vorhanden !Pierre Variante mit 3
+@fen3=0.461538461538462
+
+Equations 5 !Luftwechsel, Infiltration, Wirkungsgrad
+
+@fugenLuft = 0.14 !Simulationsrandbedingungen
+@Vent1var=1.24 ! in Anlehnung an neues pdf am 9.5. von Lukas
+@Vent2var=0. 
+@Vent3var=1.24 
+
+waermerueckgimpuls=0  !0.75  !gilt auch für ohne Impuls
 
 
-equations 68
+Equations 8  !Varianten Sonnenschutz
+schattschaltaussen=1
+@schattzu=0.75   !S0  0 !S1 0 !S4
+Schattschaltinnen=1   
+@Schatti=0  !S0  0,5 !S1 Achtung, ist Transmission 0   !S4
+Schatti1= Schatti*schattschaltinnen 
+Schatti2= Schatti*schattschaltinnen 
+Schatti3= Schatti*schattschaltinnen 
+@strahlungsgrenze = 200  !R0
+
+
+equations 1  !Wärmeschutz, wenn nur mittlere Einheit, dann egal, da keine erdberührten Bauteile
+terd1 = 10.4+[19,2]*(15.4-10.4)  ! Bestand: 9.9+[19,2]*(20.7-9.9) OIB:6.1+[19,2]*(19.6-6.1)  NEH:  9.6+[19,2]*(16.3-9.6) PH: 10.4+[19,2]*(15.4-10.4)  !ta+(heizperiode1*21+26*(1-heizperiode1)-ta)/2 !9.5+[19,2]*15.1  !EG, Temperaturfaktor ca. 0.5
+
+equations 17 !Heizen Kühlen befeuchten entfeuchten
+@qheizmax=50
+@qkuehlmax=40
+qbtamax=qheizmax*anutzges  !wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
+qbtamaxs=qkuehlmax*anutzges  !wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
+
+@theizsollminideal=21  !20
+@theizsollmaxideal=25  !25
+@tkuehlsollminideal=50  !25
+@tkuehlsollmaxideal=50   !23
+@humsoll = 0 !0.012*(1-BTAmodellein)*0+0*BTAmodellein  !BBSR
+@relmin = 0  !40*(1-BTAmodellein)*0+0*BTAmodellein !BBSR
+@abshumgrenzo = 0.1  !0.009	! [g/kg] Grenze fur Entfeuchtung Lüftung, achtung dazu muss man dann noch abszu ändern
+@abshumgrenzu = 0.0	! [g/kg] Grenze fur Befeuchtung
+@tzukuehl = 50  !lt(tzuquellmin,20)*20+(1-lt(tzuquellmin,20))*tzuquellmin  Ausschalten mit hohen Temperaturen
+@tzuheiz = 0  !wenn kein Nachheizen, auf 0 setzen
+
+@absmax = 0.012  !Grenze für ideale Entfeuchtung Raum
+
+@BTAmodellein = 0 !BTA ein-1 und ausschalten-0
+@FlagTraumsoll=1  !0 - wenn fixe Temperatur, 1 wenn nach Kat I. Achtung auf Klimadaten
+
+equations 55
+tcomfneutr_MannInnSom=[3,78]   !neutrale Temperatur Mannheim Innenstadt Sommer min Temp 25°C, sonst Kat I
+tcomfneutr_PotsInnSom=[3,79]   !neutrale Temperatur Potsdam Innenstadt Sommer
+tcomfneutr_MannVorSom=[3,80]   !neutrale Temperatur Mannheim Vorort Sommer
+tcomfneutr=eql(FlagTraumsoll,0)*tkuehlsollminideal+eql(FlagTraumsoll,1)*tcomfneutr_MannInnSom+eql(FlagTraumsoll,2)*tcomfneutr_PotsInnSom+eql(FlagTraumsoll,3)*tcomfneutr_MannVorSom
+*tcomfneutr=tcomfneutr_MannInnSom
+tkuehlsollminidealcomf=tcomfneutr
+tkuehlsollmaxidealcomf=tcomfneutr
 
 impuls=0   !0-normale Simulation, 1-Impuls
-BTAmodellein = 0 !BTA ein-1 und ausschalten-0
-Windfreigabe = 1 ! 1-freigegeben
+
+Windfreigabe = 0 ! 1-freigegeben
 *Flexfreigabe = Flexibilitaet
 *WindstromvonAnlagen = gt(ueberschuss2050,0)*Windfreigabe !gt(WindPV,(4.53*0.4)) !4530 kW ist Nennleistung; 40 % Schwelle
 Windleistungmaxfreigabe=19.0994152*0.4  !
 !heizidealfrei=heiz4wo
 !kuehlidealfrei=kuehl4wo
-heizidealfrei=gt(bilanz2050,0)
-kuehlidealfrei=gt(bilanz2050,0)
-wwidealfrei=wwwo
-nutzidealfrei=nutz24h
+heizidealfrei=1 !gt(bilanz2050,0)
+kuehlidealfrei=1 !gt(bilanz2050,0)
+wwidealfrei=1 !wwwo
+nutzidealfrei=1 ! nutz24h
 
 WindstromvonAnlagen = gt(wind2050,Windleistungmaxfreigabe)*Windfreigabe  !Ausgangsvariante 2050 Streicher 19.0994152 GW, APG Brainpool 34 GW sind installiert 
 Windnutzbar = WindstromvonAnlagen * (WindPV-(4.53*0.3)) * Windfreigabe*0
-
-B2Grid_frei = 1  !dsm Signal
+*waermerueckgimpuls=0.75  !gilt auch für ohne
+B2Grid_frei = 0  !dsm Signal
 WBTA = 1 !BTA_Schedule !Zeitsignal für Freischaltung (vor allem Büros etc.)
 
-waermerueckgimpuls=0.75  !gilt auch für ohne
-terd1 = 10.4+[19,2]*(15.4-10.4)  ! Bestand: 9.9+[19,2]*(20.7-9.9) OIB:6.1+[19,2]*(19.6-6.1)  NEH:  9.6+[19,2]*(16.3-9.6) PH: 10.4+[19,2]*(15.4-10.4)  !ta+(heizperiode1*21+26*(1-heizperiode1)-ta)/2 !9.5+[19,2]*15.1  !EG, Temperaturfaktor ca. 0.5
+*
+*terd1 = 10.4+[19,2]*(15.4-10.4)  ! Bestand: 9.9+[19,2]*(20.7-9.9) OIB:6.1+[19,2]*(19.6-6.1)  NEH:  9.6+[19,2]*(16.3-9.6) PH: 10.4+[19,2]*(15.4-10.4)  !ta+(heizperiode1*21+26*(1-heizperiode1)-ta)/2 !9.5+[19,2]*15.1  !EG, Temperaturfaktor ca. 0.5
 qpvmm=igm*0.3125*0   !Siehe Annahmen, Ansatz maximierend, W/m² EBF: 4 Geschosse: 0.3125, 2 Geschosse 0.625
 
 kuehlperiode1=(gt(time,5000)*lt(time,10000))*impuls+(1-impuls)*(lt(time,6552)*gt(time,2880)+lt(time,6552+8760)*gt(time,2880+8760)+lt(time,6552+8760*2)*gt(time,2880+8760*2)+lt(time,6552+8760*3)*gt(time,2880+8760*3))
@@ -107,24 +177,24 @@ qbtamaxs1=10+10*(gt(time,5700)+gt(time,6200)+gt(time,6300)+gt(time,6900)+gt(time
 qbtamax1=qbtamaxw1*heizperiode1-qbtamaxs1*kuehlperiode1
 qbtamax2=qbtamax1 !heizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1
 qbtamax3=qbtamax1 !heizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1
-qbtamax=50*anutzges  !wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
-qbtamaxs=40*anutzges  !wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
+*qbtamax=50*anutzges  !wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
+*qbtamaxs=40*anutzges  !wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
 tbtahysges=0.1
-theizsollminideal=25  !20
-theizsollmaxideal=25  !25
-tkuehlsollminideal=23  !25
-tkuehlsollmaxideal=23   !23
-humsoll = 0.012*(1-BTAmodellein)*0+0*BTAmodellein
-relmin = 40*(1-BTAmodellein)*0+0*BTAmodellein
-abshumgrenzo = 0.1  !0.009	! [g/kg] Grenze fur Entfeuchtung Lüftung, achtung dazu muss man dann noch abszu ändern
-abshumgrenzu = 0.0	! [g/kg] Grenze fur Befeuchtung
-tzukuehl = 50  !lt(tzuquellmin,20)*20+(1-lt(tzuquellmin,20))*tzuquellmin  Ausschalten mit hohen Temperaturen
-tzuheiz = 0  !wenn kein Nachheizen, auf 0 setzen
+*theizsollminideal=21  !20
+*theizsollmaxideal=25  !25
+*tkuehlsollminideal=50  !25
+*tkuehlsollmaxideal=50   !23
+*humsoll = 0 !0.012*(1-BTAmodellein)*0+0*BTAmodellein  !BBSR
+*relmin = 0  !40*(1-BTAmodellein)*0+0*BTAmodellein !BBSR
+*abshumgrenzo = 0.1  !0.009	! [g/kg] Grenze fur Entfeuchtung Lüftung, achtung dazu muss man dann noch abszu ändern
+*abshumgrenzu = 0.0	! [g/kg] Grenze fur Befeuchtung
+*tzukuehl = 50  !lt(tzuquellmin,20)*20+(1-lt(tzuquellmin,20))*tzuquellmin  Ausschalten mit hohen Temperaturen
+*tzuheiz = 0  !wenn kein Nachheizen, auf 0 setzen
 
 theizsollmin=theizsollminideal-tbtahysges/2
 theizsollmax=theizsollmaxideal-tbtahysges/2
-tkuehlsollmin=tkuehlsollminideal-tbtahysges/2
-tkuehlsollmax=tkuehlsollmaxideal-tbtahysges/2
+tkuehlsollmin=tkuehlsollminidealcomf-tbtahysges/2
+tkuehlsollmax=tkuehlsollmaxidealcomf-tbtahysges/2
 queber1w=gt(time,100)*lt(time,301)+gt(time,700)*lt(time,901)+gt(time,1300)*lt(time,1501)+gt(time,1900)*lt(time,2101)+gt(time,2500)*lt(time,2701)+gt(time,3100)*lt(time,3301)+gt(time,3700)*lt(time,3901)+gt(time,4300)*lt(time,4501)+gt(time,4900)*lt(time,5001)  
 queber1s=gt(time,5100)*lt(time,5301)+gt(time,5700)*lt(time,5901)+gt(time,6300)*lt(time,6501)+gt(time,6900)*lt(time,7101)+gt(time,7500)*lt(time,7701)+gt(time,8100)*lt(time,8301)+gt(time,8700)*lt(time,8901)+gt(time,9300)*lt(time,9501)+gt(time,9900)*lt(time,10101)  
 queber1=queber1w*heizperiode1+queber1s*kuehlperiode1
@@ -137,11 +207,11 @@ kuehlleistmaxideal=10+10*zeitmax
 
 *sonstige Var
 fenluftsomm=1
-Schattschaltaussen=0.8
-Schattschaltinnen=0
-Vent1var=0.5 
-Vent2var=0. 
-Vent3var=0.5 
+*Schattschaltaussen=0.8
+*Schattschaltinnen=0
+*Vent1var=0.5 
+*Vent2var=0. 
+*Vent3var=0.5 
 Qelvar=QelHH*0.5 !(Qel1*anutz1+Qel2*anutz2+Qel3*anutz3)/anutzges  !([3,44]+[3,45]+[3,46]+[3,47]+[3,48]+(licht3*anutz3)/1000+[3,50]+[3,51]+[3,52])*1000/anutz3 !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
 Qwwnutzvar=QWW_HH*0.5 !12.75/0.8*1000/8760 ![3,40]*1000/anutz3 !WWprofil in W/m²
 QelAbwvar=Qel*0.8 !QelabwHH !Abwärme von Haushaltsgeräten in W/m²
@@ -157,6 +227,121 @@ etavertww=0.7
 
 
 MBTAspezges=16  !kg/h/m² 22 bei fußbodenheizung, 16 bei BTA
+qv1=[56,19]/anutz1/3.6
+
+*------------------------------------------------------------------------------
+
+
+* EQUATIONS "Schedule"
+* 
+EQUATIONS 11
+wluft = [3,76]  ![56,50] Profil geändert, 6 bis 18 Uhr durchgehend
+use = [3,77] ![56,45]  !Büronutzung, 0.5 am Anfang und Ende
+lichtuse = use
+wohnwoche = [56,46]
+wrestaurante = [56,56]
+wveranstaltung = [56,57]
+wseminar = [56,58]
+wkueche = [56,60]
+wnatluft = [56,47]
+BTA_Schedule=[56,59]
+wschlaf=[56,61]
+*$UNIT_NAME Schedule
+*$LAYER Main
+*$POSITION 199 194
+*------------------------------------------------------------------------------
+
+
+* EQUATIONS "Inf"
+* 
+EQUATIONS 18
+*fugenLuft = 0.042
+nluft1 = (100*(abs(tzone1-ta))**0.5*(fen1*1.23*1.9*1.9**0.5))/vol1  !nach Lukas. Kippstellung bei fen1 berücksichtigen 
+nluft2 = (100*(abs(tzone2-ta))**0.5*(fen2*1.23*1.9*1.9**0.5))/vol1
+nluft3 = (100*(abs(tzone3-ta))**0.5*(fen3*1.23*1.9*1.9**0.5))/vol3
+*nluft1 = (0.7*100*(abs(tzone1-ta))**0.5*(fen1*0.8*1.3*1.3**0.5))/vol1  !10cm Rahmen umseitig abgezogen
+*nluft2 = (0.7*100*(abs(tzone2-ta))**0.5*(fen2*0.8*1.3*1.3**0.5))/vol1
+*nluft3 = (0.7*100*(abs(tzone3-ta))**0.5*(fen3*0.8*1.3*1.3**0.5))/vol3
+fugenLuftBestand = 0.042
+nluftstand = 0
+nluftbuero = 0
+tcontr1 = [20,1]
+tcontr2 = [21,1]
+tcontr3 = [22,1]
+Inf1 = fugenLuft + (nluft1*somm*tcontr1*wnatluft)+(nluft1*(1-somm)*tcontr1*wnatluft)*fenluftsomm ! 1/h hier noch an regelung von Lukas anpassen: Entscheidung immer von Stand 18 Uhr abhängig, Taussen >=26°C
+Inf2 = fugenLuft + (nluft2*somm*tcontr2*wnatluft)+(nluft2*(1-somm)*tcontr2*wnatluft)*fenluftsomm ! 1/h
+Inf3 = fugenLuft + (nluft3*somm*tcontr3*wnatluft)+(nluft3*(1-somm)*tcontr3*wnatluft)*fenluftsomm ! 1/h
+winterUnterGrenze = -2
+sommerUnterGrenze = -2
+querhyst = winterUnterGrenze*(1-somm)+sommerUnterGrenze*somm
+winterOberGrenze = 25
+sommerOberGrenze = 24
+querob = winterOberGrenze*(1-somm)+sommerOberGrenze*somm  !49
+
+*------------------------------------------------------------------------------
+
+* EQUATIONS "IW"
+* 
+EQUATIONS 34
+QelHH=[334,1]*1000/anutzges
+QelflexHH=[334,2]*1000/anutzges
+QelabwteilHH=[334,3]*1000/anutzges
+QelabwHH=[334,4]*1000/anutzges
+QWW_HH=[334,5]*4.19/3.6*(38-10)/anutzges
+PersHH=[334,6]
+
+redukpers = 1
+*Persanz1 = 2 !Annahme, dass Personen gleich auf die beiden Zonen des Haushalts aufgeteilt werden
+*Persanz2 = 0 
+*Persanz3 = 2 
+Pers1 = 0*impuls+(1-impuls)*use*Persanz1 ![3,11]*Persanz1
+Pers2 = 0*impuls+(1-impuls)*use*Persanz2
+Pers3 = 0*impuls+(1-impuls)*use*Persanz3 ![3,53]*Persanz3
+*Pers1 = 0*impuls+(1-impuls)*PersHH/2 ![3,11]*Persanz1
+*Pers2 = 0 ![3,25]*Persanz2
+*Pers3 = 0*impuls+(1-impuls)*PersHH/2 ![3,53]*Persanz3
+
+*Companz1=15 !A0  5 !A2
+*Companz2=0
+*Companz3=15 !A0  5 !A2
+
+Comp1 = companz1*use !A0  5*use !A2 (2.78-0.5*qdampf*ilf1/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf1/3.6) ! 2.78-0.5*qdampf*ilf1/3.6 !qelabw1	!Wichtig: Bezieht sich auf 1W/m²!!!		, 2,78 bleiben netto übrig, halbe Feuchte sind Personen
+Comp2 = companz2*0 !(2.78-0.5*qdampf*ilf2/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf2/3.6) !2.78-0.5*qdampf*ilf2/3.6 !qelabw2			
+Comp3 = companz3*use !A0  5*use !A2  (2.78-0.5*qdampf*ilf3/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf3/3.6) !2.78-0.5*qdampf*ilf3/3.6 !qelabw3
+
+*Comp1 = (2.78-0.5*qdampf*ilf1/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf1/3.6) ! 2.78-0.5*qdampf*ilf1/3.6 !qelabw1	!Wichtig: Bezieht sich auf 1W/m²!!!		, 2,78 bleiben netto übrig, halbe Feuchte sind Personen
+*Comp2 = (2.78-0.5*qdampf*ilf2/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf2/3.6) !2.78-0.5*qdampf*ilf2/3.6 !qelabw2			
+*Comp3 = (2.78-0.5*qdampf*ilf3/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf3/3.6) !2.78-0.5*qdampf*ilf3/3.6 !qelabw3
+
+*TQ1 = 0.03	!gut  !BBSR für unterschiedliche Fenstergrößen anpassen
+TQ2 = 0.06	!mittel
+*TQ3 = 0.03 !gut
+TQ4 = 0.01	!schlecht
+Iglobal1 = 100*TQ1*idh	! [Umrechnung von Watt in Lux]
+Iglobal2 = 100*TQ2*idh
+Iglobal3 = 100*TQ3*idh
+Iglobal4 = 100*TQ4*igh
+Iglobal42 = 100*TQ4*igh*(1-Schatth2)
+
+lichtcontr1 = lt(iglobal1,300) 
+lichtcontr2 = lt(iglobal2,300) 
+lichtcontr3 = lt(iglobal3,300)
+dimfakt = 1 	!nicht implementiert, siehe Post
+dimfaktInnen = 1
+*LichtLeistung = 5	!Licht0  10 !Licht1 [W/m²]
+LichtLeistungBestand = 20	!W/m²
+Licht1 = LichtLeistung*(lichtcontr1)*use*dimfakt	! [W/m²] Achtung, Sonnenschutz berücksichtigen bei hohen Helligkeitsanforderungen
+Licht2 = LichtLeistung*0.25*use*dimfakt
+Licht3 = LichtLeistung*(lichtcontr3)*use*dimfakt
+*Licht1 = Lichtbasis*(lichtcontr1)*pers1*(1-wschlaf)*dimfakt	! [W/m²] Achtung, Sonnenschutz berücksichtigen bei hohen Helligkeitsanforderungen
+*Licht2 = Lichtbasis*(lichtcontr2)*pers2*(1-wschlaf)*dimfakt
+*Licht3 = Lichtbasis*(lichtcontr3)*pers3*(1-wschlaf)*dimfakt
+Lichtbasis = 1 !2.5 !LichtLeistung*lichtuse
+ifeuchtm2 = 0! 0.002 !(0.05*gt(igh,5)+(1-gt(igh,5))*0.005*(lt(time,3624)+gt(time,7296)))/25  !Pflanzen, Wäsche ist noch extra zu berücksichtigen
+ilf1 = ifeuchtm2
+ilf2 = ifeuchtm2
+ilf3 = ifeuchtm2
+
 
 * EQUATIONS "heiz"
 * 
@@ -182,8 +367,8 @@ relmin3 = relmin
 
 * EQUATIONS "kuehl"
 * 
-EQUATIONS 22
-tkuehlges = (impuls*((tbtasoll)*(1-heizperiode1)+50*heizperiode1)+(1-impuls)*(tkuehlsollminideal*(1-heizperiode1)+heizperiode1*50))*(1-BTAmodellein)+BTAmodellein*50 !25-wkuehlvor*2*0
+EQUATIONS 21
+tkuehlges = (impuls*((tbtasoll)*(1-heizperiode1)+50*heizperiode1)+(1-impuls)*(tkuehlsollminidealcomf*(1-heizperiode1)+heizperiode1*50))*(1-BTAmodellein)+BTAmodellein*50 !25-wkuehlvor*2*0
 tkuehlgesfb = 24*(1-BTAmodellein)+BTAmodellein*50 !25-wkuehlvor*1
 
 Tkuehl1 = tkuehlges	! Solltemperaturen Kühlen [°C]	
@@ -202,7 +387,7 @@ kfakreduk = 0.85 !Faktor für Flächenreduktion etc. global
 kuehlmax1 = (-impuls*qbtamax1*(1-heizperiode1)+(1-impuls)*(1000*(1-GSC)+40.5*kuehlidealfrei*GSC))*anutz1 ! Anutz1*(mkuehlp*(TZone1-tkuehlvormit)+dkuehlp)*kfakreduk
 kuehlmax2 = (-impuls*qbtamax2*(1-heizperiode1)+(1-impuls)*(1000*(1-GSC)+40.5*kuehlidealfrei*GSC))*anutz2 ! Anutz2*(mkuehlp*(TZone2-tkuehlvormit)+dkuehlp)*kfakreduk
 kuehlmax3 = (-impuls*qbtamax3*(1-heizperiode1)+(1-impuls)*(1000*(1-GSC)+40.5*kuehlidealfrei*GSC))*anutz3 ! Anutz3*(mkuehlp*(TZone3-tkuehlvormit)+dkuehlp)*kfakreduk
-absmax = 0.012  !Grenze für ideale Entfeuchtung Raum
+*absmax = 0.012  !Grenze für ideale Entfeuchtung Raum
 absmax1 = absmax
 absmax2 = absmax
 absmax3 = absmax
@@ -669,26 +854,6 @@ qmaschabw = [3,3]*1000
 *$LAYER Main
 *$POSITION 199 794
 
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Schedule"
-* 
-EQUATIONS 11
-wluft = 1  ![56,50] Profil
-use = [56,45]
-lichtuse = use
-wohnwoche = [56,46]
-wrestaurante = [56,56]
-wveranstaltung = [56,57]
-wseminar = [56,58]
-wkueche = [56,60]
-wnatluft = [56,47]
-BTA_Schedule=[56,59]
-wschlaf=[56,61]
-*$UNIT_NAME Schedule
-*$LAYER Main
-*$POSITION 199 194
                                                                          
 *------------------------------------------------------------------------------
 
@@ -708,31 +873,6 @@ anutzges = Anutz1 + Anutz2 + Anutz3
 *$LAYER Main
 *$POSITION 712 487
 
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Inf"
-* 
-EQUATIONS 19
-fugenLuft = 0.042
-fugenLuftBestand = 0.042
-nluftstand = 0
-nluftbuero = 0
-nluft1 = (0.7*100*(abs(tzone1-ta))**0.5*(fen1*0.8*1.3*1.3**0.5))/vol1  !10cm Rahmen umseitig abgezogen
-nluft2 = (0.7*100*(abs(tzone2-ta))**0.5*(fen2*0.8*1.3*1.3**0.5))/vol1
-nluft3 = (0.7*100*(abs(tzone3-ta))**0.5*(fen3*0.8*1.3*1.3**0.5))/vol3
-tcontr1 = [20,1]
-tcontr2 = [21,1]
-tcontr3 = [22,1]
-Inf1 = fugenLuft + (nluft1*somm*tcontr1*wnatluft)+(nluft1*(1-somm)*tcontr1*wnatluft)*fenluftsomm ! 1/h 
-Inf2 = fugenLuft + (nluft2*somm*tcontr2*wnatluft)+(nluft2*(1-somm)*tcontr2*wnatluft)*fenluftsomm ! 1/h
-Inf3 = fugenLuft + (nluft3*somm*tcontr3*wnatluft)+(nluft3*(1-somm)*tcontr3*wnatluft)*fenluftsomm ! 1/h
-winterUnterGrenze = -2
-sommerUnterGrenze = -2
-querhyst = winterUnterGrenze*(1-somm)+sommerUnterGrenze*somm
-winterOberGrenze = 25
-sommerOberGrenze = 24
-querob = winterOberGrenze*(1-somm)+sommerOberGrenze*somm  !49
 *$UNIT_NAME Inf
 *$LAYER Main
 *$POSITION 596 1501
@@ -742,13 +882,13 @@ querob = winterOberGrenze*(1-somm)+sommerOberGrenze*somm  !49
 
 * EQUATIONS "Schatt"
 * 
-EQUATIONS 30
-schattzu = 0.8*schattschaltaussen !0.90
-strahlungsgrenze = 150
+EQUATIONS 25
+*schattzu = 0.8*schattschaltaussen !0.90
+*strahlungsgrenze = 150
 strahlungglobal = igh
 grenzschatt=30   !windgeschwindigkeit, bis zu welcher Sonnenschutz aussen zu bleiben kann
 windfass=wind*3.6*0.8*1.8  ! Windgeschwindigkeit in m/s (meist 10 m Höhe) umgerechnet auf km/h mal Reduktion durch Umgebungsstruktur/Laibung/Umrechnung auf tatsächliche Höhe + 80% für Böhen (nach Lahme)
-windauf=lt(windfass,grenzschatt)
+windauf=1 !lt(windfass,grenzschatt)
 tschattcontr1 = [40,1]
 tschattcontr2 = [41,1]
 tschattcontr3 = [42,1]
@@ -766,9 +906,11 @@ Schattw3 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igw, strahlungsgr
 Schattn3 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(ign, strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)
 Schatto3 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igo, strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)
 
-Schatti1 = 0.6*schattschaltinnen
-Schatti2 = 0.6*schattschaltinnen
-Schatti3 = 0.6*schattschaltinnen
+
+
+*Schatti1 = 0.6*schattschaltinnen
+*Schatti2 = 0.6*schattschaltinnen
+*Schatti3 = 0.6*schattschaltinnen
 strahlungZone1 = igh
 Iglobal4ohne = 100*TQ4*igh
 Iglobal4mit = 100*TQ4*igh*(1-0.8)
@@ -799,9 +941,9 @@ ventvolges1 =ventvol1 + ventvol2 + ventvol3
 ventab1 = wluft*lueftvol1
 ventab2 = wluft*lueftvol2
 ventab3 = wluft*lueftvol3
-VENT1 = Vent1var ! 0.5 ! ventvol1/Vol1	! [1/h] -> Input Building
-VENT2 = Vent2var !0. ! ventvol2/Vol2
-VENT3 = Vent3var !0.5 ! ventvol3/Vol3
+VENT1 = Vent1var*wluft ! 0.5 ! ventvol1/Vol1	! [1/h] -> Input Building
+VENT2 = Vent2var*wluft !0. ! ventvol2/Vol2
+VENT3 = Vent3var*wluft !0.5 ! ventvol3/Vol3
 tmittel1 = (TZone1+TZone2+TZone3)/3
 twtoutges1 = ventvol1*TZone1+ventvol2*TZone2+ventvol3*TZone3
 twtoutges2 = 0
@@ -1100,7 +1242,7 @@ clo3 = 1.2*lt(top3,20)+1*(1-lt(top3,20))*((gt(top3,25))*0.45+(-0.15*top3+4.2)*(1
 met1 = 1.2
 met2 = 1.2
 met3 = 1.2
-velstand = 0.1
+velstand = 0.05
 vel1 = velstand
 vel2 = velstand
 vel3 = velstand
@@ -1132,55 +1274,6 @@ Gain03 = default
 *$UNIT_NAME Interne Gewinne Scholz
 *$LAYER Main
 *$POSITION 349 511
-*------------------------------------------------------------------------------
-
-* EQUATIONS "IW"
-* 
-EQUATIONS 40
-QelHH=[334,1]*1000/anutzges
-QelflexHH=[334,2]*1000/anutzges
-QelabwteilHH=[334,3]*1000/anutzges
-QelabwHH=[334,4]*1000/anutzges
-QWW_HH=[334,5]*4.19/3.6*(38-10)/anutzges
-PersHH=[334,6]
-
-redukpers = 1
-Persanz1 = 2*redukpers*0 !Annahme, dass Personen gleich auf die beiden Zonen des Haushalts aufgeteilt werden
-Persanz2 = 2*redukpers*0 
-Persanz3 = 2*redukpers*0 
-Pers1 = 0*impuls+(1-impuls)*PersHH/2 ![3,11]*Persanz1
-Pers2 = 0 ![3,25]*Persanz2
-Pers3 = 0*impuls+(1-impuls)*PersHH/2 ![3,53]*Persanz3
-
-Comp1 = (2.78-0.5*qdampf*ilf1/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf1/3.6) ! 2.78-0.5*qdampf*ilf1/3.6 !qelabw1	!Wichtig: Bezieht sich auf 1W/m²!!!		, 2,78 bleiben netto übrig, halbe Feuchte sind Personen
-Comp2 = (2.78-0.5*qdampf*ilf2/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf2/3.6) !2.78-0.5*qdampf*ilf2/3.6 !qelabw2			
-Comp3 = (2.78-0.5*qdampf*ilf3/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf3/3.6) !2.78-0.5*qdampf*ilf3/3.6 !qelabw3
-
-TQ1 = 0.02	!gut
-TQ2 = 0.06	!mittel
-TQ3 = 0.04 !UG
-TQ4 = 0.01	!schlecht
-Iglobal1 = 100*TQ1*idh	! [Umrechnung von Watt in Lux]
-Iglobal2 = 100*TQ2*idh
-Iglobal3 = 100*TQ3*idh
-Iglobal4 = 100*TQ4*igh
-Iglobal42 = 100*TQ4*igh*(1-Schatth2)
-
-lichtcontr1 = lt(iglobal1,200) 
-lichtcontr2 = lt(iglobal2,200) 
-lichtcontr3 = lt(iglobal3,200)
-dimfakt = 1 	!nicht implementiert, siehe Post
-dimfaktInnen = 1
-LichtLeistung = 2.5	![W/m²]
-LichtLeistungBestand = 20	!W/m²
-Licht1 = Lichtbasis*(lichtcontr1)*pers1*(1-wschlaf)*dimfakt	! [W/m²] Achtung, Sonnenschutz berücksichtigen bei hohen Helligkeitsanforderungen
-Licht2 = Lichtbasis*(lichtcontr2)*pers2*(1-wschlaf)*dimfakt
-Licht3 = Lichtbasis*(lichtcontr3)*pers3*(1-wschlaf)*dimfakt
-Lichtbasis = 0 !2.5 !LichtLeistung*lichtuse
-ifeuchtm2 = 0.002 !(0.05*gt(igh,5)+(1-gt(igh,5))*0.005*(lt(time,3624)+gt(time,7296)))/25  !Pflanzen, Wäsche ist noch extra zu berücksichtigen
-ilf1 = ifeuchtm2
-ilf2 = ifeuchtm2
-ilf3 = ifeuchtm2
 *$UNIT_NAME IW
 *$LAYER Main
 *$POSITION 703 701
@@ -1660,10 +1753,10 @@ UNIT 3 TYPE 9	 lastprofil
 *$POSITION 60 327
 *$LAYER Weather - Data Files # # 
 TRACE START STOP
-PARAMETERS 302
+PARAMETERS 326
 5		! 1 Mode
 4		! 2 Header Lines to Skip
-74		! 3 No. of values to read
+80		! 3 No. of values to read
 1.0		! 4 Time interval of data
 -1		! 5 Interpolate or not-1
 1.0		! 6 Multiplication factor-1
@@ -1957,6 +2050,30 @@ PARAMETERS 302
 1.0		! 62 Multiplication factor-15
 0		! 63 Addition factor-15
 0		! 64 Average or instantaneous value-15
+-1		! 65 Interpolate or not-16
+1.0		! 66 Multiplication factor-16
+0		! 67 Addition factor-16
+1		! 68 Average or instantaneous value-16
+-1		! 65 Interpolate or not-16
+1.0		! 66 Multiplication factor-16
+0		! 67 Addition factor-16
+1		! 68 Average or instantaneous value-16
+-1		! 65 Interpolate or not-16
+1.0		! 66 Multiplication factor-16
+0		! 67 Addition factor-16
+1		! 68 Average or instantaneous value-16
+-1		! 65 Interpolate or not-16
+1.0		! 66 Multiplication factor-16
+0		! 67 Addition factor-16
+1		! 68 Average or instantaneous value-16
+-1		! 65 Interpolate or not-16
+1.0		! 66 Multiplication factor-16
+0		! 67 Addition factor-16
+1		! 68 Average or instantaneous value-16
+-1		! 65 Interpolate or not-16
+1.0		! 66 Multiplication factor-16
+0		! 67 Addition factor-16
+1		! 68 Average or instantaneous value-16
 -1		! 65 Interpolate or not-16
 1.0		! 66 Multiplication factor-16
 0		! 67 Addition factor-16
@@ -3153,8 +3270,8 @@ wluft
 use
 lichtuse 
 wohnwoche
-wrestaurante 
-wveranstaltung 
+tkuehlsollminideal  
+tkuehlsollminidealcomf   
 wseminar 
 wkueche 
 wnatluft 
@@ -3241,8 +3358,8 @@ wluft
 use
 lichtuse 
 wohnwoche
-wrestaurante 
-wveranstaltung 
+tkuehlsollminideal  
+tkuehlsollminidealcomf   
 wseminar 
 wkueche 
 wnatluft 
@@ -3312,7 +3429,7 @@ deltatsi77303
 
 Qhges qbefgesraum qvolgesh Qvbefges qcges Qventfges qvolgesc Qventfges qkuehlges  qheizges Qwwnutz Qel
 qhend qwwend qendwaerme qcend qelges PVprod queber
-qh1 qh2 qh3 qc1 qc2 qc3 qbtamax1 queber1 absh1 absh2 absh3 relh1 
+qh1 qh2 qh3 qc1 qc2 qc3 qbtamax1 queber1 pmv1 pmv2 pmv3 qv1 
 
 
 ta tzone1 tzone2 tzone3 top1 top2 top3 
@@ -3356,7 +3473,7 @@ deltatsi77303
 
 Qhges qbefgesraum qvolgesh Qvbefges qcges Qventfges qvolgesc Qventfges qkuehlges  qheizges Qwwnutz Qel
 qhend qwwend qendwaerme qcend qelges PVprod queber
-qh1 qh2 qh3 qc1 qc2 qc3 qbtamax1 queber1 absh1 absh2 absh3 relh1 
+qh1 qh2 qh3 qc1 qc2 qc3 qbtamax1 queber1 pmv1 pmv2 pmv3 qv1 
  
 	
 LABELS 0
