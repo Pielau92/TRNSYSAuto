@@ -3,7 +3,6 @@ sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compati
 import os
 import shutil
 import functions
-import tkinter as tk
 import pandas as pd
 import re
 import psutil
@@ -12,13 +11,12 @@ import time
 
 from pywinauto.application import Application
 from datetime import datetime
-from tkinter import filedialog
 
 
 class SimulationSeries:
     """ """
 
-    def __init__(self, path_exe, filename_excel):
+    def __init__(self, current_dir, path_exe, filename_excel):
         """
 
         Parameters
@@ -26,21 +24,21 @@ class SimulationSeries:
         path_exe :
         """
 
-        current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')  # current time
+        self.current_dir = current_dir
+        self.path_exe = path_exe  # .exe simulation file
+        self.filename_excel = filename_excel  # input Excel file name
 
-        # ask directory with base folder 'Basisordner' in it
-        root = tk.Tk()
-        root.withdraw()
-        self.current_dir = filedialog.askdirectory()
+        self.sim_list = None
+        self.df_dck = None
+        self.b18_series = None
+        self.weather_series = None
+
+        current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')  # current time
 
         # paths
         self.path_sim_series = os.path.join(self.current_dir, current_time)     # simulation series folder
         self.path_base = os.path.join(self.current_dir, 'Basisordner')          # base folder todo: base folder beschreiben
-        self.path_exe = path_exe    # .exe simulation file
-        self.filename_excel = filename_excel    # input Excel file name
         self.path_excel = os.path.join(self.path_base, self.filename_excel)     # input Excel file
-
-        os.makedirs(self.path_sim_series)  # create new directory for simulation series
 
     def import_input_excel(self):
         """
@@ -192,6 +190,14 @@ class SimulationSeries:
         -------
 
         """
+        # copy Input Excel file into simulation series folder
+        shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
+
+        path_dck = list()
+        for sim in self.sim_list:
+            self.create_sim_folder(sim)
+            path_dck.append (os.path.join(self.path_sim_series, sim, 'templateDck.dck'))
+
         pool_obj = multiprocessing.Pool()
-        pool_obj.map(self.start_sim, self.p)
+        pool_obj.map(self.start_sim, path_dck)
         pool_obj.close()
