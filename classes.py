@@ -6,8 +6,9 @@ import functions
 import tkinter as tk
 import pandas as pd
 import re
-# import psutil
+import psutil
 import multiprocessing
+import time
 
 from pywinauto.application import Application
 from datetime import datetime
@@ -76,7 +77,7 @@ class SimulationSeries:
         # list of simulation variants
         self.sim_list = df.columns[1:].astype(str).tolist()
 
-    def start_sim_series(self):
+    def start_sim_series(self, timeout=60*15, cpu_threshold=70):
 
         # copy Input Excel file into simulation series folder
         shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
@@ -84,7 +85,17 @@ class SimulationSeries:
         for sim in self.sim_list:
             self.create_sim_folder(sim)
             path_dck = os.path.join(self.path_sim_series, sim, 'templateDck.dck')
-            self.start_sim(path_dck)
+
+            start_time = time.time()
+
+            while True:
+                cpu_percent = psutil.cpu_percent(interval=1)
+                if cpu_percent < cpu_threshold:
+                    self.start_sim(path_dck)
+                    break
+                elif time.time() - start_time > timeout:
+                    sys.exit('Timeout of ' + str(timeout) + ' sec reached, program ended.')
+                time.sleep(1)
 
     def create_sim_folder(self, sim):
 
@@ -161,8 +172,8 @@ class SimulationSeries:
         Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
         Button.click_input()
 
-        app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
-        print(app.cpu_usage())
+        # app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
+        # print(app.cpu_usage())
         # app.kill()
 
         # region DELETE REDUNDANT FILES
