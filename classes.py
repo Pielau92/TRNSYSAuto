@@ -170,13 +170,15 @@ class SimulationSeries:
         Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
         Button.click_input()
 
-        # app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
+        time.sleep(10)  # give the simulation some time to start
+        app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)      # wait until the cpu is no longer needed (simulation has ended)
         # print(app.cpu_usage())
-        # app.kill()
+        app.kill()  # quit simulation
+        time.sleep(5)   # give the simulation some time to quit
 
         # region DELETE REDUNDANT FILES
 
-        # os.remove(os.path.join(path_sim, 'templateDck.lst'))
+        os.remove(path_dck_file[:-3] + 'lst')
         # os.remove(os.path.join(path_sim, 'out11.txt'))
         # os.remove(os.path.join(path_sim, 'out8.txt'))
         # os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
@@ -198,6 +200,13 @@ class SimulationSeries:
             self.create_sim_folder(sim)
             path_dck.append (os.path.join(self.path_sim_series, sim, 'templateDck.dck'))
 
-        pool_obj = multiprocessing.Pool()
-        pool_obj.map(self.start_sim, path_dck)
-        pool_obj.close()
+        # pool_obj = multiprocessing.Pool()
+        # pool_obj.map(self.start_sim, path_dck)
+        # pool_obj.close()
+
+        for dck in path_dck:
+            # create a new process instance
+            process = multiprocessing.Process(target=self.start_sim, args=(dck,))
+            # start the process
+            process.start()
+            time.sleep(30)
