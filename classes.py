@@ -75,7 +75,7 @@ class SimulationSeries:
         # list of simulation variants
         self.sim_list = df.columns[1:].astype(str).tolist()
 
-    def start_sim_series(self, timeout=60*15, cpu_threshold=70):
+    def start_sim_series(self, timeout=60*15, cpu_threshold=50):
 
         # copy Input Excel file into simulation series folder
         shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
@@ -185,7 +185,7 @@ class SimulationSeries:
 
         # endregion
 
-    def start_sim_series_par(self):
+    def start_sim_series_par(self, timeout=60*15, cpu_threshold=50):
         """
 
         Returns
@@ -207,6 +207,16 @@ class SimulationSeries:
         for dck in path_dck:
             # create a new process instance
             process = multiprocessing.Process(target=self.start_sim, args=(dck,))
-            # start the process
-            process.start()
-            time.sleep(30)
+
+            start_time = time.time()
+
+            while True:
+                cpu_percent = psutil.cpu_percent(interval=1)
+                if cpu_percent < cpu_threshold:
+                    # start the process
+                    process.start()
+                    time.sleep(10)
+                    break
+                elif time.time() - start_time > timeout:
+                    sys.exit('Timeout of ' + str(timeout) + ' sec reached, program ended.')
+                time.sleep(1)
