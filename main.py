@@ -1,3 +1,4 @@
+import multiprocessing
 import sys
 sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compatibility issues with pywinauto
 
@@ -8,6 +9,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     # ask directory with base folder 'Basisordner' in it
     root = tk.Tk()
     root.withdraw()
