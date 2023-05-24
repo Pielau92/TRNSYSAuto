@@ -75,7 +75,7 @@ class SimulationSeries:
         # list of simulation variants
         self.sim_list = df.columns[1:].astype(str).tolist()
 
-    def start_sim_series(self, timeout=60*15, cpu_threshold=50):
+    def start_sim_series(self, timeout=60*15, cpu_threshold=60):
 
         # copy Input Excel file into simulation series folder
         shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
@@ -185,7 +185,7 @@ class SimulationSeries:
 
         # endregion
 
-    def start_sim_series_par(self, timeout=60*15, cpu_threshold=50):
+    def start_sim_series_par(self, timeout=60*15, cpu_threshold=60):
         """
 
         Returns
