@@ -453,7 +453,7 @@ UNIT 131 TYPE 9	 Type9e
 *$MODEL .\Utility\Data Readers\Generic Data Files\Expert Mode\Free Format\Type9e.tmf
 *$POSITION 752 127
 *$LAYER Weather - Data Files # 
-TRACE START STOP
+!TRACE START STOP
 PARAMETERS 106
 5		! 1 Mode
 4		! 2 Header Lines to Skip
@@ -568,7 +568,7 @@ UNIT 132 TYPE 9	 Type9e
 *$MODEL .\Utility\Data Readers\Generic Data Files\Expert Mode\Free Format\Type9e.tmf
 *$POSITION 752 127
 *$LAYER Weather - Data Files # 
-TRACE START STOP
+!TRACE START STOP
 PARAMETERS 126
 5		! 1 Mode
 3		! 2 Header Lines to Skip
@@ -1117,7 +1117,7 @@ UNIT 170 TYPE 93	 Type93
 *$MODEL .\Utility\Input Value Recall\Type93.tmf
 *$POSITION 45 34
 *$LAYER Main # 
-TRACE START STOP
+!TRACE START STOP
 PARAMETERS 2
 8		! 1 Number of inputs to be stored
 2		! 2 Number of timesteps to be stored (including the curent step)
@@ -1733,7 +1733,7 @@ UNIT 17 TYPE 24	 Type24-2
 *$MODEL .\Utility\Integrators\Quantity Integrator\Type24.tmf
 *$POSITION 755 621
 *$LAYER Main # # 
-TRACE START STOP
+!TRACE START STOP
 PARAMETERS 2
 8760		! 1 Integration period
 1		! 2 Relative or absolute start time
@@ -1752,7 +1752,7 @@ UNIT 3 TYPE 9	 lastprofil
 *$MODEL .\Utility\Data Readers\Generic Data Files\Skip Lines to Start\Free Format\Type9c.tmf
 *$POSITION 60 327
 *$LAYER Weather - Data Files # # 
-TRACE START STOP
+!TRACE START STOP
 PARAMETERS 326
 5		! 1 Mode
 4		! 2 Header Lines to Skip
@@ -2087,7 +2087,7 @@ ASSIGN "lastprofil.txt" 31
 *------------------------------------------------------------------------------
 UNIT 333   TYPE 9  Data Reader for EX2  PRESIM TYPE  1109
 * Auskommentieren, wenn nicht gebraucht, auch File beachten
-TRACE START STOP
+!TRACE START STOP
 PARAMS   206
 *         Data Reader mode
          1
@@ -2160,7 +2160,7 @@ assign "StrahlungBruck.txt" 60
 *------------------------------------------------------------------------------
 UNIT 334   TYPE 9  Data Reader for EX2  PRESIM TYPE  1109
 * Auskommentieren, wenn nicht gebraucht, auch File beachten
-TRACE START STOP
+!TRACE START STOP
 PARAMS   30
 *         Data Reader mode
          1
