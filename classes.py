@@ -178,7 +178,7 @@ class SimulationSeries:
 
         # region DELETE REDUNDANT FILES
 
-        os.remove(path_dck_file[:-3] + 'lst')
+        # os.remove(path_dck_file[:-3] + 'lst')
         # os.remove(os.path.join(path_sim, 'out11.txt'))
         # os.remove(os.path.join(path_sim, 'out8.txt'))
         # os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
