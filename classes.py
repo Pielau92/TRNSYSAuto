@@ -215,7 +215,7 @@ class SimulationSeries:
                 if cpu_percent < cpu_threshold:
                     # start the process
                     process.start()
-                    time.sleep(10)
+                    time.sleep(15)
                     break
                 elif time.time() - start_time > timeout:
                     sys.exit('Timeout of ' + str(timeout) + ' sec reached, program ended.')
