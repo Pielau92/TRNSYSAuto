@@ -5,10 +5,12 @@ import glob
 import os
 import shutil
 import win32com.client
+from tkinter import filedialog
 
 
 def main():
-    trnsys_folder = './23.05.2023_18.22/'
+    trnsys_folder = filedialog.askdirectory()
+    # trnsys_folder = './23.05.2023_18.22/'
     trnsys_data_file_name = 'out5.txt'
     cumulative_template_file = './Basisordner/Auswertung_Gesamt.xlsx'
     variant_template_file = './Basisordner/Auswertung_Variante.xlsx'
