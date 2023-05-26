@@ -101,10 +101,10 @@ def main():
 
         # copy all zones and all classifications in cumulative file
         # read calculated values from variant and copy in cumulative file
-        zone_1_with_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[2], header=None, nrows=None, skiprows=None)
-        zone_1_without_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[3], header=None,  nrows=None, skiprows=None)
-        zone_3_with_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[2], header=None,  nrows=None, skiprows=None)
-        zone_3_without_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[3], header=None,  nrows=None, skiprows=None)
+        zone_1_with_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[3], header=None, nrows=None, skiprows=None)
+        zone_1_without_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[2], header=None,  nrows=None, skiprows=None)
+        zone_3_with_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[3], header=None,  nrows=None, skiprows=None)
+        zone_3_without_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[2], header=None,  nrows=None, skiprows=None)
 
         with pd.ExcelWriter(cumulative_output_file, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
             if variant_cnt <= 1:
