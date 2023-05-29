@@ -170,11 +170,13 @@ class SimulationSeries:
         Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
         Button.click_input()
 
-        time.sleep(10)  # give the simulation some time to start
-        app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)      # wait until the cpu is no longer needed (simulation has ended)
+
+        # app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)      # wait until the cpu is no longer needed (simulation has ended)
         # print(app.cpu_usage())
-        app.kill()  # quit simulation
-        time.sleep(5)   # give the simulation some time to quit
+        # quit simulation after 5 minutes
+        time.sleep(60 * 5)
+        app.kill()  
+        time.sleep(20)   # give the simulation some time to quit
 
         # region DELETE REDUNDANT FILES
 
@@ -215,7 +217,7 @@ class SimulationSeries:
                 if cpu_percent < cpu_threshold:
                     # start the process
                     process.start()
-                    time.sleep(15)
+                    time.sleep(30)
                     break
                 elif time.time() - start_time > timeout:
                     sys.exit('Timeout of ' + str(timeout) + ' sec reached, program ended.')
