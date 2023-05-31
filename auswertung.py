@@ -7,6 +7,9 @@ import shutil
 import win32com.client
 from tkinter import filedialog
 
+from natsort import natsorted
+#from line_profiler import LineProfiler
+import xlwings as xw
 
 def main():
     trnsys_folder = filedialog.askdirectory()
@@ -51,6 +54,7 @@ def main():
 
     # get top level directories
     variant_folders = next(os.walk(trnsys_folder))[1]
+    variant_folders = natsorted(variant_folders)
     variant_cnt = 0
     # iterate through trnsys variant folders
     for variant_folder in variant_folders:
@@ -76,16 +80,25 @@ def main():
         # copy template and write data in it
         variant_output_file = os.path.abspath(f"{output_folder}variant_{variant_folder}{os.path.splitext(os.path.basename(variant_template_file))[1]}")
         shutil.copy(variant_template_file, variant_output_file)
-        with pd.ExcelWriter(variant_output_file, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
-            """workBook = writer.book
-            try:
-                workBook.remove(workBook[raw_data_variant_sheet_name])
-            except:
-                print("Worksheet does not exist")
-            finally:"""
-            variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=1, startcol=0, index=False)
-            selected_trnsys_df.to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=59, startcol=1, index=False)
-            trnsys_df[trnsys_outdoor_temperature].to_frame().to_excel(writer, sheet_name=calculation_sheetname, startrow=39, startcol=2, index=False, header=False)
+
+        wb = xw.Book(variant_output_file)
+        ws = wb.sheets[raw_data_variant_sheet_name]
+        ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[['File', 'Parameter', variant_folder]]
+        ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = selected_trnsys_df
+        ws = wb.sheets[calculation_sheetname]
+        ws["C40"].options(pd.DataFrame, header=False, index=False, expand='table').value = trnsys_df[trnsys_outdoor_temperature].to_frame()
+        wb.save()
+        wb.app.quit()
+        #with pd.ExcelWriter(variant_output_file, mode="a", engine="xlwings", if_sheet_exists='overlay') as writer:
+        #    """workBook = writer.book
+        #    try:
+        #        workBook.remove(workBook[raw_data_variant_sheet_name])
+        #    except:
+        #        print("Worksheet does not exist")
+        #    finally:"""
+            #variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=1, startcol=0, index=False)
+            #selected_trnsys_df.to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=59, startcol=1, index=False)
+            #trnsys_df[trnsys_outdoor_temperature].to_frame().to_excel(writer, sheet_name=calculation_sheetname, startrow=39, startcol=2, index=False, header=False)
 
         # update excel to receive cross-referenced values and updates calculations
         # https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
@@ -238,4 +251,9 @@ def get_filename_without_extension(name):
 
 # to acknoledge functions on the bottom of the file, this is necessary
 if __name__ == '__main__':
+    #lp = LineProfiler()
+    #lp_wrapper = lp(main)
+    #lp.run('main()')
+    #lp.print_stats()
     main()
+
