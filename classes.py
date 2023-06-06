@@ -251,3 +251,32 @@ class SimulationSeries:
                 elif time.time() - start_time > self.timeout:
                     sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
                 time.sleep(5)
+
+    def start_sim_series_par_fixed_amount(self):
+
+        processes = []
+
+        # copy Input Excel file into simulation series folder
+        shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
+
+        path_dck = list()
+        for sim in self.sim_list:
+            self.create_sim_folder(sim)
+            path_dck.append(os.path.join(self.path_sim_series, sim, 'templateDck.dck'))
+
+        for dck in path_dck:
+            # create a new process instance
+            process = multiprocessing.Process(target=self.start_sim, args=(dck,))
+
+            start_time = time.time()
+            processes.append(process)
+            process.start()
+            time.sleep(30)
+            active_processes = multiprocessing.active_children()
+            num_active_processes = len(active_processes)
+            start_time = time.time()
+
+            while (num_active_processes >= 4) & (time.time() - start_time < self.timeout):
+                active_processes = multiprocessing.active_children()
+                num_active_processes = len(active_processes)
+                time.sleep(30)
