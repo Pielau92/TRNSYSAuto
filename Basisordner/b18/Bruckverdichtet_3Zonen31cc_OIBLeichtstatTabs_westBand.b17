@@ -2,7 +2,7 @@
 *  TRNBuild   3.0.298
 *********************************************************************************
 *   BUILDING DESCRIPTIONS FILE TRNSYS
-*   FOR BUILDING:   D:\BBSR_Sommertauglichkit\Trnsys\Pierre\Test\Bruckverdichtet_3Zonen31cc_OIBLeichtstatTabs_westBand.b17
+*   FOR BUILDING:   D:\BBSR_Sommertauglichkit\Trnsys\Pierre\main29.05.2023\Basisordner\b18\Bruckverdichtet_3Zonen31cc_OIBLeichtstatTabs_westBand.b17
 *   GET BY WORKING WITH TRNBuild 1.0 for Windows
 *********************************************************************************
 *
@@ -617,7 +617,7 @@ AIRNODE ZONE3
 WALL         =IW1        : SURF=  2 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
 WALL         =IW1        : SURF=  3 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
 WALL         =AW1        : SURF=  6 : AREA=      4.26 : EXTERNAL : ORI=OST : FSKY=0.5
-WINDOW=EXT_WINDOW1 : SURF=  9 : AREA=      8.24 : EXTERNAL : ORI=OST : FSKY=0.5
+WINDOW=EXT_WINDOW1 : SURF=  9 : AREA=      8.24 : EXTERNAL : ORI=OST : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI3 : ESHADE=INPUT 1*SCHATTO3
 WALL         =DE1O_BTA   : SURF= 73 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
 WALL         =DE1U_BTA   : SURF= 74 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
 WALL         =IW2        : SURF= 31 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=29 : BACK : COUPL=200
