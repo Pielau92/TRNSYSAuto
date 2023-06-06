@@ -22,7 +22,7 @@ class SimulationSeries:
     """
 
     def __init__(self, current_dir, path_exe, name_excel_file, name_excelsheet, name_base_folder, filename_dck_template,
-                 timeout=10*60, cpu_threshold=60):
+                 timeout=10*60, cpu_threshold=60, start_time_buffer=30, multiprocessing_max=None):
         """ Initialize simulation series object
 
         A simulation series is saved in a folder at the same level as the base folder (which contains templates, b17/18
@@ -54,6 +54,12 @@ class SimulationSeries:
         self.filename_dck = filename_dck_template
         self.timeout = timeout
         self.cpu_threshold = cpu_threshold
+        self.start_time_buffer = start_time_buffer
+
+        if multiprocessing_max is None:
+            self.multiprocessing_max = multiprocessing.cpu_count()  # set to amount of cpu of the computer automatically
+        else:
+            self.multiprocessing_max = multiprocessing_max
 
         self.sim_list = None    # list of simulation variant names
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
@@ -196,15 +202,15 @@ class SimulationSeries:
         app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
 
         # for extra stability
-        time.sleep(10)  # give the simulation some time to start
-        app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
+        # time.sleep(10)  # give the simulation some time to start
+        # app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
 
         # print(app.cpu_usage())
         # quit simulation after 10 minutes
         # time.sleep(60 * 10)
 
         app.kill()  # close window
-        time.sleep(10)   # give the simulation some time to quit
+        # time.sleep(10)   # give the simulation some time to quit
         # time.sleep(20)  # give the simulation some time to quit
 
         # region DELETE REDUNDANT FILES
@@ -267,16 +273,13 @@ class SimulationSeries:
         for dck in path_dck:
             # create a new process instance
             process = multiprocessing.Process(target=self.start_sim, args=(dck,))
-
-            start_time = time.time()
             processes.append(process)
             process.start()
-            time.sleep(30)
-            active_processes = multiprocessing.active_children()
-            num_active_processes = len(active_processes)
+            time.sleep(self.start_time_buffer)
             start_time = time.time()
 
-            while (num_active_processes >= 4) & (time.time() - start_time < self.timeout):
-                active_processes = multiprocessing.active_children()
-                num_active_processes = len(active_processes)
-                time.sleep(30)
+            while len(multiprocessing.active_children()) >= self.multiprocessing_max:
+                time.sleep(self.start_time_buffer)
+                if time.time() - start_time > self.timeout:
+                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+

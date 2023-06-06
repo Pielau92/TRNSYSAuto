@@ -26,7 +26,9 @@ if __name__ == '__main__':
                                           name_base_folder='Basisordner',
                                           filename_dck_template='templateDck.dck',
                                           timeout=30*60,
-                                          cpu_threshold=60)
+                                          cpu_threshold=60,
+                                          start_time_buffer=15,
+                                          multiprocessing_max=3)
 
     # create new folder for simulation series
     os.makedirs(sim_series.path_sim_series)
@@ -35,4 +37,5 @@ if __name__ == '__main__':
     sim_series.import_input_excel()
 
     # sim_series.start_sim_series()       # start simulation - linear computing
-    sim_series.start_sim_series_par()   # start simulation - parallel computing
+    # sim_series.start_sim_series_par()   # start simulation - parallel computing
+    sim_series.start_sim_series_par_fixed_amount()   # start simulation - parallel computing fixed amount of parallel simulations
