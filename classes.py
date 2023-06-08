@@ -9,6 +9,7 @@ import re
 import psutil
 import multiprocessing
 import time
+import csv
 
 from pywinauto.application import Application
 from datetime import datetime
@@ -104,12 +105,13 @@ class SimulationSeries:
         for sim in self.sim_list:
             self.create_sim_folder(sim)     # create simulation folder
             path_dck = os.path.join(self.path_sim_series, sim, self.filename_dck)   # dck File path of the current sim
+            path_output = os.path.join(self.path_sim_series, sim, 'out5.txt')
 
             start_time = time.time()
             while True:
                 cpu_percent = psutil.cpu_percent(interval=1)
                 if cpu_percent < self.cpu_threshold:
-                    self.start_sim(path_dck)    # start simulation
+                    self.start_sim(path_dck, path_output)    # start simulation
                     break
                 elif time.time() - start_time > self.timeout:
                     sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
@@ -182,7 +184,7 @@ class SimulationSeries:
 
         # endregion
 
-    def start_sim(self, path_dck_file):
+    def start_sim(self, path_dck_file, path_output):
 
         path_dck_file = path_dck_file.replace("/", "\\")
 
@@ -199,17 +201,37 @@ class SimulationSeries:
         time.sleep(10) # give the simulation some time to start
 
         # wait until the cpu kernel is no longer needed (simulation has ended)
-        app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
+        # app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
 
         # for extra stability
         # time.sleep(10)  # give the simulation some time to start
-        # app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
+        app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
 
         # print(app.cpu_usage())
         # quit simulation after 10 minutes
         # time.sleep(60 * 10)
 
         app.kill()  # close window
+        #
+        # with open(path_output) as f:
+        #     reader = csv.reader(f, delimiter="\t")
+        #     d = list(reader)
+        #
+        # while False:    #len(d) < 8762:
+        #     app.start(self.path_exe)
+        #     app.connect(title="Öffnen", timeout=60 * 30)
+        #
+        #     app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)  # insert .dck file name
+        #     Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
+        #     Button.click_input()
+        #
+        #     time.sleep(10)  # give the simulation some time to start
+        #     app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
+        #     app.kill()  # close window
+        #
+        #     with open(path_output) as f:
+        #         reader = csv.reader(f, delimiter="\t")
+        #         d = list(reader)
         # time.sleep(10)   # give the simulation some time to quit
         # time.sleep(20)  # give the simulation some time to quit
 
@@ -264,22 +286,49 @@ class SimulationSeries:
 
         # copy Input Excel file into simulation series folder
         shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
+        sim_success = [False] * len(self.sim_list)
 
-        path_dck = list()
         for sim in self.sim_list:
             self.create_sim_folder(sim)
-            path_dck.append(os.path.join(self.path_sim_series, sim, 'templateDck.dck'))
 
-        for dck in path_dck:
-            # create a new process instance
-            process = multiprocessing.Process(target=self.start_sim, args=(dck,))
-            processes.append(process)
-            process.start()
-            time.sleep(self.start_time_buffer)
-            start_time = time.time()
+        while not all(sim_success):
 
-            while len(multiprocessing.active_children()) >= self.multiprocessing_max:
-                time.sleep(self.start_time_buffer)
-                if time.time() - start_time > self.timeout:
-                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+            for index in range(len(self.sim_list)):
+                sim = self.sim_list[index]
+
+                if not sim_success[index]:
+
+                    # create a new process instance
+                    process = multiprocessing.Process(
+                        target=self.start_sim,
+                        args=(os.path.join(self.path_sim_series, sim, self.filename_dck),
+                              os.path.join(self.path_sim_series, sim, 'out5.txt')),)
+
+                    processes.append(process)
+                    process.start()
+
+                    time.sleep(self.start_time_buffer)
+                    start_time = time.time()
+                    if len(multiprocessing.active_children()) >= self.multiprocessing_max:
+                        process.join()
+
+                    # while len(multiprocessing.active_children()) >= self.multiprocessing_max:
+                    #     time.sleep(self.start_time_buffer)
+                        # if time.time() - start_time > self.timeout:
+                            # sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+
+            process.join()  # wait until all simulations are done first, otherwise problems when calculating small series
+
+            for index in range(len(self.sim_list)):
+                sim = self.sim_list[index]
+
+                path_output = os.path.join(self.path_sim_series, sim, 'out5.txt')
+                try:
+                    with open(path_output) as f:
+                        reader = csv.reader(f, delimiter="\t")
+                        d = list(reader)
+
+                    sim_success[index] = not len(d) < 8762
+                except: # no file found
+                    sim_success[index] = False
 
