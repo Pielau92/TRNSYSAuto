@@ -22,7 +22,7 @@ class SimulationSeries:
     multiprocessing.
     """
 
-    def __init__(self, current_dir, name_excel_file):
+    def __init__(self):
         """ Initialize simulation series object
 
         A simulation series is saved in a folder at the same level as the base folder (which contains templates, b17/18
@@ -32,7 +32,7 @@ class SimulationSeries:
 
         Parameters
         ----------
-        current_dir : string
+        dir_base_folder : string
             Current directory of the executed main.exe file
         path_exe : string
             Path to the TRNSYS simulation executable file
@@ -46,39 +46,46 @@ class SimulationSeries:
             Threshold of the cpu usage that must be undercut to initiate the next simulation
         """
 
-        self.current_dir = current_dir
+        self.dir_base_folder = None
+        self.dir_sim_variants_excel = None
+
+        self.path_sim_variants_excel = None
         self.path_exe = None
-        self.filename_excel = None
+        self.dir_sim_series = None
+        self.dir_base_folder = None
+
+
+        self.filename_sim_variants_excel = None
+        self.filename_dck_template = None
+
         self.name_excelsheet = None
         self.name_base_folder = None
-        self.filename_dck_template = None
+
+
         self.timeout = None
         self.cpu_threshold = None
         self.start_time_buffer = None
-
         self.settings = None    # Pandas series with simulation settings
         self.sim_list = None    # list of simulation variant names
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # Series with the .b18 data file names
         self.weather_series = None  # Series with the weather data file names
 
-        self.path_sim_series = None
-        self.path_base = None
-        self.path_excel = None
-
     def set_paths(self):
 
         current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')  # current time when the main.exe file was executed
 
-        self.filename_excel = 'Simulationsvarianten.xlsx'
-        # paths
-        self.path_sim_series = os.path.join(self.current_dir, current_time)         # simulation series folder
-        self.path_base = os.path.join(self.current_dir, self.name_base_folder)      # base folder
-        self.path_excel = os.path.join(self.path_base, self.filename_excel)     # input Excel file
+        self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
+        self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
+        self.filename_sim_variants_excel = os.path.basename(self.path_sim_variants_excel).split('.')[0]
 
-    def import_settings_excel(self, path_settings_excel):
+        # simulation series folder in same directory as base folder
+        self.dir_sim_series = \
+            os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + current_time)
 
-        excel_data = pd.ExcelFile(path_settings_excel)  # read input Excel file
+    def import_settings_excel(self):
+
+        excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, 'Einstellungen.xlsx'))  # read input Excel file
         df = excel_data.parse('Einstellungen', index_col=0)  # Excel data as DataFrame
         self.settings = df.Wert
 
@@ -99,7 +106,7 @@ class SimulationSeries:
     def import_input_excel(self):
         """ Input Excel file import routine."""
 
-        excel_data = pd.ExcelFile(self.path_excel)  # read input Excel file
+        excel_data = pd.ExcelFile(self.path_sim_variants_excel)  # read input Excel file
         df = excel_data.parse(self.name_excelsheet, index_col=0)  # Excel data as DataFrame
 
         # transpose data
@@ -122,12 +129,12 @@ class SimulationSeries:
         """Start simulation series."""
 
         # copy input Excel file into simulation series folder
-        shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
+        shutil.copy(os.path.join(self.dir_base_folder, self.filename_sim_variants_excel), self.dir_sim_series)
 
         for sim in self.sim_list:
             self.create_sim_folder(sim)     # create simulation folder
-            path_dck = os.path.join(self.path_sim_series, sim, self.filename_dck_template)   # dck File path of the current sim
-            path_output = os.path.join(self.path_sim_series, sim, 'out5.txt')
+            path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)   # dck File path of the current sim
+            path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
 
             start_time = time.time()
             while True:
@@ -148,21 +155,21 @@ class SimulationSeries:
             name of the simulation variant
         """
 
-        path_sim = os.path.join(self.path_sim_series, sim)  # path of simulation folder
+        path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation folder
         os.makedirs(path_sim)  # create new directory for simulation
-        # shutil.copytree(path_base, path_sim)          # copy all files from base to simulation folder
+        # shutil.copytree(dir_base_folder, path_sim)          # copy all files from base to simulation folder
 
         # region SOURCE/DESTINATION FILE PATHS FOR COPYING PROCESS
 
         src_file = [  #todo: dynamisch neu machen
-            os.path.join(self.path_base, 'templateDck.dck'),
-            os.path.join(self.path_base, 'Lastprofil.txt'),
-            os.path.join(self.path_base, 'b18', self.b18_series[sim]),
-            os.path.join(self.path_base, 'Wetterdaten', self.weather_series[sim]),
-            os.path.join(self.path_base, 'SzenarioAneu.txt'),
-            os.path.join(self.path_base, 'Qelww_CHR55025.txt'),
-            os.path.join(self.path_base, 'Windetc20190804.txt'),
-            os.path.join(self.path_base, 'StrahlungBruck.txt')]
+            os.path.join(self.dir_sim_variants_excel, 'templateDck.dck'),
+            os.path.join(self.dir_sim_variants_excel, 'Lastprofil.txt'),
+            os.path.join(self.dir_sim_variants_excel, 'b18', self.b18_series[sim]),
+            os.path.join(self.dir_sim_variants_excel, 'Wetterdaten', self.weather_series[sim]),
+            os.path.join(self.dir_sim_variants_excel, 'SzenarioAneu.txt'),
+            os.path.join(self.dir_sim_variants_excel, 'Qelww_CHR55025.txt'),
+            os.path.join(self.dir_sim_variants_excel, 'Windetc20190804.txt'),
+            os.path.join(self.dir_sim_variants_excel, 'StrahlungBruck.txt')]
 
         dst_file = [
             os.path.join(path_sim, 'templateDck.dck'),
@@ -274,12 +281,12 @@ class SimulationSeries:
 
         """
         # copy Input Excel file into simulation series folder
-        shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
+        shutil.copy(os.path.join(self.dir_base_folder, self.filename_sim_variants_excel), self.dir_sim_series)
 
         path_dck = list()
         for sim in self.sim_list:
             self.create_sim_folder(sim)
-            path_dck.append (os.path.join(self.path_sim_series, sim, 'templateDck.dck'))
+            path_dck.append (os.path.join(self.dir_sim_series, sim, 'templateDck.dck'))
 
         # pool_obj = multiprocessing.Pool()
         # pool_obj.map(self.start_sim, path_dck)
@@ -307,7 +314,7 @@ class SimulationSeries:
         processes = []
 
         # copy Input Excel file into simulation series folder
-        shutil.copy(os.path.join(self.path_base, self.filename_excel), self.path_sim_series)
+        shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
         sim_success = [False] * len(self.sim_list)
 
         for sim in self.sim_list:
@@ -323,8 +330,8 @@ class SimulationSeries:
                     # create a new process instance
                     process = multiprocessing.Process(
                         target=self.start_sim,
-                        args=(os.path.join(self.path_sim_series, sim, self.filename_dck_template),
-                              os.path.join(self.path_sim_series, sim, 'out5.txt')),)
+                        args=(os.path.join(self.dir_sim_series, sim, self.filename_dck_template),
+                              os.path.join(self.dir_sim_series, sim, 'out5.txt')),)
 
                     processes.append(process)
                     process.start()
@@ -344,7 +351,7 @@ class SimulationSeries:
             for index in range(len(self.sim_list)):
                 sim = self.sim_list[index]
 
-                path_output = os.path.join(self.path_sim_series, sim, 'out5.txt')
+                path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
                 try:
                     with open(path_output) as f:
                         reader = csv.reader(f, delimiter="\t")

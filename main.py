@@ -14,23 +14,21 @@ if __name__ == '__main__':
     """
     multiprocessing.freeze_support()
 
-    # ask directory with base folder 'Basisordner' in it
+    # create simulation series object
+    sim_series = classes.SimulationSeries()
+
+    # ask simulation variants Excel file path
     root = tk.Tk()
     root.withdraw()
-    current_dir = filedialog.askdirectory()
-
-    # create simulation series object
-    sim_series = classes.SimulationSeries(current_dir, name_excel_file='Simulationsvarianten.xlsx')
-
-    # import and apply settings Excel file
-    sim_series.import_settings_excel('C:/Users/pierre/PycharmProjects/TimberBioC/Basisordner/Einstellungen.xlsx')
-    sim_series.set_settings()
-
-    # set paths
+    sim_series.path_sim_variants_excel = filedialog.askopenfilename().replace("/", "\\")
     sim_series.set_paths()
 
+    # import and apply settings Excel file
+    sim_series.import_settings_excel()
+    sim_series.set_settings()
+
     # create new folder for simulation series
-    os.makedirs(sim_series.path_sim_series)
+    os.makedirs(sim_series.dir_sim_series)
 
     # import routine for input Excel file
     sim_series.import_input_excel()
