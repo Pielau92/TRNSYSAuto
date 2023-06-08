@@ -22,8 +22,7 @@ class SimulationSeries:
     multiprocessing.
     """
 
-    def __init__(self, current_dir, path_exe, name_excel_file, name_excelsheet, name_base_folder, filename_dck_template,
-                 timeout=10*60, cpu_threshold=60, start_time_buffer=30, multiprocessing_max=None):
+    def __init__(self, current_dir, name_excel_file):
         """ Initialize simulation series object
 
         A simulation series is saved in a folder at the same level as the base folder (which contains templates, b17/18
@@ -39,7 +38,7 @@ class SimulationSeries:
             Path to the TRNSYS simulation executable file
         name_excel_file : string
             File name of the input Excel file inside the base folder
-        filename_dck : string
+        filename_dck_template : string
             File name of the .dck template file
         timeout : int
             Time limitation in sec for a single simulation, before it is canceled and closed #todo(0 means no timeout)
@@ -48,31 +47,54 @@ class SimulationSeries:
         """
 
         self.current_dir = current_dir
-        self.path_exe = path_exe
-        self.filename_excel = name_excel_file
-        self.name_excelsheet = name_excelsheet
-        self.base_folder_name = name_base_folder
-        self.filename_dck = filename_dck_template
-        self.timeout = timeout
-        self.cpu_threshold = cpu_threshold
-        self.start_time_buffer = start_time_buffer
+        self.path_exe = None
+        self.filename_excel = None
+        self.name_excelsheet = None
+        self.name_base_folder = None
+        self.filename_dck_template = None
+        self.timeout = None
+        self.cpu_threshold = None
+        self.start_time_buffer = None
 
-        if multiprocessing_max is None:
-            self.multiprocessing_max = multiprocessing.cpu_count()  # set to amount of cpu of the computer automatically
-        else:
-            self.multiprocessing_max = multiprocessing_max
-
+        self.settings = None    # Pandas series with simulation settings
         self.sim_list = None    # list of simulation variant names
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # Series with the .b18 data file names
         self.weather_series = None  # Series with the weather data file names
 
+        self.path_sim_series = None
+        self.path_base = None
+        self.path_excel = None
+
+    def set_paths(self):
+
         current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')  # current time when the main.exe file was executed
 
+        self.filename_excel = 'Simulationsvarianten.xlsx'
         # paths
-        self.path_sim_series = os.path.join(self.current_dir, current_time)     # simulation series folder
-        self.path_base = os.path.join(self.current_dir, self.base_folder_name)          # base folder
+        self.path_sim_series = os.path.join(self.current_dir, current_time)         # simulation series folder
+        self.path_base = os.path.join(self.current_dir, self.name_base_folder)      # base folder
         self.path_excel = os.path.join(self.path_base, self.filename_excel)     # input Excel file
+
+    def import_settings_excel(self, path_settings_excel):
+
+        excel_data = pd.ExcelFile(path_settings_excel)  # read input Excel file
+        df = excel_data.parse('Einstellungen', index_col=0)  # Excel data as DataFrame
+        self.settings = df.Wert
+
+    def set_settings(self):
+
+        self.path_exe = self.settings.loc['path_exe']
+        self.name_excelsheet = self.settings.loc['name_excelsheet_sim_variants']
+        self.name_base_folder = self.settings.loc['name_base_folder']
+        self.filename_dck_template = self.settings.loc['filename_dck_template']
+        self.timeout = self.settings.loc['timeout']
+        self.start_time_buffer = self.settings.loc['start_time_buffer']
+
+        if self.settings.loc['multiprocessing_max'] == 'auto':  #todo Prüfung ob sinnvoller Wert eingegeben wurde
+            multiprocessing.cpu_count()
+        else:
+            self.multiprocessing_max = self.settings.loc['multiprocessing_max']
 
     def import_input_excel(self):
         """ Input Excel file import routine."""
@@ -104,7 +126,7 @@ class SimulationSeries:
 
         for sim in self.sim_list:
             self.create_sim_folder(sim)     # create simulation folder
-            path_dck = os.path.join(self.path_sim_series, sim, self.filename_dck)   # dck File path of the current sim
+            path_dck = os.path.join(self.path_sim_series, sim, self.filename_dck_template)   # dck File path of the current sim
             path_output = os.path.join(self.path_sim_series, sim, 'out5.txt')
 
             start_time = time.time()
@@ -301,7 +323,7 @@ class SimulationSeries:
                     # create a new process instance
                     process = multiprocessing.Process(
                         target=self.start_sim,
-                        args=(os.path.join(self.path_sim_series, sim, self.filename_dck),
+                        args=(os.path.join(self.path_sim_series, sim, self.filename_dck_template),
                               os.path.join(self.path_sim_series, sim, 'out5.txt')),)
 
                     processes.append(process)

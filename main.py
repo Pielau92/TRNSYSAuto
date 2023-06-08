@@ -19,21 +19,15 @@ if __name__ == '__main__':
     root.withdraw()
     current_dir = filedialog.askdirectory()
 
-    # import settings Excel file
-    settings = \
-        functions.import_settings_excel('C:/Users/pierre/PycharmProjects/TimberBioC/Basisordner/Einstellungen.xlsx')
-
     # create simulation series object
-    sim_series = classes.SimulationSeries(current_dir,
-                                          name_excel_file='Simulationsvarianten.xlsx',
-                                          cpu_threshold=60,
-                                          path_exe=settings.loc['path_exe'],
-                                          name_excelsheet=settings.loc['name_excelsheet_sim_variants'],
-                                          name_base_folder=settings.loc['name_base_folder'],
-                                          filename_dck_template=settings.loc['filename_dck_template'],
-                                          timeout=settings.loc['timeout'],
-                                          start_time_buffer=settings.loc['start_time_buffer'],
-                                          multiprocessing_max=settings.loc['multiprocessing_max'])
+    sim_series = classes.SimulationSeries(current_dir, name_excel_file='Simulationsvarianten.xlsx')
+
+    # import and apply settings Excel file
+    sim_series.import_settings_excel('C:/Users/pierre/PycharmProjects/TimberBioC/Basisordner/Einstellungen.xlsx')
+    sim_series.set_settings()
+
+    # set paths
+    sim_series.set_paths()
 
     # create new folder for simulation series
     os.makedirs(sim_series.path_sim_series)

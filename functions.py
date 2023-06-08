@@ -43,8 +43,3 @@ def find_and_replace_param(path_file, pattern, parameters):
     with open(path_file, 'w') as file:
         file.write(text)
 
-def import_settings_excel(path_settings_excel='C:/Users/pierre/PycharmProjects/TimberBioC/Basisordner/Einstellungen.xlsx'):
-
-    excel_data = pd.ExcelFile(path_settings_excel)  # read input Excel file
-    df = excel_data.parse('Einstellungen', index_col=0)  # Excel data as DataFrame
-    return df.Wert
