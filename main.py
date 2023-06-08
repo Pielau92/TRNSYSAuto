@@ -1,109 +1,40 @@
+import multiprocessing
 import sys
-sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compatibility issues with pywinauto
-import os
-import shutil
+sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compatibility issues with pywinauto    #todo: prüfen ob noch nötig
+import classes
 import functions
+import os
 import tkinter as tk
-import re
+from tkinter import filedialog  #todo direkt über tk aufrufen
 
-from datetime import datetime
-from tkinter import filedialog
+if __name__ == '__main__':
 
-current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')    # current time
+    """ For some unknown reason main is also affected by multiprocessing (directory is asked multiple times), therefore
+    the function freeze_support is necessary
+    """
+    multiprocessing.freeze_support()
 
-# region paths and directories
+    # ask directory with base folder 'Basisordner' in it
+    root = tk.Tk()
+    root.withdraw()
+    current_dir = filedialog.askdirectory()
 
-# ask directory with base folder 'Basisordner' in it
-root = tk.Tk()
-root.withdraw()
-current_dir = filedialog.askdirectory()
-# current_dir = os.getcwd()  # current directory
+    # create simulation series object
+    sim_series = classes.SimulationSeries(current_dir, name_excel_file='Simulationsvarianten.xlsx')
 
-path_sim_series = os.path.join(current_dir, current_time)   # path of simulation series folder
-path_base = os.path.join(current_dir, 'Basisordner')        # path of base folder (templates, load profiles, weather...)
-path_exe = 'C:\TRNSYS18\Exe\TrnEXE64.exe'                   # path of the simulation .exe file
-path_excel = os.path.join(path_base, 'Simulationsvarianten.xlsx')
+    # import and apply settings Excel file
+    sim_series.import_settings_excel('C:/Users/pierre/PycharmProjects/TimberBioC/Basisordner/Einstellungen.xlsx')
+    sim_series.set_settings()
 
-os.makedirs(path_sim_series)  # create new directory for simulation series
+    # set paths
+    sim_series.set_paths()
 
-# endregion
+    # create new folder for simulation series
+    os.makedirs(sim_series.path_sim_series)
 
-# import Excel file
-sim_list, weather_series, df_dck, b18_series = functions.import_input_excel(path_excel)
+    # import routine for input Excel file
+    sim_series.import_input_excel()
 
-for sim in sim_list:
-
-    shutil.copy(os.path.join(path_base, 'Simulationsvarianten.xlsx'), path_sim_series)  # copy Input Excel file
-
-    # region create simulation folders
-
-    path_sim = os.path.join(path_sim_series, sim)   # path of simulation folder
-    os.makedirs(path_sim)                           # create new directory for simulation
-    # shutil.copytree(path_base, path_sim)          # copy all files from base to simulation folder
-
-    # region source/destination file paths for copying process
-    src_file = [
-        os.path.join(path_base, 'templateDck.dck'),
-        os.path.join(path_base, 'Lastprofil.txt'),
-        os.path.join(path_base, 'b18', b18_series[sim]),
-        os.path.join(path_base, 'Wetterdaten', weather_series[sim]),
-        os.path.join(path_base, 'SzenarioAneu.txt'),
-        os.path.join(path_base, 'Qelww_CHR55025.txt'),
-        os.path.join(path_base, 'Windetc20190804.txt'),
-        os.path.join(path_base, 'StrahlungBruck.txt')]
-
-    dst_file = [
-        os.path.join(path_sim, 'templateDck.dck'),
-        os.path.join(path_sim, 'Lastprofil.txt'),
-        os.path.join(path_sim, b18_series[sim]),
-        os.path.join(path_sim, weather_series[sim]),
-        os.path.join(path_sim, 'SzenarioAneu.txt'),
-        os.path.join(path_sim, 'Qelww_CHR55025.txt'),
-        os.path.join(path_sim, 'Windetc20190804.txt'),
-        os.path.join(path_sim, 'StrahlungBruck.txt')]
-
-    # endregion
-
-    # copy specified files into simulation folder
-    for index in range(len(src_file)):
-        shutil.copy(src_file[index], dst_file[index])  # copy file
-
-    # replace parameters in .dck File
-    functions.find_and_replace_param(dst_file[0], r'(@\w+)\s*=\s*([\d.]+)', df_dck.loc[sim])
-
-    # region find and replace .b18/.b17 file name
-
-    with open(dst_file[0], 'r') as file:
-        text = file.read()  # read file
-        new_text = re.sub(r'(\*ASSIGN "b17")', r'ASSIGN "' + b18_series[sim] + '"', text)
-    with open(dst_file[0], 'w') as file:
-        file.write(new_text)  # overwrite file
-
-    # endregion
-
-    # region find and replace weather data file name
-
-    with open(dst_file[0], 'r') as file:
-        text = file.read()  # read file
-        new_text = re.sub(r'(\*ASSIGN "tm2")', r'ASSIGN "' + weather_series[sim] + '"', text)
-    with open(dst_file[0], 'w') as file:
-        file.write(new_text)  # overwrite file
-
-    # endregion
-
-    functions.find_and_replace_param(dst_file[0], r'(\*ASSIGN "b17")', df_dck.loc[sim])
-
-    # new_text = re.sub(pattern, r'* ASSIGN "replacement"', text)
-
-    # endregion
-
-    # perform simulation
-    functions.start_sim(path_exe, os.path.join(path_sim, dst_file[0]))
-
-    # delete redundant files
-    # os.remove(os.path.join(path_sim, 'templateDck.lst'))
-    # os.remove(os.path.join(path_sim, 'out11.txt'))
-    # os.remove(os.path.join(path_sim, 'out8.txt'))
-    # os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
-
-
+    # sim_series.start_sim_series()       # start simulation - linear computing
+    # sim_series.start_sim_series_par()   # start simulation - parallel computing
+    sim_series.start_sim_series_par_fixed_amount()   # start simulation - parallel computing fixed amount of parallel simulations
