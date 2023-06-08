@@ -2,6 +2,7 @@ import multiprocessing
 import sys
 sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compatibility issues with pywinauto    #todo: prüfen ob noch nötig
 import classes
+import functions
 import os
 import tkinter as tk
 from tkinter import filedialog  #todo direkt über tk aufrufen
@@ -18,17 +19,21 @@ if __name__ == '__main__':
     root.withdraw()
     current_dir = filedialog.askdirectory()
 
+    # import settings Excel file
+    settings = \
+        functions.import_settings_excel('C:/Users/pierre/PycharmProjects/TimberBioC/Basisordner/Einstellungen.xlsx')
+
     # create simulation series object
     sim_series = classes.SimulationSeries(current_dir,
-                                          path_exe='C:\TRNSYS18\Exe\TrnEXE64.exe',
                                           name_excel_file='Simulationsvarianten.xlsx',
-                                          name_excelsheet='Simulationsvarianten',
-                                          name_base_folder='Basisordner',
-                                          filename_dck_template='templateDck.dck',
-                                          timeout=30*60,
                                           cpu_threshold=60,
-                                          start_time_buffer=15,
-                                          multiprocessing_max=3)
+                                          path_exe=settings.loc['path_exe'],
+                                          name_excelsheet=settings.loc['name_excelsheet_sim_variants'],
+                                          name_base_folder=settings.loc['name_base_folder'],
+                                          filename_dck_template=settings.loc['filename_dck_template'],
+                                          timeout=settings.loc['timeout'],
+                                          start_time_buffer=settings.loc['start_time_buffer'],
+                                          multiprocessing_max=settings.loc['multiprocessing_max'])
 
     # create new folder for simulation series
     os.makedirs(sim_series.path_sim_series)
