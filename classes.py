@@ -215,18 +215,20 @@ class SimulationSeries:
         Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
         Button.click_input()
 
-        time.sleep(10) # give the simulation some time to start
+        time.sleep(1)  # give the simulation some time to start
 
-        # wait until the cpu kernel is no longer needed (simulation has ended)
+        # region wait for simulation completion
+        # Solution 1: wait until the cpu kernel is no longer needed (simulation has ended)
         # app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
 
-        # for extra stability
-        # time.sleep(10)  # give the simulation some time to start
-        app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
-
-        # print(app.cpu_usage())
-        # quit simulation after 10 minutes
-        # time.sleep(60 * 10)
+        # Solution 2: wait until second window pops up
+        # (simulation has ended and asks if the online plotter should be closed)
+        interval = 5  # checking interval in seconds
+        timeout = 60 * 60  # timeout in seconds
+        start_time = time.time()
+        while not len(app.windows()) > 1 and time.time() - start_time < timeout:
+            time.sleep(interval)
+        # endregion
 
         app.kill()  # close window
 
