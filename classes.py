@@ -96,6 +96,7 @@ class SimulationSeries:
         self.filename_dck_template = self.settings.loc['filename_dck_template']
         self.timeout = self.settings.loc['timeout']
         self.start_time_buffer = self.settings.loc['start_time_buffer']
+        self.cpu_threshold = self.settings.loc['cpu_threshold']
 
         if self.settings.loc['multiprocessing_max'] == 'auto':  #todo Prüfung ob sinnvoller Wert eingegeben wurde
             multiprocessing.cpu_count()
