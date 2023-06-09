@@ -1,15 +1,13 @@
 import sys
-# todo: "sys.coinit_flags = 2 " wird hier glaube ich nicht mehr benötigt
-# sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compatibility issues with pywinauto when creating .exe file
 import os
 import shutil
 import functions
-import pandas as pd
 import re
 import psutil
 import multiprocessing
 import time
 import csv
+import pandas as pd
 
 from pywinauto.application import Application
 from datetime import datetime
@@ -22,7 +20,7 @@ class SimulationSeries:
     multiprocessing.
     """
 
-    def __init__(self):
+    def __init__(self, cpu_threshold=100):
         """ Initialize simulation series object
 
         A simulation series is saved in a folder at the same level as the base folder (which contains templates, b17/18
@@ -63,10 +61,11 @@ class SimulationSeries:
 
 
         self.timeout = None
-        self.cpu_threshold = None
+        self.cpu_threshold = cpu_threshold
         self.start_time_buffer = None
         self.settings = None    # Pandas series with simulation settings
         self.sim_list = None    # list of simulation variant names
+        self.sim_success = None
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # Series with the .b18 data file names
         self.weather_series = None  # Series with the weather data file names
@@ -125,28 +124,10 @@ class SimulationSeries:
         # list of simulation variants
         self.sim_list = df.columns[1:].astype(str).tolist()
 
-    def start_sim_series(self):
-        """Start simulation series."""
+        # initialize simulation success flag
+        self.sim_success = [False] * len(self.sim_list)
 
-        # copy input Excel file into simulation series folder
-        shutil.copy(os.path.join(self.dir_base_folder, self.filename_sim_variants_excel), self.dir_sim_series)
-
-        for sim in self.sim_list:
-            self.create_sim_folder(sim)     # create simulation folder
-            path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)   # dck File path of the current sim
-            path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
-
-            start_time = time.time()
-            while True:
-                cpu_percent = psutil.cpu_percent(interval=1)
-                if cpu_percent < self.cpu_threshold:
-                    self.start_sim(path_dck, path_output)    # start simulation
-                    break
-                elif time.time() - start_time > self.timeout:
-                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-                time.sleep(5)
-
-    def create_sim_folder(self, sim):
+    def create_sim_folders(self):
         """Create simulation folder.
 
         Parameters
@@ -154,68 +135,72 @@ class SimulationSeries:
         sim : string
             name of the simulation variant
         """
+        for sim in self.sim_list:
 
-        path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation folder
-        os.makedirs(path_sim)  # create new directory for simulation
-        # shutil.copytree(dir_base_folder, path_sim)          # copy all files from base to simulation folder
+            path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation folder
+            os.makedirs(path_sim)  # create new directory for simulation
+            # shutil.copytree(dir_base_folder, path_sim)          # copy all files from base to simulation folder
 
-        # region SOURCE/DESTINATION FILE PATHS FOR COPYING PROCESS
+            # region SOURCE/DESTINATION FILE PATHS FOR COPYING PROCESS
 
-        src_file = [  #todo: dynamisch neu machen
-            os.path.join(self.dir_sim_variants_excel, 'templateDck.dck'),
-            os.path.join(self.dir_sim_variants_excel, 'Lastprofil.txt'),
-            os.path.join(self.dir_sim_variants_excel, 'b18', self.b18_series[sim]),
-            os.path.join(self.dir_sim_variants_excel, 'Wetterdaten', self.weather_series[sim]),
-            os.path.join(self.dir_sim_variants_excel, 'SzenarioAneu.txt'),
-            os.path.join(self.dir_sim_variants_excel, 'Qelww_CHR55025.txt'),
-            os.path.join(self.dir_sim_variants_excel, 'Windetc20190804.txt'),
-            os.path.join(self.dir_sim_variants_excel, 'StrahlungBruck.txt')]
+            src_file = [  #todo: dynamisch neu machen
+                os.path.join(self.dir_sim_variants_excel, 'templateDck.dck'),
+                os.path.join(self.dir_sim_variants_excel, 'Lastprofil.txt'),
+                os.path.join(self.dir_sim_variants_excel, 'b18', self.b18_series[sim]),
+                os.path.join(self.dir_sim_variants_excel, 'Wetterdaten', self.weather_series[sim]),
+                os.path.join(self.dir_sim_variants_excel, 'SzenarioAneu.txt'),
+                os.path.join(self.dir_sim_variants_excel, 'Qelww_CHR55025.txt'),
+                os.path.join(self.dir_sim_variants_excel, 'Windetc20190804.txt'),
+                os.path.join(self.dir_sim_variants_excel, 'StrahlungBruck.txt')]
 
-        dst_file = [
-            os.path.join(path_sim, 'templateDck.dck'),
-            os.path.join(path_sim, 'Lastprofil.txt'),
-            os.path.join(path_sim, self.b18_series[sim]),
-            os.path.join(path_sim, self.weather_series[sim]),
-            os.path.join(path_sim, 'SzenarioAneu.txt'),
-            os.path.join(path_sim, 'Qelww_CHR55025.txt'),
-            os.path.join(path_sim, 'Windetc20190804.txt'),
-            os.path.join(path_sim, 'StrahlungBruck.txt')]
+            dst_file = [
+                os.path.join(path_sim, 'templateDck.dck'),
+                os.path.join(path_sim, 'Lastprofil.txt'),
+                os.path.join(path_sim, self.b18_series[sim]),
+                os.path.join(path_sim, self.weather_series[sim]),
+                os.path.join(path_sim, 'SzenarioAneu.txt'),
+                os.path.join(path_sim, 'Qelww_CHR55025.txt'),
+                os.path.join(path_sim, 'Windetc20190804.txt'),
+                os.path.join(path_sim, 'StrahlungBruck.txt')]
 
-        # endregion
+            # endregion
 
-        # copy specified files into simulation folder
-        for index in range(len(src_file)):
-            shutil.copy(src_file[index], dst_file[index])
+            # copy specified files into simulation folder
+            for index in range(len(src_file)):
+                shutil.copy(src_file[index], dst_file[index])
 
-        # region FIND AND REPLACE WEATHER DATA FILE NAME IN .dck FILE
+            # region FIND AND REPLACE WEATHER DATA FILE NAME IN .dck FILE
 
-        with open(dst_file[0], 'r') as file:
-            text = file.read()  # read file
-            new_text = re.sub(r'(\*ASSIGN "tm2")', r'ASSIGN "' + self.weather_series[sim] + '"', text)
-        with open(dst_file[0], 'w') as file:
-            file.write(new_text)  # overwrite file
+            with open(dst_file[0], 'r') as file:
+                text = file.read()  # read file
+                new_text = re.sub(r'(\*ASSIGN "tm2")', r'ASSIGN "' + self.weather_series[sim] + '"', text)
+            with open(dst_file[0], 'w') as file:
+                file.write(new_text)  # overwrite file
 
-        # endregion
+            # endregion
 
-        # region FIND AND REPLACE .b18/b.17 FILE NAME IN .dck FILE
+            # region FIND AND REPLACE .b18/b.17 FILE NAME IN .dck FILE
 
-        with open(dst_file[0], 'r') as file:
-            text = file.read()  # read file
-            new_text = re.sub(r'(\*ASSIGN "b17")', r'ASSIGN "' + self.b18_series[sim] + '"', text)
-        with open(dst_file[0], 'w') as file:
-            file.write(new_text)  # overwrite file
+            with open(dst_file[0], 'r') as file:
+                text = file.read()  # read file
+                new_text = re.sub(r'(\*ASSIGN "b17")', r'ASSIGN "' + self.b18_series[sim] + '"', text)
+            with open(dst_file[0], 'w') as file:
+                file.write(new_text)  # overwrite file
 
-        # endregion
+            # endregion
 
-        # region FIND AND REPLACE PARAMETERS IN .dck FILE
-        functions.find_and_replace_param(dst_file[0], r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
-        functions.find_and_replace_param(dst_file[0], r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
+            # region FIND AND REPLACE PARAMETERS IN .dck FILE
+            functions.find_and_replace_param(dst_file[0], r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
+            functions.find_and_replace_param(dst_file[0], r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
 
-        # endregion
+            # endregion
 
-    def start_sim(self, path_dck_file, path_output):
+        # copy Input Excel file into simulation series folder
+        shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
 
-        path_dck_file = path_dck_file.replace("/", "\\")
+    def start_sim(self, path_dck_file):
+
+        # path_dck_file = path_dck_file.replace("/", "\\")
 
         # path_file_raw = r'{}'.format(path_file)     # turn file path into raw string to avoid error messages
 
@@ -223,7 +208,7 @@ class SimulationSeries:
         app.start(self.path_exe)
         app.connect(title="Öffnen", timeout=60 * 30)
 
-        app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)    # insert .dck file name
+        app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)    # insert .dck file path
         Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
         Button.click_input()
 
@@ -273,68 +258,32 @@ class SimulationSeries:
 
         # endregion
 
-    def start_sim_series_par(self):
-        """
-#todo start_sim_series aufrufen, anstatt Code doppelt. Ggf. muss die Erstellung der Ordnerstruktur und das Starten der Simulation in 2 Funktionen aufgetrennt werden
-        Returns
-        -------
-
-        """
-        # copy Input Excel file into simulation series folder
-        shutil.copy(os.path.join(self.dir_base_folder, self.filename_sim_variants_excel), self.dir_sim_series)
-
-        path_dck = list()
-        for sim in self.sim_list:
-            self.create_sim_folder(sim)
-            path_dck.append (os.path.join(self.dir_sim_series, sim, 'templateDck.dck'))
-
-        # pool_obj = multiprocessing.Pool()
-        # pool_obj.map(self.start_sim, path_dck)
-        # pool_obj.close()
-
-        for dck in path_dck:
-            # create a new process instance
-            process = multiprocessing.Process(target=self.start_sim, args=(dck,))
-
-            start_time = time.time()
-
-            while True:
-                cpu_percent = psutil.cpu_percent(interval=1)
-                if cpu_percent < self.cpu_threshold:
-                    # start the process
-                    process.start()
-                    time.sleep(30)
-                    break
-                elif time.time() - start_time > self.timeout:
-                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-                time.sleep(5)
-
-    def start_sim_series_par_fixed_amount(self):
+    def start_sim_series(self):
 
         processes = []
 
-        # copy Input Excel file into simulation series folder
-        shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
-        sim_success = [False] * len(self.sim_list)
+        self.create_sim_folders()
 
-        for sim in self.sim_list:
-            self.create_sim_folder(sim)
-
-        while not all(sim_success):
+        while not all(self.sim_success):
 
             for index in range(len(self.sim_list)):
                 sim = self.sim_list[index]
-
-                if not sim_success[index]:
-
+                path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)
+                # path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
+                # self.start_sim(path_dck)  #debug
+                if not self.sim_success[index]:
                     # create a new process instance
-                    process = multiprocessing.Process(
-                        target=self.start_sim,
-                        args=(os.path.join(self.dir_sim_series, sim, self.filename_dck_template),
-                              os.path.join(self.dir_sim_series, sim, 'out5.txt')),)
-
+                    process = multiprocessing.Process(target=self.start_sim, args=(path_dck,)) #todo: Schleife auf Basis von processes?
                     processes.append(process)
                     process.start()
+                    # start_time = time.time()
+                    # while True:
+                    #     cpu_percent = psutil.cpu_percent(interval=1)
+                    #     if cpu_percent < self.cpu_threshold:
+                    #         process.start()
+                    #         break
+                    #     elif time.time() - start_time > self.timeout:
+                    #         sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
 
                     time.sleep(self.start_time_buffer)
                     start_time = time.time()
@@ -348,16 +297,20 @@ class SimulationSeries:
 
             process.join()  # wait until all simulations are done first, otherwise problems when calculating small series
 
-            for index in range(len(self.sim_list)):
-                sim = self.sim_list[index]
+            self.check_sim_success()
 
-                path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
-                try:
-                    with open(path_output) as f:
-                        reader = csv.reader(f, delimiter="\t")
-                        d = list(reader)
+    def check_sim_success(self):
 
-                    sim_success[index] = not len(d) < 8762
-                except: # no file found
-                    sim_success[index] = False
+        for index in range(len(self.sim_list)):
+            sim = self.sim_list[index]
+
+            path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
+            try:
+                with open(path_output) as f:
+                    reader = csv.reader(f, delimiter="\t")
+                    d = list(reader)
+
+                self.sim_success[index] = not len(d) < 8762
+            except: # no file found
+                self.sim_success[index] = False
 

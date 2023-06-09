@@ -1,5 +1,5 @@
 import re
-import pandas as pd
+
 
 def replace_param(match, parameters):
     """
@@ -14,7 +14,7 @@ def replace_param(match, parameters):
 
     """
     for name, value in parameters.items():
-        if match.group(1).casefold() == '@' + name.casefold():  # find case insensitive
+        if match.group(1).casefold() == '@' + name.casefold():  # find, case-insensitive
             return match.group(1)[1:] + '=' + str(value)
 
 

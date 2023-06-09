@@ -1,16 +1,15 @@
 import multiprocessing
 import sys
+
 sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED - needed as tkinter has compatibility issues with pywinauto    #todo: prüfen ob noch nötig
 import classes
-import functions
 import os
 import tkinter as tk
-from tkinter import filedialog  #todo direkt über tk aufrufen
+from tkinter import filedialog  # explicit import required, calling from tk.filedialog does not work
 
 if __name__ == '__main__':
-
-    """ For some unknown reason main is also affected by multiprocessing (directory is asked multiple times), therefore
-    the function freeze_support is necessary
+    """ For some unknown reason, when producing an exe-File main is also affected by multiprocessing (directory/file is
+    asked multiple times), therefore the function freeze_support is necessary
     """
     multiprocessing.freeze_support()
 
@@ -33,6 +32,4 @@ if __name__ == '__main__':
     # import routine for input Excel file
     sim_series.import_input_excel()
 
-    # sim_series.start_sim_series()       # start simulation - linear computing
-    # sim_series.start_sim_series_par()   # start simulation - parallel computing
-    sim_series.start_sim_series_par_fixed_amount()   # start simulation - parallel computing fixed amount of parallel simulations
+    sim_series.start_sim_series()       # start simulation - linear computing
