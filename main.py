@@ -1,6 +1,8 @@
 import multiprocessing
 import classes
 import os
+import tkinter as tk
+from tkinter import filedialog
 
 # in case the script asks directory/path multiple times, use this
 # import sys
@@ -12,21 +14,33 @@ if __name__ == '__main__':
     """
     multiprocessing.freeze_support()
 
-    # create simulation series object
-    sim_series = classes.SimulationSeries()
-
     # ask simulation variants Excel file path
-    sim_series.set_paths()
+    root = tk.Tk()
+    root.withdraw()
+    path_sim_variants_excel = filedialog.askopenfilenames()
 
-    # import and apply settings Excel file
-    sim_series.import_settings_excel()
-    sim_series.set_settings()
+    sim_queue = list()
 
-    # create new folder for simulation series
-    os.makedirs(sim_series.dir_sim_series)
+    for path in path_sim_variants_excel:
+        path = path.replace("/", "\\")
 
-    # import routine for input Excel file
-    sim_series.import_input_excel()
+        # create simulation series object
+        sim_queue.append(classes.SimulationSeries(path))
 
-    # start simulation
-    sim_series.start_sim_series()
+    for sim_series in sim_queue:
+
+        # ask simulation variants Excel file path
+        sim_series.set_paths()
+
+        # import and apply settings Excel file
+        sim_series.import_settings_excel()
+        sim_series.set_settings()
+
+        # create new folder for simulation series
+        os.makedirs(sim_series.dir_sim_series)
+
+        # import routine for input Excel file
+        sim_series.import_input_excel()
+
+        # start simulation
+        sim_series.start_sim_series()

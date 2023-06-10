@@ -22,7 +22,7 @@ class SimulationSeries:
     multiprocessing.
     """
 
-    def __init__(self):
+    def __init__(self, path_sim_variants_excel):
         """ Initialize simulation series object
 
         A simulation series is saved in a folder at the same level as the base folder (which contains templates, b17/18
@@ -49,7 +49,7 @@ class SimulationSeries:
         self.dir_base_folder = None
         self.dir_sim_variants_excel = None
 
-        self.path_sim_variants_excel = None
+        self.path_sim_variants_excel = path_sim_variants_excel
         self.path_exe = None
         self.dir_sim_series = None
         self.dir_base_folder = None
@@ -60,6 +60,7 @@ class SimulationSeries:
         self.name_excelsheet = None
         self.name_base_folder = None
 
+        self.current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')   # current time when the main.exe file was executed
         self.timeout = None
         self.cpu_threshold = None
         self.start_time_buffer = None
@@ -72,20 +73,13 @@ class SimulationSeries:
 
     def set_paths(self):
 
-        # ask simulation variants Excel file path
-        root = tk.Tk()
-        root.withdraw()
-        self.path_sim_variants_excel = filedialog.askopenfilename().replace("/", "\\")
-
-        current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')  # current time when the main.exe file was executed
-
         self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
         self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
         self.filename_sim_variants_excel = os.path.basename(self.path_sim_variants_excel).split('.')[0]
 
         # simulation series folder in same directory as base folder
         self.dir_sim_series = \
-            os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + current_time)
+            os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
 
     def import_settings_excel(self):
 
