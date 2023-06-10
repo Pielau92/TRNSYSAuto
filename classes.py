@@ -226,13 +226,17 @@ class SimulationSeries:
         # endregion
 
         app.kill()  # close window
+        time.sleep(1)
 
         # region DELETE REDUNDANT FILES
-
+        path_sim = os.path.dirname(path_dck_file)
         # os.remove(path_dck_file[:-3] + 'lst')
-        # os.remove(os.path.join(path_sim, 'out11.txt'))
-        # os.remove(os.path.join(path_sim, 'out8.txt'))
-        # os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
+        os.remove(os.path.join(path_sim, 'out11.txt'))
+        os.remove(os.path.join(path_sim, 'out8.txt'))
+        os.remove(os.path.join(path_sim, 'out6.txt'))
+        os.remove(os.path.join(path_sim, 'out7.txt'))
+        os.remove(os.path.join(path_sim, 'out10.txt'))
+        os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
 
         # endregion
 
