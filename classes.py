@@ -1,3 +1,4 @@
+import sys
 import os
 import shutil
 import functions
@@ -273,7 +274,12 @@ class SimulationSeries:
                     # if time.time() - start_time > self.timeout:
                     # sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
 
-            process.join()  # wait until all simulations are done first, otherwise problems when calculating small series
+            # wait until all simulations are done first, otherwise problems when calculating small series
+            start_time = time.time()
+            while len(multiprocessing.active_children()) > 0:
+                time.sleep(5)
+                if time.time() - start_time > self.timeout:
+                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
 
             self.check_sim_success()
 
