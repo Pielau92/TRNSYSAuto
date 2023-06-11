@@ -201,7 +201,7 @@ class SimulationSeries:
         # copy Input Excel file into simulation series folder
         shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
 
-    def start_sim(self, path_dck_file):
+    def start_sim(self, path_dck_file, lock):
 
         app = Application(backend='uia')
         app.start(self.path_exe)
@@ -212,6 +212,7 @@ class SimulationSeries:
         Button.click_input()
 
         time.sleep(1)  # give the simulation some time to start
+        lock.release()
 
         # region wait for simulation completion
         # Solution 1: wait until the cpu kernel is no longer needed (simulation has ended)
@@ -249,6 +250,8 @@ class SimulationSeries:
 
         while not all(self.sim_success):
 
+            lock = multiprocessing.Lock()
+
             for index in range(len(self.sim_list)):
                 sim = self.sim_list[index]
                 path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)
@@ -257,9 +260,11 @@ class SimulationSeries:
                 if not self.sim_success[index]:
                     # create a new process instance
                     process = multiprocessing.Process(target=self.start_sim,
-                                                      args=(path_dck,))  # todo: Schleife auf Basis von processes?
+                                                      args=(path_dck, lock))  # todo: Schleife auf Basis von processes?
                     processes.append(process)
-                    process.start()
+                    with lock:
+                        process.start()
+                    lock.acquire()
                     # start_time = time.time()
                     # while True:
                     #     cpu_percent = psutil.cpu_percent(interval=1)
@@ -269,7 +274,7 @@ class SimulationSeries:
                     #     elif time.time() - start_time > self.timeout:
                     #         sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
 
-                    time.sleep(self.start_time_buffer)
+                    # time.sleep(self.start_time_buffer)
                     start_time = time.time()
                     if len(multiprocessing.active_children()) >= self.multiprocessing_max:
                         process.join()
