@@ -5,14 +5,15 @@ import glob
 import os
 import shutil
 import win32com.client
-from tkinter import filedialog
+# from tkinter import filedialog
 
 from natsort import natsorted
-#from line_profiler import LineProfiler
+# from line_profiler import LineProfiler
 import xlwings as xw
 
-def main():
-    trnsys_folder = filedialog.askdirectory()
+
+def main(trnsys_folder, filename_sim_variants_excel):
+    # trnsys_folder = filedialog.askdirectory()
     # trnsys_folder = './23.05.2023_18.22/'
     trnsys_data_file_name = 'out5.txt'
     cumulative_template_file = './Basisordner/Auswertung_Gesamt.xlsx'
@@ -34,8 +35,8 @@ def main():
 
     # logic starts here - DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING #
 
-    if not trnsys_folder.endswith('/'):
-        trnsys_folder = trnsys_folder + '/'
+    # if not trnsys_folder.endswith('/'):
+    #     trnsys_folder = trnsys_folder + '/'
     if not output_folder.endswith('/'):
         output_folder = output_folder + '/'
 
@@ -48,7 +49,7 @@ def main():
 
     shutil.copy(cumulative_template_file, cumulative_output_file)
 
-    variant_parameter_file = trnsys_folder+'Simulationsvarianten.xlsx'
+    variant_parameter_file = os.path.join(trnsys_folder, filename_sim_variants_excel) + '.xlsx'
     variant_parameter_df = pd.read_excel(variant_parameter_file, sheet_name='Simulationsvarianten')
 
 
@@ -59,8 +60,8 @@ def main():
     # iterate through trnsys variant folders
     for variant_folder in variant_folders:
         variant_cnt = variant_cnt + 1
-        variant_folder_path = f"{trnsys_folder}{variant_folder}"
-        variant_file_path = f"{variant_folder_path}/{trnsys_data_file_name}"
+        variant_folder_path = os.path.join(trnsys_folder, variant_folder)
+        variant_file_path = os.path.join(variant_folder_path, trnsys_data_file_name)
         print(variant_file_path)
         if not os.path.exists(variant_file_path):
             raise ValueError(f'File {variant_file_path} does not exist!')

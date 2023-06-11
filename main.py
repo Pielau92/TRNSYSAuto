@@ -2,9 +2,11 @@ import multiprocessing
 import classes
 import os
 import tkinter as tk
-from tkinter import filedialog
+from auswertung import main as evaluation
 
-# in case the script asks directory/path multiple times, use this
+from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work
+
+# in case the askdirectory/askfile window does not open, try this (fixes compatibility issues tkinter <=> pywinauto
 # import sys
 # sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
 
@@ -44,3 +46,7 @@ if __name__ == '__main__':
 
         # start simulation
         sim_series.start_sim_series()
+
+        # start evaluation "auswertung", if enabled
+        if sim_series.autostart_evaluation:
+            evaluation(sim_series.dir_sim_series, sim_series.filename_sim_variants_excel)

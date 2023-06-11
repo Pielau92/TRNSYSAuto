@@ -6,12 +6,10 @@ import re
 import multiprocessing
 import time
 import csv
-import psutil
+# import psutil
 
 import pandas as pd
-import tkinter as tk
 
-from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work
 from pywinauto.application import Application
 from datetime import datetime
 
@@ -71,6 +69,7 @@ class SimulationSeries:
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # Series with the .b18 data file names
         self.weather_series = None  # Series with the weather data file names
+        self.autostart_evaluation = False
 
     def set_paths(self):
 
@@ -98,6 +97,8 @@ class SimulationSeries:
         self.timeout = self.settings.loc['timeout']
         self.start_time_buffer = self.settings.loc['start_time_buffer']
         self.cpu_threshold = self.settings.loc['cpu_threshold']
+
+        self.autostart_evaluation = bool(self.settings.loc['autostart_evaluation'])
 
         if self.settings.loc['multiprocessing_max'] == 'auto':  # todo Prüfung ob sinnvoller Wert eingegeben wurde
             multiprocessing.cpu_count()
