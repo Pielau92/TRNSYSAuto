@@ -227,7 +227,7 @@ class SimulationSeries:
         # endregion
 
         app.kill()  # close window
-        time.sleep(1)
+        time.sleep(5)
 
         # region DELETE REDUNDANT FILES
         path_sim = os.path.dirname(path_dck_file)
