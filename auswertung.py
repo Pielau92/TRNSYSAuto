@@ -18,7 +18,8 @@ def main(trnsys_folder, filename_sim_variants_excel):
     trnsys_data_file_name = 'out5.txt'
     cumulative_template_file = './Basisordner/Auswertung_Gesamt.xlsx'
     variant_template_file = './Basisordner/Auswertung_Variante.xlsx'
-    output_folder = './out/'
+    # output_folder = './out/'
+    output_folder = os.path.join(trnsys_folder, 'evaluation')
     raw_data_variant_sheet_name = 'Rohdaten'
     calculation_sheetname = 'Berechn1'
     raw_data_cumulative_sheet_name = 'Rohinputs'
@@ -37,16 +38,16 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
     # if not trnsys_folder.endswith('/'):
     #     trnsys_folder = trnsys_folder + '/'
-    if not output_folder.endswith('/'):
-        output_folder = output_folder + '/'
+    # if not output_folder.endswith('/'):
+    #     output_folder = output_folder + '/'
 
     for existing_output in glob.glob(output_folder + '/*.xlsx'):
         os.remove(existing_output)
     os.makedirs(output_folder, exist_ok=True)
 
     cumulative_template_file = os.path.abspath(cumulative_template_file)
-    cumulative_output_file = os.path.abspath(f"{output_folder}gesamt{os.path.splitext(os.path.basename(cumulative_template_file))[1]}")
-
+    # cumulative_output_file = os.path.abspath(f"{output_folder}gesamt{os.path.splitext(os.path.basename(cumulative_template_file))[1]}")
+    cumulative_output_file = os.path.join(output_folder,'gesamt.xlsx')
     shutil.copy(cumulative_template_file, cumulative_output_file)
 
     variant_parameter_file = os.path.join(trnsys_folder, filename_sim_variants_excel) + '.xlsx'
@@ -55,6 +56,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
     # get top level directories
     variant_folders = next(os.walk(trnsys_folder))[1]
+    variant_folders.remove('evaluation')
     variant_folders = natsorted(variant_folders)
     variant_cnt = 0
     # iterate through trnsys variant folders
@@ -79,7 +81,9 @@ def main(trnsys_folder, filename_sim_variants_excel):
         #print(selected_trnsys_df)
 
         # copy template and write data in it
-        variant_output_file = os.path.abspath(f"{output_folder}variant_{variant_folder}{os.path.splitext(os.path.basename(variant_template_file))[1]}")
+        # variant_output_file = os.path.abspath(f"{output_folder}variant_{variant_folder}{os.path.splitext(os.path.basename(variant_template_file))[1]}")
+        variant_output_file = os.path.join(output_folder, 'variant' + variant_folder + '.xlsx')
+
         shutil.copy(variant_template_file, variant_output_file)
 
         wb = xw.Book(variant_output_file)
