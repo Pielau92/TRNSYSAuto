@@ -211,7 +211,8 @@ class SimulationSeries:
         Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
         Button.click_input()
 
-        time.sleep(1)  # give the simulation some time to start
+        while len(app.windows()) < 1:
+            time.sleep(1)
         lock.release()
 
         # region wait for simulation completion
@@ -223,22 +224,32 @@ class SimulationSeries:
         interval = 5  # checking interval in seconds
         timeout = 60 * 60  # timeout in seconds
         start_time = time.time()
-        while not len(app.windows()) > 1 and time.time() - start_time < timeout:
-            time.sleep(interval)
-        # endregion
+        while time.time() - start_time < timeout:
+            count_windows = len(app.windows())
+            match count_windows:
+                case 0:     # window got closed manually
+                    break
 
-        app.kill()  # close window
-        time.sleep(5)
+                case 1:     # simulation window still open
+                    time.sleep(interval)
 
-        # region DELETE REDUNDANT FILES
-        path_sim = os.path.dirname(path_dck_file)
-        # os.remove(path_dck_file[:-3] + 'lst')
-        os.remove(os.path.join(path_sim, 'out11.txt'))
-        os.remove(os.path.join(path_sim, 'out8.txt'))
-        os.remove(os.path.join(path_sim, 'out6.txt'))
-        os.remove(os.path.join(path_sim, 'out7.txt'))
-        os.remove(os.path.join(path_sim, 'out10.txt'))
-        os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
+                case 2:     # simulation completion window opened in addition to the simulation window
+                    app.kill()  # close window
+                    time.sleep(5)
+
+                    # region DELETE REDUNDANT FILES
+
+                    path_sim = os.path.dirname(path_dck_file)
+                    # os.remove(path_dck_file[:-3] + 'lst')
+                    os.remove(os.path.join(path_sim, 'out11.txt'))
+                    os.remove(os.path.join(path_sim, 'out8.txt'))
+                    os.remove(os.path.join(path_sim, 'out6.txt'))
+                    os.remove(os.path.join(path_sim, 'out7.txt'))
+                    os.remove(os.path.join(path_sim, 'out10.txt'))
+                    os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
+
+                    # endregion
+                    break
 
         # endregion
 
@@ -256,7 +267,7 @@ class SimulationSeries:
                 sim = self.sim_list[index]
                 path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)
                 # path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
-                # self.start_sim(path_dck)  #debug
+                # self.start_sim(path_dck, lock)  #debug
                 if not self.sim_success[index]:
                     # create a new process instance
                     process = multiprocessing.Process(target=self.start_sim,
