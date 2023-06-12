@@ -274,6 +274,11 @@ class SimulationSeries:
                         process.start()
                     lock.acquire()
 
+            while len(multiprocessing.active_children()) > 0:
+                time.sleep(5)
+                if time.time() - start_time > self.timeout:
+                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+
             self.check_sim_success()
 
     def check_sim_success(self):
