@@ -247,52 +247,32 @@ class SimulationSeries:
 
     def start_sim_series(self):
 
-        processes = []
-
         self.create_sim_folders()
 
-        while not all(self.sim_success):
+        processes = []
+        lock = multiprocessing.Lock()
 
-            lock = multiprocessing.Lock()
+        while not all(self.sim_success):
 
             for index in range(len(self.sim_list)):
                 sim = self.sim_list[index]
                 path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)
-                # path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
+
                 # self.start_sim(path_dck, lock)  #debug
+
                 if not self.sim_success[index]:
                     # create a new process instance
                     process = multiprocessing.Process(target=self.start_sim,
                                                       args=(path_dck, lock))  # todo: Schleife auf Basis von processes?
                     processes.append(process)
                     with lock:
+                        start_time = time.time()
+                        while len(multiprocessing.active_children()) >= self.multiprocessing_max:
+                            time.sleep(5)
+                            if time.time() - start_time > self.timeout:
+                                sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
                         process.start()
                     lock.acquire()
-                    # start_time = time.time()
-                    # while True:
-                    #     cpu_percent = psutil.cpu_percent(interval=1)
-                    #     if cpu_percent < self.cpu_threshold:
-                    #         process.start()
-                    #         break
-                    #     elif time.time() - start_time > self.timeout:
-                    #         sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-
-                    # time.sleep(self.start_time_buffer)
-                    start_time = time.time()
-                    if len(multiprocessing.active_children()) >= self.multiprocessing_max:
-                        process.join()
-
-                    # while len(multiprocessing.active_children()) >= self.multiprocessing_max:
-                    #     time.sleep(self.start_time_buffer)
-                    # if time.time() - start_time > self.timeout:
-                    # sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-
-            # wait until all simulations are done first, otherwise problems when calculating small series
-            start_time = time.time()
-            while len(multiprocessing.active_children()) > 0:
-                time.sleep(5)
-                if time.time() - start_time > self.timeout:
-                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
 
             self.check_sim_success()
 
