@@ -42,4 +42,3 @@ def find_and_replace_param(path_file, pattern, parameters):
     # overwrite file
     with open(path_file, 'w') as file:
         file.write(text)
-

@@ -3,10 +3,11 @@ import os
 import shutil
 import functions
 import re
-import psutil
 import multiprocessing
 import time
 import csv
+# import psutil
+
 import pandas as pd
 
 from pywinauto.application import Application
@@ -20,7 +21,7 @@ class SimulationSeries:
     multiprocessing.
     """
 
-    def __init__(self, cpu_threshold=100):
+    def __init__(self, path_sim_variants_excel):
         """ Initialize simulation series object
 
         A simulation series is saved in a folder at the same level as the base folder (which contains templates, b17/18
@@ -47,11 +48,10 @@ class SimulationSeries:
         self.dir_base_folder = None
         self.dir_sim_variants_excel = None
 
-        self.path_sim_variants_excel = None
+        self.path_sim_variants_excel = path_sim_variants_excel
         self.path_exe = None
         self.dir_sim_series = None
         self.dir_base_folder = None
-
 
         self.filename_sim_variants_excel = None
         self.filename_dck_template = None
@@ -59,20 +59,19 @@ class SimulationSeries:
         self.name_excelsheet = None
         self.name_base_folder = None
 
-
+        self.current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')   # current time when the main.exe file was executed
         self.timeout = None
-        self.cpu_threshold = cpu_threshold
+        self.cpu_threshold = None
         self.start_time_buffer = None
-        self.settings = None    # Pandas series with simulation settings
-        self.sim_list = None    # list of simulation variant names
+        self.settings = None  # Pandas series with simulation settings
+        self.sim_list = None  # list of simulation variant names
         self.sim_success = None
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # Series with the .b18 data file names
         self.weather_series = None  # Series with the weather data file names
+        self.autostart_evaluation = False
 
     def set_paths(self):
-
-        current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')  # current time when the main.exe file was executed
 
         self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
         self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
@@ -80,11 +79,12 @@ class SimulationSeries:
 
         # simulation series folder in same directory as base folder
         self.dir_sim_series = \
-            os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + current_time)
+            os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
 
     def import_settings_excel(self):
 
-        excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, 'Einstellungen.xlsx'))  # read input Excel file
+        excel_data = pd.ExcelFile(
+            os.path.join(self.dir_sim_variants_excel, 'Einstellungen.xlsx'))  # read input Excel file
         df = excel_data.parse('Einstellungen', index_col=0)  # Excel data as DataFrame
         self.settings = df.Wert
 
@@ -96,8 +96,11 @@ class SimulationSeries:
         self.filename_dck_template = self.settings.loc['filename_dck_template']
         self.timeout = self.settings.loc['timeout']
         self.start_time_buffer = self.settings.loc['start_time_buffer']
+        self.cpu_threshold = self.settings.loc['cpu_threshold']
 
-        if self.settings.loc['multiprocessing_max'] == 'auto':  #todo Prüfung ob sinnvoller Wert eingegeben wurde
+        self.autostart_evaluation = bool(self.settings.loc['autostart_evaluation'])
+
+        if self.settings.loc['multiprocessing_max'] == 'auto':  # todo Prüfung ob sinnvoller Wert eingegeben wurde
             multiprocessing.cpu_count()
         else:
             self.multiprocessing_max = self.settings.loc['multiprocessing_max']
@@ -143,7 +146,7 @@ class SimulationSeries:
 
             # region SOURCE/DESTINATION FILE PATHS FOR COPYING PROCESS
 
-            src_file = [  #todo: dynamisch neu machen
+            src_file = [  # todo: dynamisch neu machen
                 os.path.join(self.dir_sim_variants_excel, 'templateDck.dck'),
                 os.path.join(self.dir_sim_variants_excel, 'Lastprofil.txt'),
                 os.path.join(self.dir_sim_variants_excel, 'b18', self.b18_series[sim]),
@@ -198,104 +201,83 @@ class SimulationSeries:
         # copy Input Excel file into simulation series folder
         shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
 
-    def start_sim(self, path_dck_file):
-
-        # path_dck_file = path_dck_file.replace("/", "\\")
-
-        # path_file_raw = r'{}'.format(path_file)     # turn file path into raw string to avoid error messages
+    def start_sim(self, path_dck_file, lock):
 
         app = Application(backend='uia')
         app.start(self.path_exe)
         app.connect(title="Öffnen", timeout=60 * 30)
 
-        app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)    # insert .dck file path
+        app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)  # insert .dck file path
         Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
         Button.click_input()
 
-        time.sleep(10) # give the simulation some time to start
+        while len(app.windows()) < 1:
+            time.sleep(1)
+        lock.release()
 
-        # wait until the cpu kernel is no longer needed (simulation has ended)
+        # region wait for simulation completion
+        # Solution 1: wait until the cpu kernel is no longer needed (simulation has ended)
         # app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
 
-        # for extra stability
-        # time.sleep(10)  # give the simulation some time to start
-        app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
-
-        # print(app.cpu_usage())
-        # quit simulation after 10 minutes
-        # time.sleep(60 * 10)
+        # Solution 2: wait until second window pops up
+        # (simulation has ended and asks if the online plotter should be closed)
+        interval = 5  # checking interval in seconds
+        timeout = 60 * 60  # timeout in seconds
+        start_time = time.time()
+        while time.time() - start_time < timeout and len(app.windows()) < 2 and app.is_process_running():
+            time.sleep(interval)
 
         app.kill()  # close window
-        #
-        # with open(path_output) as f:
-        #     reader = csv.reader(f, delimiter="\t")
-        #     d = list(reader)
-        #
-        # while False:    #len(d) < 8762:
-        #     app.start(self.path_exe)
-        #     app.connect(title="Öffnen", timeout=60 * 30)
-        #
-        #     app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)  # insert .dck file name
-        #     Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
-        #     Button.click_input()
-        #
-        #     time.sleep(10)  # give the simulation some time to start
-        #     app.wait_cpu_usage_lower(threshold=0, timeout=60 * 15)
-        #     app.kill()  # close window
-        #
-        #     with open(path_output) as f:
-        #         reader = csv.reader(f, delimiter="\t")
-        #         d = list(reader)
-        # time.sleep(10)   # give the simulation some time to quit
-        # time.sleep(20)  # give the simulation some time to quit
+        time.sleep(5)
 
         # region DELETE REDUNDANT FILES
 
+        path_sim = os.path.dirname(path_dck_file)
         # os.remove(path_dck_file[:-3] + 'lst')
-        # os.remove(os.path.join(path_sim, 'out11.txt'))
-        # os.remove(os.path.join(path_sim, 'out8.txt'))
-        # os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
+        os.remove(os.path.join(path_sim, 'out11.txt'))
+        os.remove(os.path.join(path_sim, 'out8.txt'))
+        os.remove(os.path.join(path_sim, 'out6.txt'))
+        os.remove(os.path.join(path_sim, 'out7.txt'))
+        os.remove(os.path.join(path_sim, 'out10.txt'))
+        os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
+
+        # endregion
 
         # endregion
 
     def start_sim_series(self):
 
-        processes = []
-
         self.create_sim_folders()
+
+        processes = []
+        lock = multiprocessing.Lock()
 
         while not all(self.sim_success):
 
             for index in range(len(self.sim_list)):
                 sim = self.sim_list[index]
                 path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)
-                # path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')
-                # self.start_sim(path_dck)  #debug
+
+                # self.start_sim(path_dck, lock)  #debug
+
                 if not self.sim_success[index]:
                     # create a new process instance
-                    process = multiprocessing.Process(target=self.start_sim, args=(path_dck,)) #todo: Schleife auf Basis von processes?
+                    process = multiprocessing.Process(target=self.start_sim,
+                                                      args=(path_dck, lock))  # todo: Schleife auf Basis von processes?
                     processes.append(process)
-                    process.start()
-                    # start_time = time.time()
-                    # while True:
-                    #     cpu_percent = psutil.cpu_percent(interval=1)
-                    #     if cpu_percent < self.cpu_threshold:
-                    #         process.start()
-                    #         break
-                    #     elif time.time() - start_time > self.timeout:
-                    #         sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+                    with lock:
+                        start_time = time.time()
+                        while len(multiprocessing.active_children()) >= self.multiprocessing_max:
+                            time.sleep(5)
+                            if time.time() - start_time > self.timeout:
+                                sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+                        process.start()
+                    lock.acquire()
 
-                    time.sleep(self.start_time_buffer)
-                    start_time = time.time()
-                    if len(multiprocessing.active_children()) >= self.multiprocessing_max:
-                        process.join()
-
-                    # while len(multiprocessing.active_children()) >= self.multiprocessing_max:
-                    #     time.sleep(self.start_time_buffer)
-                        # if time.time() - start_time > self.timeout:
-                            # sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-
-            process.join()  # wait until all simulations are done first, otherwise problems when calculating small series
+            while len(multiprocessing.active_children()) > 0:
+                time.sleep(5)
+                if time.time() - start_time > self.timeout:
+                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
 
             self.check_sim_success()
 
@@ -311,6 +293,5 @@ class SimulationSeries:
                     d = list(reader)
 
                 self.sim_success[index] = not len(d) < 8762
-            except: # no file found
+            except:  # no file found
                 self.sim_success[index] = False
-

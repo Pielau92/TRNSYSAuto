@@ -5,19 +5,21 @@ import glob
 import os
 import shutil
 import win32com.client
-from tkinter import filedialog
+# from tkinter import filedialog
 
 from natsort import natsorted
-#from line_profiler import LineProfiler
+# from line_profiler import LineProfiler
 import xlwings as xw
 
-def main():
-    trnsys_folder = filedialog.askdirectory()
+
+def main(trnsys_folder, filename_sim_variants_excel):
+    # trnsys_folder = filedialog.askdirectory()
     # trnsys_folder = './23.05.2023_18.22/'
     trnsys_data_file_name = 'out5.txt'
     cumulative_template_file = './Basisordner/Auswertung_Gesamt.xlsx'
     variant_template_file = './Basisordner/Auswertung_Variante.xlsx'
-    output_folder = './out/'
+    # output_folder = './out/'
+    output_folder = os.path.join(trnsys_folder, 'evaluation')
     raw_data_variant_sheet_name = 'Rohdaten'
     calculation_sheetname = 'Berechn1'
     raw_data_cumulative_sheet_name = 'Rohinputs'
@@ -34,33 +36,34 @@ def main():
 
     # logic starts here - DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING #
 
-    if not trnsys_folder.endswith('/'):
-        trnsys_folder = trnsys_folder + '/'
-    if not output_folder.endswith('/'):
-        output_folder = output_folder + '/'
+    # if not trnsys_folder.endswith('/'):
+    #     trnsys_folder = trnsys_folder + '/'
+    # if not output_folder.endswith('/'):
+    #     output_folder = output_folder + '/'
 
     for existing_output in glob.glob(output_folder + '/*.xlsx'):
         os.remove(existing_output)
     os.makedirs(output_folder, exist_ok=True)
 
     cumulative_template_file = os.path.abspath(cumulative_template_file)
-    cumulative_output_file = os.path.abspath(f"{output_folder}gesamt{os.path.splitext(os.path.basename(cumulative_template_file))[1]}")
-
+    # cumulative_output_file = os.path.abspath(f"{output_folder}gesamt{os.path.splitext(os.path.basename(cumulative_template_file))[1]}")
+    cumulative_output_file = os.path.join(output_folder,'gesamt.xlsx')
     shutil.copy(cumulative_template_file, cumulative_output_file)
 
-    variant_parameter_file = trnsys_folder+'Simulationsvarianten.xlsx'
+    variant_parameter_file = os.path.join(trnsys_folder, filename_sim_variants_excel) + '.xlsx'
     variant_parameter_df = pd.read_excel(variant_parameter_file, sheet_name='Simulationsvarianten')
 
 
     # get top level directories
     variant_folders = next(os.walk(trnsys_folder))[1]
+    variant_folders.remove('evaluation')
     variant_folders = natsorted(variant_folders)
     variant_cnt = 0
     # iterate through trnsys variant folders
     for variant_folder in variant_folders:
         variant_cnt = variant_cnt + 1
-        variant_folder_path = f"{trnsys_folder}{variant_folder}"
-        variant_file_path = f"{variant_folder_path}/{trnsys_data_file_name}"
+        variant_folder_path = os.path.join(trnsys_folder, variant_folder)
+        variant_file_path = os.path.join(variant_folder_path, trnsys_data_file_name)
         print(variant_file_path)
         if not os.path.exists(variant_file_path):
             raise ValueError(f'File {variant_file_path} does not exist!')
@@ -78,7 +81,9 @@ def main():
         #print(selected_trnsys_df)
 
         # copy template and write data in it
-        variant_output_file = os.path.abspath(f"{output_folder}variant_{variant_folder}{os.path.splitext(os.path.basename(variant_template_file))[1]}")
+        # variant_output_file = os.path.abspath(f"{output_folder}variant_{variant_folder}{os.path.splitext(os.path.basename(variant_template_file))[1]}")
+        variant_output_file = os.path.join(output_folder, 'variant' + variant_folder + '.xlsx')
+
         shutil.copy(variant_template_file, variant_output_file)
 
         wb = xw.Book(variant_output_file)
