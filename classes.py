@@ -224,32 +224,24 @@ class SimulationSeries:
         interval = 5  # checking interval in seconds
         timeout = 60 * 60  # timeout in seconds
         start_time = time.time()
-        while time.time() - start_time < timeout:
-            count_windows = len(app.windows())
-            match count_windows:
-                case 0:     # window got closed manually
-                    break
+        while time.time() - start_time < timeout and len(app.windows()) < 2 and app.is_process_running():
+            time.sleep(interval)
 
-                case 1:     # simulation window still open
-                    time.sleep(interval)
+        app.kill()  # close window
+        time.sleep(5)
 
-                case 2:     # simulation completion window opened in addition to the simulation window
-                    app.kill()  # close window
-                    time.sleep(5)
+        # region DELETE REDUNDANT FILES
 
-                    # region DELETE REDUNDANT FILES
+        path_sim = os.path.dirname(path_dck_file)
+        # os.remove(path_dck_file[:-3] + 'lst')
+        os.remove(os.path.join(path_sim, 'out11.txt'))
+        os.remove(os.path.join(path_sim, 'out8.txt'))
+        os.remove(os.path.join(path_sim, 'out6.txt'))
+        os.remove(os.path.join(path_sim, 'out7.txt'))
+        os.remove(os.path.join(path_sim, 'out10.txt'))
+        os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
 
-                    path_sim = os.path.dirname(path_dck_file)
-                    # os.remove(path_dck_file[:-3] + 'lst')
-                    os.remove(os.path.join(path_sim, 'out11.txt'))
-                    os.remove(os.path.join(path_sim, 'out8.txt'))
-                    os.remove(os.path.join(path_sim, 'out6.txt'))
-                    os.remove(os.path.join(path_sim, 'out7.txt'))
-                    os.remove(os.path.join(path_sim, 'out10.txt'))
-                    os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
-
-                    # endregion
-                    break
+        # endregion
 
         # endregion
 
