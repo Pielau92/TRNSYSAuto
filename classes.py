@@ -45,30 +45,33 @@ class SimulationSeries:
             Threshold of the cpu usage that must be undercut to initiate the next simulation
         """
 
-        self.dir_base_folder = None
-        self.dir_sim_variants_excel = None
+        # current time when the main.exe file was executed
+        self.current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
 
         self.path_sim_variants_excel = path_sim_variants_excel
-        self.path_exe = None
+
+        self.dir_base_folder = None
+        self.dir_sim_variants_excel = None
         self.dir_sim_series = None
         self.dir_base_folder = None
 
         self.filename_sim_variants_excel = None
-        self.filename_dck_template = None
-
-        self.name_excelsheet = None
-        self.name_base_folder = None
-
-        self.current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')   # current time when the main.exe file was executed
-        self.timeout = None
-        self.cpu_threshold = None
-        self.start_time_buffer = None
         self.settings = None  # Pandas series with simulation settings
         self.sim_list = None  # list of simulation variant names
         self.sim_success = None
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # Series with the .b18 data file names
         self.weather_series = None  # Series with the weather data file names
+
+        # Settings
+        self.path_exe = None
+        self.name_excelsheet = None
+        self.name_base_folder = None
+        self.filename_dck_template = None
+        self.timeout = None
+        self.start_time_buffer = None
+        self.multiprocessing_max = None
+        # self.cpu_threshold = None
         self.autostart_evaluation = False
 
     def set_paths(self):
@@ -92,16 +95,17 @@ class SimulationSeries:
 
         self.path_exe = self.settings.loc['path_exe']
         self.name_excelsheet = self.settings.loc['name_excelsheet_sim_variants']
-        self.name_base_folder = self.settings.loc['name_base_folder']
         self.filename_dck_template = self.settings.loc['filename_dck_template']
         self.timeout = self.settings.loc['timeout']
         self.start_time_buffer = self.settings.loc['start_time_buffer']
-        self.cpu_threshold = self.settings.loc['cpu_threshold']
+
+        # self.name_base_folder = self.settings.loc['name_base_folder']
+        # self.cpu_threshold = self.settings.loc['cpu_threshold']
 
         self.autostart_evaluation = bool(self.settings.loc['autostart_evaluation'])
 
         if self.settings.loc['multiprocessing_max'] == 'auto':  # todo Prüfung ob sinnvoller Wert eingegeben wurde
-            multiprocessing.cpu_count()
+            self.multiprocessing_max = multiprocessing.cpu_count()
         else:
             self.multiprocessing_max = self.settings.loc['multiprocessing_max']
 
@@ -205,7 +209,7 @@ class SimulationSeries:
 
         app = Application(backend='uia')
         app.start(self.path_exe)
-        app.connect(title="Öffnen", timeout=60 * 30)
+        app.connect(title="Öffnen", timeout=self.timeout)
 
         app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)  # insert .dck file path
         Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
@@ -213,6 +217,10 @@ class SimulationSeries:
 
         while len(app.windows()) < 1:
             time.sleep(1)
+
+        # add a time buffer before releasing the lock, which delays the next simulation
+        time.sleep(self.start_time_buffer)
+
         lock.release()
 
         # region wait for simulation completion
@@ -222,9 +230,8 @@ class SimulationSeries:
         # Solution 2: wait until second window pops up
         # (simulation has ended and asks if the online plotter should be closed)
         interval = 5  # checking interval in seconds
-        timeout = 60 * 60  # timeout in seconds
         start_time = time.time()
-        while time.time() - start_time < timeout and len(app.windows()) < 2 and app.is_process_running():
+        while time.time() - start_time < self.timeout and len(app.windows()) < 2 and app.is_process_running():
             time.sleep(interval)
 
         app.kill()  # close window
