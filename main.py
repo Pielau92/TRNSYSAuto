@@ -22,21 +22,20 @@ def main():
     multiprocessing.freeze_support()
     # endregion
 
-    sim_queue = create_sim_queue()  # create list of SimulationSeries object(s)
-    start_sim_series(sim_queue)     # start simulation series calculation
+    sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
+    start_sim_queue(sim_queue)      # start calculation
 
 
 def create_sim_queue():
     """Create queue of simulation series.
 
     Opens the explorer and asks for one or multiple simulation variants Excel files. For each selected Excel file, an
-    additional SimulationSeries object is added to the list sim_queue.
+    additional SimulationSeries object is created and added to the list sim_queue.
 
     Returns
     -------
     sim_queue : list of SimulationSeries
-        list with SimulationSeries objects
-
+        list with SimulationSeries objects.
     """
 
     # ask simulation variants Excel file path(s)
@@ -55,27 +54,26 @@ def create_sim_queue():
     return sim_queue
 
 
-def start_sim_series(sim_queue):
-    """Start simulation series.
+def start_sim_queue(sim_queue):
+    """Start simulation series queue.
 
-    Starts each SimulationSeries object stored in sim_queue one after the other. Additionally, for each simulation
-    an evaluation routine starts, if the autostart_evaluation parameter is set to True.
+    Starts each SimulationSeries object stored in sim_queue successively. Additionally, after each simulation series an
+    evaluation routine starts, provided the parameter "autostart_evaluation" is set to True.
 
     Parameters
     ----------
     sim_queue : list of SimulationSeries
-        list with SimulationSeries objects
-
+        list with SimulationSeries objects.
     """
 
     for sim_series in sim_queue:
 
         # store essential paths in SimulationSeries object
-        sim_series.set_paths()
+        # sim_series.set_paths()
 
         # import and apply settings Excel file
-        sim_series.import_settings_excel()
-        sim_series.set_settings()
+        sim_series.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
+                                         name_excelsheet_settings='Einstellungen')
 
         # create new folder for simulation series
         os.makedirs(sim_series.dir_sim_series)
