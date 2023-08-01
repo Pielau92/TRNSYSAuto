@@ -285,7 +285,6 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         # create simulation series folder
         self.create_sim_series_folder()
 
-        processes = []  #todo: benutzen oder löschen
         lock = multiprocessing.Lock()
 
         while not all(self.sim_success):    # check if any simulation has not been simulated successfully yet
@@ -293,16 +292,16 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
             print('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
 
             for index in range(len(self.sim_list)):
-                sim = self.sim_list[index]  # name of simulation
-                path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)   # path of dck-file
-
-                # self.start_sim(path_dck, lock)  #debug
 
                 if not self.sim_success[index]:
+                    sim = self.sim_list[index]  # name of simulation
+                    path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)  # path of dck-file
+
+                    # self.start_sim(path_dck, lock)  # for debugging only
+
                     # create a new process instance
                     process = multiprocessing.Process(target=self.start_sim,
-                                                      args=(path_dck, lock))  # todo: Schleife auf Basis von processes?
-                    processes.append(process)   # todo: benutzen oder löschen
+                                                      args=(path_dck, lock))
                     with lock:
                         start_time = time.time()
                         while len(multiprocessing.active_children()) >= self.multiprocessing_max:
