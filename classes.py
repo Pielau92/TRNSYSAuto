@@ -180,27 +180,16 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
             for index in range(len(src_file)):
                 shutil.copy(src_file[index], dst_file[index])
 
-            # region FIND AND REPLACE WEATHER DATA FILE NAME IN .dck FILE todo: eigene Funktion draus machen
+            # find and replace weather data file name in .dck file
+            functions.find_and_replace(
+                dst_file[0], pattern=r'(\*ASSIGN "tm2")', repl=r'ASSIGN "' + self.weather_series[sim] + '"')
 
-            with open(dst_file[0], 'r') as file:
-                text = file.read()  # read file
-                new_text = re.sub(r'(\*ASSIGN "tm2")', r'ASSIGN "' + self.weather_series[sim] + '"', text)
-            with open(dst_file[0], 'w') as file:
-                file.write(new_text)  # overwrite file
-
-            # endregion
-
-            # region FIND AND REPLACE .b18/b.17 FILE NAME IN .dck FILE
-
-            with open(dst_file[0], 'r') as file:
-                text = file.read()  # read file
-                new_text = re.sub(r'(\*ASSIGN "b17")', r'ASSIGN "' + self.b18_series[sim] + '"', text)
-            with open(dst_file[0], 'w') as file:
-                file.write(new_text)  # overwrite file
-
-            # endregion
+            # find and replace .b17/.b18 file name in .dck file
+            functions.find_and_replace(
+                dst_file[0], pattern=r'(\*ASSIGN "b17")', repl=r'ASSIGN "' + self.b18_series[sim] + '"')
 
             # region FIND AND REPLACE PARAMETERS IN .dck FILE
+
             functions.find_and_replace_text(dst_file[0], r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
             functions.find_and_replace_text(dst_file[0], r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
 
