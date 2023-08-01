@@ -13,6 +13,7 @@ import xlwings as xw
 
 
 def main(trnsys_folder, filename_sim_variants_excel):
+    print('Starting evaluation of simulation results')
     # trnsys_folder = filedialog.askdirectory()
     # trnsys_folder = './23.05.2023_18.22/'
     trnsys_data_file_name = 'out5.txt'

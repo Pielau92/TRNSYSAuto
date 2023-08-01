@@ -228,18 +228,24 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         # start application
         app = Application(backend='uia')
         app.start(self.path_exe)
-        app.connect(title="Öffnen", timeout=self.timeout)
 
-        # insert .dck file path
-        app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)
+        try:
+            app.connect(title="Öffnen", timeout=2) #self.timeout)
 
-        # press start button
-        Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
-        Button.click_input()
+            # insert .dck file path
+            app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)
 
-        # wait for the simulation window to open
-        while len(app.windows()) < 1:
-            time.sleep(1)
+            # press start button
+            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
+            Button.click_input()
+
+            # wait for the simulation window to open
+            while len(app.windows()) < 1:
+                time.sleep(1)
+
+        except Exception:   #TimeoutError:
+            lock.release()
+            return
 
         # add a time buffer before releasing the lock, which delays the next simulation
         time.sleep(self.start_time_buffer)
@@ -284,6 +290,8 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
         while not all(self.sim_success):    # check if any simulation has not been simulated successfully yet
 
+            print('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
+
             for index in range(len(self.sim_list)):
                 sim = self.sim_list[index]  # name of simulation
                 path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)   # path of dck-file
@@ -294,7 +302,7 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
                     # create a new process instance
                     process = multiprocessing.Process(target=self.start_sim,
                                                       args=(path_dck, lock))  # todo: Schleife auf Basis von processes?
-                    processes.append(process)   #todo: benutzen oder löschen
+                    processes.append(process)   # todo: benutzen oder löschen
                     with lock:
                         start_time = time.time()
                         while len(multiprocessing.active_children()) >= self.multiprocessing_max:
@@ -319,6 +327,8 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         Checks for each simulation inside the simulation series, if the simulation was calculated successfully. If so,
         its sim_success flag is switched from False to True."""
 
+        print('Checking for failed simulations')
+
         for index in range(len(self.sim_list)):
             sim = self.sim_list[index]
 
@@ -330,5 +340,12 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
                 # simulation was successful, if hourly data is complete (8760 entries)
                 self.sim_success[index] = not len(d) < 8762
-            except:  # no file found todo: Exception hinzufügen
+            except FileNotFoundError:  # no file found
                 self.sim_success[index] = False
+
+        # print simulation success status
+        if all(self.sim_success):
+            print(('"{}" completed successfully'.format(self.filename_sim_variants_excel)))
+        else:
+            print('{} out of {} simulations completed successfully'.format(
+                sum(self.sim_success), len(self.sim_success)))
