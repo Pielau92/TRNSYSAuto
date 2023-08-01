@@ -150,48 +150,37 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
             path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation folder
             os.makedirs(path_sim)  # create new simulation subfolder
-            # shutil.copytree(dir_base_folder, path_sim)          # copy all files from base to simulation folder
 
             # region SOURCE/DESTINATION FILE PATHS FOR COPYING PROCESS
 
-            src_file = [  # todo: dynamisch neu machen, u.U. Funktion draus machen
-                os.path.join(self.dir_sim_variants_excel, 'templateDck.dck'),
-                os.path.join(self.dir_sim_variants_excel, 'Lastprofil.txt'),
-                os.path.join(self.dir_sim_variants_excel, 'b18', self.b18_series[sim]),
-                os.path.join(self.dir_sim_variants_excel, 'Wetterdaten', self.weather_series[sim]),
-                os.path.join(self.dir_sim_variants_excel, 'SzenarioAneu.txt'),
-                os.path.join(self.dir_sim_variants_excel, 'Qelww_CHR55025.txt'),
-                os.path.join(self.dir_sim_variants_excel, 'Windetc20190804.txt'),
-                os.path.join(self.dir_sim_variants_excel, 'StrahlungBruck.txt')]
-
-            dst_file = [
-                os.path.join(path_sim, 'templateDck.dck'),
-                os.path.join(path_sim, 'Lastprofil.txt'),
-                os.path.join(path_sim, self.b18_series[sim]),
-                os.path.join(path_sim, self.weather_series[sim]),
-                os.path.join(path_sim, 'SzenarioAneu.txt'),
-                os.path.join(path_sim, 'Qelww_CHR55025.txt'),
-                os.path.join(path_sim, 'Windetc20190804.txt'),
-                os.path.join(path_sim, 'StrahlungBruck.txt')]
+            file_list = ['templateDck.dck', 'Lastprofil.txt', 'SzenarioAneu.txt','Qelww_CHR55025.txt',
+                         'Windetc20190804.txt', 'StrahlungBruck.txt']
+            src_file_list = file_list + \
+                            [os.path.join('b18', self.b18_series[sim]),
+                             os.path.join('Wetterdaten', self.weather_series[sim])]
+            dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim]]
 
             # endregion
 
             # copy specified files into simulation folder
-            for index in range(len(src_file)):
-                shutil.copy(src_file[index], dst_file[index])
+            for index in range(len(src_file_list)):
+                shutil.copy(
+                    os.path.join(self.dir_sim_variants_excel, src_file_list[index]),
+                    os.path.join(path_sim, dst_file_list[index]))
 
+            path_dck = os.path.join(path_sim, dst_file_list[0])
             # find and replace weather data file name in .dck file
             functions.find_and_replace(
-                dst_file[0], pattern=r'(\*ASSIGN "tm2")', repl=r'ASSIGN "' + self.weather_series[sim] + '"')
+                path_dck, pattern=r'(\*ASSIGN "tm2")', repl=r'ASSIGN "' + self.weather_series[sim] + '"')
 
             # find and replace .b17/.b18 file name in .dck file
             functions.find_and_replace(
-                dst_file[0], pattern=r'(\*ASSIGN "b17")', repl=r'ASSIGN "' + self.b18_series[sim] + '"')
+                path_dck, pattern=r'(\*ASSIGN "b17")', repl=r'ASSIGN "' + self.b18_series[sim] + '"')
 
             # region FIND AND REPLACE PARAMETERS IN .dck FILE
 
-            functions.find_and_replace_text(dst_file[0], r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
-            functions.find_and_replace_text(dst_file[0], r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
+            functions.find_and_replace_text(path_dck, r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
+            functions.find_and_replace_text(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
 
             # endregion
 
