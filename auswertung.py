@@ -31,9 +31,14 @@ def main(trnsys_folder, filename_sim_variants_excel):
     zone_3_with_output = 'Zone3_mit'
     zone_3_without_output = 'Zone3_ohne'
 
-    selected_trnsys_columns = ['Period', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
-    trnsys_outdoor_temperature = 'ta'
+    #todo: "selected_trnsys_columns" als Parameter in Einstellungs-Excel aufnehmen
 
+    # selected_trnsys_columns = ['Period', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1',
+    #                            'pmv2', 'pmv3']
+    selected_trnsys_columns = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'clo1', 'met1', 'work1',
+                               'tzone1', 'TMSURF_ZONE1', 'relh2', 'vel2', 'clo2', 'met2',  'work2', 'tzone1',
+                               'TMSURF_ZONE1','relh3', 'vel3', 'clo3', 'met3',  'work3']
+    trnsys_outdoor_temperature = 'ta'
 
     # logic starts here - DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING #
 
