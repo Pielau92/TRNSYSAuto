@@ -153,7 +153,7 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
             # region SOURCE/DESTINATION FILE PATHS FOR COPYING PROCESS
 
-            file_list = ['templateDck.dck', 'Lastprofil.txt', 'SzenarioAneu.txt','Qelww_CHR55025.txt',
+            file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt','Qelww_CHR55025.txt',
                          'Windetc20190804.txt', 'StrahlungBruck.txt']
             src_file_list = file_list + \
                             [os.path.join('b18', self.b18_series[sim]),
