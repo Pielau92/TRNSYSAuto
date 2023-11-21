@@ -31,13 +31,13 @@ def main(trnsys_folder, filename_sim_variants_excel):
     zone_3_with_output = 'Zone3_mit'
     zone_3_without_output = 'Zone3_ohne'
 
-    #todo: "selected_trnsys_columns" als Parameter in Einstellungs-Excel aufnehmen
+    # todo: "selected_trnsys_columns" als Parameter in Einstellungs-Excel aufnehmen
 
     # selected_trnsys_columns = ['Period', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1',
     #                            'pmv2', 'pmv3']
     selected_trnsys_columns = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'clo1', 'met1', 'work1',
-                               'tzone1', 'TMSURF_ZONE1', 'relh2', 'vel2', 'clo2', 'met2',  'work2', 'tzone1',
-                               'TMSURF_ZONE1','relh3', 'vel3', 'clo3', 'met3',  'work3']
+                               'tzone1', 'TMSURF_ZONE1', 'relh2', 'vel2', 'clo2', 'met2', 'work2', 'tzone1',
+                               'TMSURF_ZONE1', 'relh3', 'vel3', 'clo3', 'met3', 'work3']
     trnsys_outdoor_temperature = 'ta'
 
     # logic starts here - DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING #
@@ -53,12 +53,11 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
     cumulative_template_file = os.path.abspath(cumulative_template_file)
     # cumulative_output_file = os.path.abspath(f"{output_folder}gesamt{os.path.splitext(os.path.basename(cumulative_template_file))[1]}")
-    cumulative_output_file = os.path.join(output_folder,'gesamt.xlsx')
+    cumulative_output_file = os.path.join(output_folder, 'gesamt.xlsx')
     shutil.copy(cumulative_template_file, cumulative_output_file)
 
     variant_parameter_file = os.path.join(trnsys_folder, filename_sim_variants_excel) + '.xlsx'
     variant_parameter_df = pd.read_excel(variant_parameter_file, sheet_name='Simulationsvarianten')
-
 
     # get top level directories
     variant_folders = next(os.walk(trnsys_folder))[1]
@@ -77,14 +76,15 @@ def main(trnsys_folder, filename_sim_variants_excel):
         if variant_folder not in variant_parameter_df.columns:
             raise ValueError(f'Did not find {variant_folder} in {variant_parameter_file}')
 
-
         # read trnsys output file
         trnsys_df = pd.read_csv(variant_file_path, sep='\s+', skiprows=1, skipfooter=23, engine='python')
 
         selected_trnsys_df = trnsys_df[selected_trnsys_columns]
         selected_trnsys_df = selected_trnsys_df.reindex(selected_trnsys_columns, axis=1)
 
-        #print(selected_trnsys_df)
+        # region EXCEL EXPORT
+
+        # print(selected_trnsys_df)
 
         # copy template and write data in it
         # variant_output_file = os.path.abspath(f"{output_folder}variant_{variant_folder}{os.path.splitext(os.path.basename(variant_template_file))[1]}")
@@ -94,22 +94,24 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
         wb = xw.Book(variant_output_file)
         ws = wb.sheets[raw_data_variant_sheet_name]
-        ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[['File', 'Parameter', variant_folder]]
+        ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
+            ['File', 'Parameter', variant_folder]]
         ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = selected_trnsys_df
         ws = wb.sheets[calculation_sheetname]
-        ws["C40"].options(pd.DataFrame, header=False, index=False, expand='table').value = trnsys_df[trnsys_outdoor_temperature].to_frame()
+        ws["C40"].options(pd.DataFrame, header=False, index=False, expand='table').value = trnsys_df[
+            trnsys_outdoor_temperature].to_frame()
         wb.save()
         wb.app.quit()
-        #with pd.ExcelWriter(variant_output_file, mode="a", engine="xlwings", if_sheet_exists='overlay') as writer:
+        # with pd.ExcelWriter(variant_output_file, mode="a", engine="xlwings", if_sheet_exists='overlay') as writer:
         #    """workBook = writer.book
         #    try:
         #        workBook.remove(workBook[raw_data_variant_sheet_name])
         #    except:
         #        print("Worksheet does not exist")
         #    finally:"""
-            #variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=1, startcol=0, index=False)
-            #selected_trnsys_df.to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=59, startcol=1, index=False)
-            #trnsys_df[trnsys_outdoor_temperature].to_frame().to_excel(writer, sheet_name=calculation_sheetname, startrow=39, startcol=2, index=False, header=False)
+        # variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=1, startcol=0, index=False)
+        # selected_trnsys_df.to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=59, startcol=1, index=False)
+        # trnsys_df[trnsys_outdoor_temperature].to_frame().to_excel(writer, sheet_name=calculation_sheetname, startrow=39, startcol=2, index=False, header=False)
 
         # update excel to receive cross-referenced values and updates calculations
         # https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
@@ -125,23 +127,38 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
         # copy all zones and all classifications in cumulative file
         # read calculated values from variant and copy in cumulative file
-        zone_1_with_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[3], header=None, nrows=None, skiprows=None)
-        zone_1_without_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[2], header=None,  nrows=None, skiprows=None)
-        zone_3_with_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[3], header=None,  nrows=None, skiprows=None)
-        zone_3_without_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[2], header=None,  nrows=None, skiprows=None)
+        zone_1_with_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[3], header=None,
+                                       nrows=None, skiprows=None)
+        zone_1_without_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[2], header=None,
+                                          nrows=None, skiprows=None)
+        zone_3_with_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[3], header=None,
+                                       nrows=None, skiprows=None)
+        zone_3_without_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[2], header=None,
+                                          nrows=None, skiprows=None)
 
         with pd.ExcelWriter(cumulative_output_file, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
             if variant_cnt <= 1:
-                variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer, sheet_name=raw_data_cumulative_sheet_name, startrow=1, startcol=0, index=False)
+                variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer,
+                                                                                     sheet_name=raw_data_cumulative_sheet_name,
+                                                                                     startrow=1, startcol=0,
+                                                                                     index=False)
             else:
-                variant_parameter_df[variant_folder].to_frame().to_excel(writer, sheet_name=raw_data_cumulative_sheet_name, startrow=1, startcol=1+variant_cnt, index=False)
+                variant_parameter_df[variant_folder].to_frame().to_excel(writer,
+                                                                         sheet_name=raw_data_cumulative_sheet_name,
+                                                                         startrow=1, startcol=1 + variant_cnt,
+                                                                         index=False)
 
-            zone_1_with_df.to_excel(writer, sheet_name=zone_1_with_output, startrow=1, startcol=6+variant_cnt, index=False, header=False)
-            zone_1_without_df.to_excel(writer, sheet_name=zone_1_without_output, startrow=1, startcol=6+variant_cnt, index=False, header=False)
-            zone_3_with_df.to_excel(writer, sheet_name=zone_3_with_output, startrow=1, startcol=6+variant_cnt, index=False, header=False)
-            zone_3_without_df.to_excel(writer, sheet_name=zone_3_without_output, startrow=1, startcol=6+variant_cnt, index=False, header=False)
-        #print(calculated_variant_df)
+            zone_1_with_df.to_excel(writer, sheet_name=zone_1_with_output, startrow=1, startcol=6 + variant_cnt,
+                                    index=False, header=False)
+            zone_1_without_df.to_excel(writer, sheet_name=zone_1_without_output, startrow=1, startcol=6 + variant_cnt,
+                                       index=False, header=False)
+            zone_3_with_df.to_excel(writer, sheet_name=zone_3_with_output, startrow=1, startcol=6 + variant_cnt,
+                                    index=False, header=False)
+            zone_3_without_df.to_excel(writer, sheet_name=zone_3_without_output, startrow=1, startcol=6 + variant_cnt,
+                                       index=False, header=False)
+        # print(calculated_variant_df)
 
+        # endregion todo: Als eigene Methode isolieren
 
     # update cumulative excel
     # https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
@@ -155,33 +172,28 @@ def main(trnsys_folder, filename_sim_variants_excel):
     # Quit
     xlapp.Quit()
 
+    # sheet_name = "Zusamm"
+    # usecols = "B:R"
+    # to_row = 21
+    # skiprows = 2#lambda x: x in [0, 1]
+    # header = [0,1]
+    # perceived_temperatures = read_multi_header(gesamt_file, index_col=0, sheet_name=sheet_name, usecols=usecols, to_row=to_row, header_top=3, header_bottom=5)
+    # fanger = read_multi_header(gesamt_file, index_col=0, sheet_name=sheet_name, usecols=usecols, to_row=48, header_top=35, header_bottom=36)
 
-
-
-
-
-
-    #sheet_name = "Zusamm"
-    #usecols = "B:R"
-    #to_row = 21
-    #skiprows = 2#lambda x: x in [0, 1]
-    #header = [0,1]
-    #perceived_temperatures = read_multi_header(gesamt_file, index_col=0, sheet_name=sheet_name, usecols=usecols, to_row=to_row, header_top=3, header_bottom=5)
-    #fanger = read_multi_header(gesamt_file, index_col=0, sheet_name=sheet_name, usecols=usecols, to_row=48, header_top=35, header_bottom=36)
 
 def read_excel(file, sheet_name=0, usecols=None, nrows=None, skiprows=None):
     df = pd.read_excel(file, sheet_name=sheet_name, usecols=usecols, nrows=nrows, skiprows=skiprows)
     return df
 
-def read_multi_header(file, sheet_name=0, index_col=None, usecols=None, to_row=None, header_top=0, header_bottom=1):
 
-    #if type(header) == list:
+def read_multi_header(file, sheet_name=0, index_col=None, usecols=None, to_row=None, header_top=0, header_bottom=1):
+    # if type(header) == list:
     #    largest_header = header.pop(header.index(max(header)))
-    #else:
+    # else:
     #    raise ValueError('given header is not a list')
 
     if to_row is None:
-        nrows=None
+        nrows = None
     else:
         nrows = to_row - header_bottom
 
@@ -189,26 +201,26 @@ def read_multi_header(file, sheet_name=0, index_col=None, usecols=None, to_row=N
     df = pd.read_excel(file,
                        sheet_name=sheet_name,
                        index_col=index_col,
-                       #header=0,
+                       # header=0,
                        usecols=usecols,
                        nrows=nrows,
-                       skiprows=header_bottom-1,
+                       skiprows=header_bottom - 1,
                        parse_dates=False)
-    #print(df)
+    # print(df)
 
     #
     index = pd.read_excel(file,
                           sheet_name=sheet_name,
                           index_col=index_col,
                           header=None,
-                          skiprows=header_top-1,
-                          nrows=header_bottom-header_top+1,
+                          skiprows=header_top - 1,
+                          nrows=header_bottom - header_top + 1,
                           usecols=usecols,
                           parse_dates=False)
-    #print(index)
+    # print(index)
     index = index.fillna(method='ffill', axis=1)
     df.columns = pd.MultiIndex.from_arrays(index.values)
-    #print(df)
+    # print(df)
 
 
 def convert_time(data_frame_of_file, conversion, date_format=None):
@@ -218,7 +230,7 @@ def convert_time(data_frame_of_file, conversion, date_format=None):
         if format == None:
             data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index, errors='coerce')
         else:
-            data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index,format=date_format)
+            data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index, format=date_format)
 
     elif conversion == 'split':
         data_frame_of_file = data_frame_of_file.reset_index()
@@ -232,16 +244,18 @@ def convert_time(data_frame_of_file, conversion, date_format=None):
 
     elif conversion == 'two':
         data_frame_of_file = data_frame_of_file.reset_index(drop=True)
-        datetime_string_column = data_frame_of_file[data_frame_of_file.columns[0]] + ' ' + data_frame_of_file[data_frame_of_file.columns[1]]
+        datetime_string_column = data_frame_of_file[data_frame_of_file.columns[0]] + ' ' + data_frame_of_file[
+            data_frame_of_file.columns[1]]
 
         if format == None:
             date_series = pd.to_datetime(datetime_string_column, errors='coerce')
         else:
-            date_series = pd.to_datetime(datetime_string_column,format=date_format)
+            date_series = pd.to_datetime(datetime_string_column, format=date_format)
 
         data_frame_of_file = data_frame_of_file.assign(date=date_series)
         data_frame_of_file.set_index('date', inplace=True)
     return data_frame_of_file
+
 
 def combine64(years, months=1, days=1, weeks=None, hours=None, minutes=None,
               seconds=None, milliseconds=None, microseconds=None, nanoseconds=None):
@@ -255,6 +269,7 @@ def combine64(years, months=1, days=1, weeks=None, hours=None, minutes=None,
     return sum(np.asarray(v, dtype=t) for t, v in zip(types, vals)
                if v is not None)
 
+
 def get_filename_without_extension(name):
     name = name.replace("\\", '/')
     return ".".join((name.split("/")[len(name.split("/")) - 1]).split(".")[:-1])
@@ -262,9 +277,8 @@ def get_filename_without_extension(name):
 
 # to acknoledge functions on the bottom of the file, this is necessary
 if __name__ == '__main__':
-    #lp = LineProfiler()
-    #lp_wrapper = lp(main)
-    #lp.run('main()')
-    #lp.print_stats()
+    # lp = LineProfiler()
+    # lp_wrapper = lp(main)
+    # lp.run('main()')
+    # lp.print_stats()
     main()
-
