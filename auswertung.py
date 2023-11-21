@@ -6,6 +6,7 @@ import os
 import shutil
 import win32com.client
 # from tkinter import filedialog
+import schweiker_model
 
 from natsort import natsorted
 # from line_profiler import LineProfiler
@@ -31,13 +32,11 @@ def main(trnsys_folder, filename_sim_variants_excel):
     zone_3_with_output = 'Zone3_mit'
     zone_3_without_output = 'Zone3_ohne'
 
-    # todo: "selected_trnsys_columns" als Parameter in Einstellungs-Excel aufnehmen
-
     # selected_trnsys_columns = ['Period', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1',
     #                            'pmv2', 'pmv3']
-    selected_trnsys_columns = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'clo1', 'met1', 'work1',
-                               'tzone1', 'TMSURF_ZONE1', 'relh2', 'vel2', 'clo2', 'met2', 'work2', 'tzone1',
-                               'TMSURF_ZONE1', 'relh3', 'vel3', 'clo3', 'met3', 'work3']
+    var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'clo1', 'met1', 'work1']
+    var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'clo2', 'met2', 'work2']
+    var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'clo3', 'met3', 'work3']
     trnsys_outdoor_temperature = 'ta'
 
     # logic starts here - DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING #
@@ -79,8 +78,25 @@ def main(trnsys_folder, filename_sim_variants_excel):
         # read trnsys output file
         trnsys_df = pd.read_csv(variant_file_path, sep='\s+', skiprows=1, skipfooter=23, engine='python')
 
-        selected_trnsys_df = trnsys_df[selected_trnsys_columns]
-        selected_trnsys_df = selected_trnsys_df.reindex(selected_trnsys_columns, axis=1)
+        selected_trnsys_df = trnsys_df[var_list_zone1]
+        selected_trnsys_df = selected_trnsys_df.reindex(var_list_zone1, axis=1)
+
+        # Schweiker model for zones 1, 2 & 3
+        sm1 = schweiker_model.SchweikerDataFrame()
+        sm1._df = trnsys_df[var_list_zone1].reindex(var_list_zone1, axis=1)
+        sm2 = schweiker_model.SchweikerDataFrame()
+        sm2._df = trnsys_df[var_list_zone2].reindex(var_list_zone2, axis=1)
+        sm3 = schweiker_model.SchweikerDataFrame()
+        sm3._df = trnsys_df[var_list_zone3].reindex(var_list_zone3, axis=1)
+
+        # adapt column headers
+        var_list = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'clo', 'met', 'work']
+        sm1.df.columns = var_list
+        sm2.df.columns = var_list
+        sm3.df.columns = var_list
+
+        #todo hier muss datum schon dabei sein...
+        sm1.calcFloatingAverageTemperature(values_name='ta')
 
         # region EXCEL EXPORT
 
