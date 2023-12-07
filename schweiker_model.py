@@ -156,8 +156,8 @@ class SchweikerDataFrame:
             else:
                 raise ValueError('day_counter case is not considered! Fix it!')
 
-            self.df['Aussentemp_mean'] = df.Aussentemp_mean
-            self.df['Aussentemp_floating_average'] = df.Aussentemp_floating_average
+        self.df['Aussentemp_mean'] = df[average_name]
+        self.df['Aussentemp_floating_average'] = df[floating_average_name]
 
     def calcComfort(self):
         # PMV und PPD Berechnung
