@@ -286,6 +286,7 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
                             time.sleep(5)   # pause until number of active simulations drops below maximum
                             if time.time() - start_time > self.timeout:
                                 sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+                        time.sleep(5)
                         process.start()     # start process
                     lock.acquire()
 
