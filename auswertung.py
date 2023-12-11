@@ -95,8 +95,33 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm2.df.columns = var_list
         sm3.df.columns = var_list
 
-        #todo hier muss datum schon dabei sein...
-        sm1.calcFloatingAverageTemperature(values_name='ta')
+        # region CREATE DATE COLUMN   #todo: Wird derzeit künstlich erzeugt
+        year = 2023     #todo: Jahr derzeit hard coded
+        time_increment_profiles = 60
+        time = pd.date_range(
+            start=str(year) + '-01-01',
+            end=str(year + 1) + '-01-01',
+            freq=str(time_increment_profiles) + 'min')
+
+        time = time.to_series()
+
+        time_df = pd.DataFrame({
+            'Tag': time.dt.day,
+            'Monat': time.dt.month,
+            'Jahr': time.dt.year,
+            'Stunde': time.dt.hour,
+            'Minute': time.dt.minute
+        })
+
+        time_df = time_df[:-(len(time_df)-len(sm1.df))]     # adapt length
+
+        # endregion
+
+        # insert date columns
+        time_df = time_df.reset_index()  # reset index
+        sm1._df = pd.concat([time_df, sm1.df], axis=1)
+        sm2._df = pd.concat([time_df, sm2.df], axis=1)
+        sm3._df = pd.concat([time_df, sm3.df], axis=1)
 
         # region EXCEL EXPORT
 
