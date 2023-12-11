@@ -123,6 +123,11 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm2._df = pd.concat([time_df, sm2.df], axis=1)
         sm3._df = pd.concat([time_df, sm3.df], axis=1)
 
+        # schweiker main
+        sm1.schweiker_main()
+        sm2.schweiker_main()
+        sm3.schweiker_main()
+
         # region EXCEL EXPORT
 
         # print(selected_trnsys_df)

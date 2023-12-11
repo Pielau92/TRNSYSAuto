@@ -316,6 +316,24 @@ class SchweikerDataFrame:
 
         return pmvColumn, ppdColumn
 
+    def schweiker_main(self):
+
+        self.calcFloatingAverageTemperature(values_name='ta', dates_name='index')
+        # adapt metabolic rate
+        self.df['metAdaptedColumn'] = self.df['met'] - (0.234 * self.Aussentemp_floating_average) / 58.2
+        # self.df['metAdaptedColumn'] = self.df['metabolischeRate'] - (0.234 * self.Aussentemp_floating_average) / 58.2
+        # determine clothing factor
+        self.df['clo'] = 10 ** (-0.172 - 0.000485 * self.df['Aussentemp_floating_average']
+                                + 0.0818 * self.df['metAdaptedColumn']
+                                - 0.00527 * self.df['Aussentemp_floating_average'] * self.df['metAdaptedColumn'])
+        # calculate comfort
+        [ptsvColumn, temp] = self.calcComfort()
+        df_z1 = self._df
+
+        # export to Excel file
+        # self.write_output_excel()
+
+        print('Done')
 
 # region MATLAB FUNCTION REPLACEMENTS
 
