@@ -204,13 +204,13 @@ class SchweikerDataFrame:
         for i in range(row_count):
 
             # in einzelne elemente speichern
-            tempAir = self.df.loc[i, 'Lufttemp']
-            tempRad = self.df.loc[i, 'Strahlungstemp']
-            hum = self.df.loc[i, 'rel.Feuchte'] / 100
-            vAir = self.df.loc[i, 'Luftgeschwindigkeit']
-            clo = self.df.loc[i, 'clothingFaktor']
+            tempAir = self.df.loc[i, 'ta']
+            tempRad = self.df.loc[i, 'TMSURF_ZONE']
+            hum = self.df.loc[i, 'relh'] / 100
+            vAir = self.df.loc[i, 'vel']
+            clo = self.df.loc[i, 'clo']
             met = self.df.loc[i, 'metAdaptedColumn']
-            wme = self.df.loc[i, 'externeArbeit']
+            wme = self.df.loc[i, 'work']
 
             # Wasserpartikeldampfdurck
             # Magnus Formel
