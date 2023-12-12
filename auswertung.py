@@ -128,11 +128,17 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm2.schweiker_main()
         sm3.schweiker_main()
 
-        # combine zones to one single DataFrame
-        result = pd.concat([sm1.df,
-                            sm2.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1),
-                            sm3.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)],
-                           axis=1)
+        # remove redundant columns
+        sm2.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)
+        sm3.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)
+
+        # numerate column names for each zone
+        sm1.df.columns = [string + '1' for string in sm1.df.columns]
+        sm2.df.columns = [string + '2' for string in sm2.df.columns]
+        sm3.df.columns = [string + '3' for string in sm3.df.columns]
+
+        # combine zones data to one single DataFrame
+        result = pd.concat([sm1.df, sm2.df, sm2.df], axis=1)
         trnsys_df = result     # overwrite with schweiker model data
 
         # region EXCEL EXPORT
