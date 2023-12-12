@@ -128,24 +128,27 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm2.schweiker_main()
         sm3.schweiker_main()
 
+        # combine zones to one single DataFrame
+        result = pd.concat([sm1.df,
+                            sm2.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1),
+                            sm3.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)],
+                           axis=1)
+        trnsys_df = result     # overwrite with schweiker model data
+
         # region EXCEL EXPORT
 
-        # print(selected_trnsys_df)
-
         # copy template and write data in it
-        # variant_output_file = os.path.abspath(f"{output_folder}variant_{variant_folder}{os.path.splitext(os.path.basename(variant_template_file))[1]}")
         variant_output_file = os.path.join(output_folder, 'variant' + variant_folder + '.xlsx')
-
         shutil.copy(variant_template_file, variant_output_file)
 
         wb = xw.Book(variant_output_file)
         ws = wb.sheets[raw_data_variant_sheet_name]
         ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
             ['File', 'Parameter', variant_folder]]
-        ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = selected_trnsys_df
-        ws = wb.sheets[calculation_sheetname]
-        ws["C40"].options(pd.DataFrame, header=False, index=False, expand='table').value = trnsys_df[
-            trnsys_outdoor_temperature].to_frame()
+        ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = trnsys_df
+        # ws = wb.sheets[calculation_sheetname]
+        # ws["C40"].options(pd.DataFrame, header=False, index=False, expand='table').value = trnsys_df    #[
+            #trnsys_outdoor_temperature]#.to_frame()
         wb.save()
         wb.app.quit()
         # with pd.ExcelWriter(variant_output_file, mode="a", engine="xlwings", if_sheet_exists='overlay') as writer:
