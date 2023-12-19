@@ -347,6 +347,89 @@ def get_filename_without_extension(name):
     return ".".join((name.split("/")[len(name.split("/")) - 1]).split(".")[:-1])
 
 
+def calcFloatingAverageTemperature(df, values_name='Aussentemp', dates_name='date'):
+
+    floating_alpha = 0.8
+
+    if df[dates_name].isnull().values.any() or df[values_name].isnull().values.any():
+        raise ValueError('Values are not allowed to be NaN, interpolate if necessary!')
+
+    average_name = f'{values_name}_mean'
+    floating_average_name = f'{values_name}_floating_average'
+
+    df = pd.DataFrame()
+    df[dates_name] = df[dates_name].copy()
+    df[values_name] = df[values_name].copy()
+    df = df.sort_values(dates_name)
+    df['ymd'] = pd.to_datetime(df[dates_name]).dt.date
+    mean_df = df.groupby('ymd').mean()
+    mean_df = mean_df.rename(columns={values_name: average_name})
+
+    df = df.merge(mean_df, how='left', on='ymd')
+    day_counter = 1
+    next_datapoint_time_delta = pd.Timedelta(0)
+    # temporary list which consists the index of the first row of each new day
+    new_day_datapoints = [0]
+
+    for i in range(len(df)):
+        # print(f'row: {i}')
+
+        if i != 0:
+            next_datapoint_time_delta = df.loc[i, 'ymd'] - df.loc[new_day_datapoints[-1], 'ymd']
+            # print(next_datapoint_time_delta)
+
+        if next_datapoint_time_delta >= pd.Timedelta('2D'):
+            # reset time counter when a time gap happens
+            new_day_datapoints = [i]
+            day_counter = 1
+        elif next_datapoint_time_delta >= pd.Timedelta('1D'):
+            new_day_datapoints.append(i)
+            day_counter = day_counter + 1
+
+        if day_counter > 8:
+            df.loc[i, floating_average_name] = (1 - floating_alpha) * df.loc[
+                new_day_datapoints[-2], average_name] + floating_alpha * df.loc[
+                                                   new_day_datapoints[-2], floating_average_name]
+        elif day_counter > 7:
+            # DIN 1525251 Formula
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                    new_day_datapoints[-6], average_name] + 0.3 * df.loc[
+                                                    new_day_datapoints[-7], average_name] + 0.2 * df.loc[
+                                                    new_day_datapoints[-8], average_name]) / 3.8
+        elif day_counter > 6:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                    new_day_datapoints[-6], average_name] + 0.3 * df.loc[
+                                                    new_day_datapoints[-7], average_name]) / 3.6
+        elif day_counter > 5:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                    new_day_datapoints[-6], average_name]) / 3.3
+        elif day_counter > 4:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                df.loc[new_day_datapoints[-5], average_name]) / 2.9
+        elif day_counter > 3:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name]) / 2.4
+        elif day_counter > 2:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name]) / 1.8
+        elif day_counter > 1:
+            df.loc[i, floating_average_name] = df.loc[new_day_datapoints[-2], average_name]
+        elif day_counter <= 1:
+            df.loc[i, floating_average_name] = df.loc[i, average_name]
+        else:
+            raise ValueError('day_counter case is not considered! Fix it!')
+
+    df['Aussentemp_mean'] = df[average_name]
+    df['Aussentemp_floating_average'] = df[floating_average_name]
+
+
 # to acknoledge functions on the bottom of the file, this is necessary
 if __name__ == '__main__':
     # lp = LineProfiler()

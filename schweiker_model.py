@@ -78,7 +78,7 @@ class SchweikerDataFrame:
                 ws.column_dimensions[col].width = value + 2
 
     def calcFloatingAverageTemperature(self, values_name='Aussentemp', dates_name='date'):
-
+        # todo:  VERALTET, wurde durch eigene standalone funktion ersetzt
         floating_alpha = 0.8
 
         if self.df[dates_name].isnull().values.any() or self.df[values_name].isnull().values.any():
