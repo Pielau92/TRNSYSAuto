@@ -129,17 +129,32 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm3.schweiker_main()
 
         # remove redundant columns
-        sm2.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)
-        sm3.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)
+        # sm2.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)
+        # sm3.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)
 
         # numerate column names for each zone
-        sm1.df.columns = [string + '1' for string in sm1.df.columns]
-        sm2.df.columns = [string + '2' for string in sm2.df.columns]
-        sm3.df.columns = [string + '3' for string in sm3.df.columns]
+        # sm1.df.columns = [string + '1' for string in sm1.df.columns]
+        # sm2.df.columns = [string + '2' for string in sm2.df.columns]
+        # sm3.df.columns = [string + '3' for string in sm3.df.columns]
 
         # combine zones data to one single DataFrame
-        result = pd.concat([sm1.df, sm2.df, sm2.df], axis=1)
+        # result = pd.concat([sm1.df, sm2.df, sm2.df], axis=1)
+
+        top1 = (sm1.df.tzone + sm1.df.TMSURF_ZONE)/2
+        top2 = (sm2.df.tzone + sm2.df.TMSURF_ZONE) / 2
+        top3 = (sm3.df.tzone + sm3.df.TMSURF_ZONE) / 2
+
+        result = pd.concat([top1, top2, top3], axis=1)
+        result.columns = ['top1', 'top2', 'top3']
+        result['Qventfges'] = ''
+        result['qvolgesh'] = ''
+        result['qc1'] = ''
+        result['qc2'] = ''
+        result['qc3'] = ''
+        result = pd.concat([result, sm1.df.pmv, sm2.df.pmv, sm3.df.pmv, sm1.df.ppd, sm2.df.ppd, sm3.df.ppd], axis=1)
+
         trnsys_df = result     # overwrite with schweiker model data
+
 
         # region EXCEL EXPORT
 
