@@ -34,9 +34,9 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
     # selected_trnsys_columns = ['Period', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1',
     #                            'pmv2', 'pmv3']
-    var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'clo1', 'met1', 'work1']
-    var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'clo2', 'met2', 'work2']
-    var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'clo3', 'met3', 'work3']
+    var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'clo1', 'met1', 'work1', 'pmv1']
+    var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'clo2', 'met2', 'work2', 'pmv2']
+    var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'clo3', 'met3', 'work3', 'pmv3']
     trnsys_outdoor_temperature = 'ta'
 
     # logic starts here - DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING #
@@ -90,7 +90,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm3._df = trnsys_df[var_list_zone3].reindex(var_list_zone3, axis=1)
 
         # adapt column headers
-        var_list = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'clo', 'met', 'work']
+        var_list = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'clo', 'met', 'work', 'schweiker_pmv']
         sm1.df.columns = var_list
         sm2.df.columns = var_list
         sm3.df.columns = var_list
@@ -151,7 +151,9 @@ def main(trnsys_folder, filename_sim_variants_excel):
         result['qc1'] = ''
         result['qc2'] = ''
         result['qc3'] = ''
-        result = pd.concat([result, sm1.df.pmv, sm2.df.pmv, sm3.df.pmv, sm1.df.ppd, sm2.df.ppd, sm3.df.ppd], axis=1)
+        result = pd.concat([result, trnsys_df['pmv1'], trnsys_df['pmv2'], trnsys_df['pmv3'], sm1.df.schweiker_pmv,
+                            sm2.df.schweiker_pmv, sm3.df.schweiker_pmv], axis=1)
+                            # sm1.df.schweiker_ppd, sm2.df.schweiker_ppd, sm3.df.schweiker_ppd], axis=1)
 
         trnsys_df = result     # overwrite with schweiker model data
 
