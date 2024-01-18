@@ -15,13 +15,15 @@ import xlwings as xw
 
 def main(trnsys_folder, filename_sim_variants_excel):
     print('Starting evaluation of simulation results')
-    # trnsys_folder = filedialog.askdirectory()
-    # trnsys_folder = './23.05.2023_18.22/'
-    trnsys_data_file_name = 'out5.txt'
-    cumulative_template_file = './Basisordner/Auswertung_Gesamt.xlsx'
-    variant_template_file = './Basisordner/Auswertung_Variante.xlsx'
-    # output_folder = './out/'
     output_folder = os.path.join(trnsys_folder, 'evaluation')
+
+    # region NAMES
+
+    trnsys_data_file_name = 'out5.txt'
+    cumulative_template_file = os.path.abspath('./Basisordner/Auswertung_Gesamt.xlsx')
+    cumulative_output_file = os.path.join(output_folder, 'gesamt.xlsx')
+    variant_template_file = './Basisordner/Auswertung_Variante.xlsx'
+
     raw_data_variant_sheet_name = 'Rohdaten'
     calculation_sheetname = 'Berechn1'
     raw_data_cumulative_sheet_name = 'Rohinputs'
@@ -39,31 +41,28 @@ def main(trnsys_folder, filename_sim_variants_excel):
     var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'clo3', 'met3', 'work3', 'pmv3']
     trnsys_outdoor_temperature = 'ta'
 
-    # logic starts here - DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING #
+    variant_parameter_file = os.path.join(trnsys_folder, filename_sim_variants_excel) + '.xlsx'
 
-    # if not trnsys_folder.endswith('/'):
-    #     trnsys_folder = trnsys_folder + '/'
-    # if not output_folder.endswith('/'):
-    #     output_folder = output_folder + '/'
+    # endregion NAMES
 
+    # remove existing files in output folder
     for existing_output in glob.glob(output_folder + '/*.xlsx'):
         os.remove(existing_output)
     os.makedirs(output_folder, exist_ok=True)
 
-    cumulative_template_file = os.path.abspath(cumulative_template_file)
-    # cumulative_output_file = os.path.abspath(f"{output_folder}gesamt{os.path.splitext(os.path.basename(cumulative_template_file))[1]}")
-    cumulative_output_file = os.path.join(output_folder, 'gesamt.xlsx')
+    # create copy of evaluation file template
     shutil.copy(cumulative_template_file, cumulative_output_file)
 
-    variant_parameter_file = os.path.join(trnsys_folder, filename_sim_variants_excel) + '.xlsx'
+    # read simulation variant parameters
     variant_parameter_df = pd.read_excel(variant_parameter_file, sheet_name='Simulationsvarianten')
 
-    # get top level directories
+    # get top level directory list
     variant_folders = next(os.walk(trnsys_folder))[1]
     variant_folders.remove('evaluation')
     variant_folders = natsorted(variant_folders)
+    
+    # read TRNSYS output and save data
     variant_cnt = 0
-    # iterate through trnsys variant folders
     for variant_folder in variant_folders:
         variant_cnt = variant_cnt + 1
         variant_folder_path = os.path.join(trnsys_folder, variant_folder)
@@ -78,6 +77,8 @@ def main(trnsys_folder, filename_sim_variants_excel):
         # read trnsys output file
         trnsys_df = pd.read_csv(variant_file_path, sep='\s+', skiprows=1, skipfooter=23, engine='python')
 
+        # todo: ab da etwas chaotisch
+        # region DATA
         selected_trnsys_df = trnsys_df[var_list_zone1]
         selected_trnsys_df = selected_trnsys_df.reindex(var_list_zone1, axis=1)
 
@@ -96,7 +97,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm3.df.columns = var_list
 
         # region CREATE DATE COLUMN   #todo: Wird derzeit künstlich erzeugt
-        year = 2023     #todo: Jahr derzeit hard coded
+        year = 2023  # todo: Jahr derzeit hard coded
         time_increment_profiles = 60
         time = pd.date_range(
             start=str(year) + '-01-01',
@@ -113,7 +114,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
             'Minute': time.dt.minute
         })
 
-        time_df = time_df[:-(len(time_df)-len(sm1.df))]     # adapt length
+        time_df = time_df[:-(len(time_df) - len(sm1.df))]  # adapt length
 
         # endregion
 
@@ -140,7 +141,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
         # combine zones data to one single DataFrame
         # result = pd.concat([sm1.df, sm2.df, sm2.df], axis=1)
 
-        top1 = (sm1.df.tzone + sm1.df.TMSURF_ZONE)/2
+        top1 = (sm1.df.tzone + sm1.df.TMSURF_ZONE) / 2
         top2 = (sm2.df.tzone + sm2.df.TMSURF_ZONE) / 2
         top3 = (sm3.df.tzone + sm3.df.TMSURF_ZONE) / 2
 
@@ -153,15 +154,15 @@ def main(trnsys_folder, filename_sim_variants_excel):
         result['qc3'] = ''
         result = pd.concat([result, trnsys_df['pmv1'], trnsys_df['pmv2'], trnsys_df['pmv3'], sm1.df.schweiker_pmv,
                             sm2.df.schweiker_pmv, sm3.df.schweiker_pmv], axis=1)
-                            # sm1.df.schweiker_ppd, sm2.df.schweiker_ppd, sm3.df.schweiker_ppd], axis=1)
+        # sm1.df.schweiker_ppd, sm2.df.schweiker_ppd, sm3.df.schweiker_ppd], axis=1)
 
-        trnsys_df = result     # overwrite with schweiker model data
+        trnsys_df = result  # overwrite with schweiker model data
 
+        # endregion
 
         # region EXCEL EXPORT
 
         # copy template and write data in it
-        variant_output_file = os.path.join(output_folder, 'variant' + variant_folder + '.xlsx')
         shutil.copy(variant_template_file, variant_output_file)
 
         wb = xw.Book(variant_output_file)
@@ -169,21 +170,8 @@ def main(trnsys_folder, filename_sim_variants_excel):
         ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
             ['File', 'Parameter', variant_folder]]
         ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = trnsys_df
-        # ws = wb.sheets[calculation_sheetname]
-        # ws["C40"].options(pd.DataFrame, header=False, index=False, expand='table').value = trnsys_df    #[
-            #trnsys_outdoor_temperature]#.to_frame()
         wb.save()
         wb.app.quit()
-        # with pd.ExcelWriter(variant_output_file, mode="a", engine="xlwings", if_sheet_exists='overlay') as writer:
-        #    """workBook = writer.book
-        #    try:
-        #        workBook.remove(workBook[raw_data_variant_sheet_name])
-        #    except:
-        #        print("Worksheet does not exist")
-        #    finally:"""
-        # variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=1, startcol=0, index=False)
-        # selected_trnsys_df.to_excel(writer, sheet_name=raw_data_variant_sheet_name, startrow=59, startcol=1, index=False)
-        # trnsys_df[trnsys_outdoor_temperature].to_frame().to_excel(writer, sheet_name=calculation_sheetname, startrow=39, startcol=2, index=False, header=False)
 
         # update excel to receive cross-referenced values and updates calculations
         # https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
@@ -244,13 +232,6 @@ def main(trnsys_folder, filename_sim_variants_excel):
     # Quit
     xlapp.Quit()
 
-    # sheet_name = "Zusamm"
-    # usecols = "B:R"
-    # to_row = 21
-    # skiprows = 2#lambda x: x in [0, 1]
-    # header = [0,1]
-    # perceived_temperatures = read_multi_header(gesamt_file, index_col=0, sheet_name=sheet_name, usecols=usecols, to_row=to_row, header_top=3, header_bottom=5)
-    # fanger = read_multi_header(gesamt_file, index_col=0, sheet_name=sheet_name, usecols=usecols, to_row=48, header_top=35, header_bottom=36)
 
 
 def read_excel(file, sheet_name=0, usecols=None, nrows=None, skiprows=None):
@@ -348,7 +329,6 @@ def get_filename_without_extension(name):
 
 
 def calcFloatingAverageTemperature(df, values_name='Aussentemp', dates_name='date'):
-
     floating_alpha = 0.8
 
     if df[dates_name].isnull().values.any() or df[values_name].isnull().values.any():
