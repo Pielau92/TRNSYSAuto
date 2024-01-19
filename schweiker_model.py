@@ -328,8 +328,8 @@ class SchweikerDataFrame:
                                 - 0.00527 * self.df['Aussentemp_floating_average'] * self.df['metAdaptedColumn'])
         # calculate comfort
         [pmv, ppd] = self.calcComfort()
-        self.df['schweiker_pmv'] = pmv
-        self.df['schweiker_ppd'] = ppd
+        self.df['pmv'] = pmv
+        self.df['ppd'] = ppd
         df_z1 = self._df
 
         # export to Excel file

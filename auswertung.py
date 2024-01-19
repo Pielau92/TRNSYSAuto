@@ -36,9 +36,13 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
     # selected_trnsys_columns = ['Period', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1',
     #                            'pmv2', 'pmv3']
-    var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'clo1', 'met1', 'work1', 'pmv1']
-    var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'clo2', 'met2', 'work2', 'pmv2']
-    var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'clo3', 'met3', 'work3', 'pmv3']
+    selected_trnsys_columns = ['ta', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2',
+                               'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1',
+                               'met2', 'met3']
+
+    var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1', 'met1', 'work1']
+    var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2', 'met2', 'work2']
+    var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3', 'clo3', 'met3', 'work3']
     trnsys_outdoor_temperature = 'ta'
 
     variant_parameter_file = os.path.join(trnsys_folder, filename_sim_variants_excel) + '.xlsx'
@@ -67,6 +71,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
         variant_cnt = variant_cnt + 1
         variant_folder_path = os.path.join(trnsys_folder, variant_folder)
         variant_file_path = os.path.join(variant_folder_path, trnsys_data_file_name)
+        variant_output_file = os.path.join(output_folder, 'variant' + variant_folder + '.xlsx')
         print(variant_file_path)
         if not os.path.exists(variant_file_path):
             raise ValueError(f'File {variant_file_path} does not exist!')
@@ -77,10 +82,16 @@ def main(trnsys_folder, filename_sim_variants_excel):
         # read trnsys output file
         trnsys_df = pd.read_csv(variant_file_path, sep='\s+', skiprows=1, skipfooter=23, engine='python')
 
+        # region todo: ppd1-3 muss im out5.txt vorhanden sein, dann können diese Zeilen entfernt werden
+        trnsys_df['ppd1'] = np.nan
+        trnsys_df['ppd2'] = np.nan
+        trnsys_df['ppd3'] = np.nan
+        # endregion
+
         # todo: ab da etwas chaotisch
         # region DATA
-        selected_trnsys_df = trnsys_df[var_list_zone1]
-        selected_trnsys_df = selected_trnsys_df.reindex(var_list_zone1, axis=1)
+        selected_trnsys_df = trnsys_df[selected_trnsys_columns]
+        selected_trnsys_df = selected_trnsys_df.reindex(selected_trnsys_columns, axis=1)
 
         # Schweiker model for zones 1, 2 & 3
         sm1 = schweiker_model.SchweikerDataFrame()
@@ -91,7 +102,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm3._df = trnsys_df[var_list_zone3].reindex(var_list_zone3, axis=1)
 
         # adapt column headers
-        var_list = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'clo', 'met', 'work', 'schweiker_pmv']
+        var_list = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'pmv', 'ppd', 'clo', 'met', 'work']
         sm1.df.columns = var_list
         sm2.df.columns = var_list
         sm3.df.columns = var_list
@@ -129,34 +140,46 @@ def main(trnsys_folder, filename_sim_variants_excel):
         sm2.schweiker_main()
         sm3.schweiker_main()
 
-        # remove redundant columns
-        # sm2.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)
-        # sm3.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1)
-
-        # numerate column names for each zone
-        # sm1.df.columns = [string + '1' for string in sm1.df.columns]
-        # sm2.df.columns = [string + '2' for string in sm2.df.columns]
-        # sm3.df.columns = [string + '3' for string in sm3.df.columns]
-
         # combine zones data to one single DataFrame
         # result = pd.concat([sm1.df, sm2.df, sm2.df], axis=1)
 
-        top1 = (sm1.df.tzone + sm1.df.TMSURF_ZONE) / 2
-        top2 = (sm2.df.tzone + sm2.df.TMSURF_ZONE) / 2
-        top3 = (sm3.df.tzone + sm3.df.TMSURF_ZONE) / 2
+        # top1 = (sm1.df.tzone + sm1.df.TMSURF_ZONE) / 2
+        # top2 = (sm2.df.tzone + sm2.df.TMSURF_ZONE) / 2
+        # top3 = (sm3.df.tzone + sm3.df.TMSURF_ZONE) / 2
+        #
+        # result = pd.concat([top1, top2, top3], axis=1)
+        # result.columns = ['top1', 'top2', 'top3']
+        # result['Qventfges'] = ''
+        # result['qvolgesh'] = ''
+        # result['qc1'] = ''
+        # result['qc2'] = ''
+        # result['qc3'] = ''
 
-        result = pd.concat([top1, top2, top3], axis=1)
-        result.columns = ['top1', 'top2', 'top3']
-        result['Qventfges'] = ''
-        result['qvolgesh'] = ''
-        result['qc1'] = ''
-        result['qc2'] = ''
-        result['qc3'] = ''
-        result = pd.concat([result, trnsys_df['pmv1'], trnsys_df['pmv2'], trnsys_df['pmv3'], sm1.df.schweiker_pmv,
-                            sm2.df.schweiker_pmv, sm3.df.schweiker_pmv], axis=1)
-        # sm1.df.schweiker_ppd, sm2.df.schweiker_ppd, sm3.df.schweiker_ppd], axis=1)
+        # region RENAME sm
 
-        trnsys_df = result  # overwrite with schweiker model data
+        # remove redundant columns
+        sm1.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
+        sm2.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
+        sm3.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
+
+        # numerate column names for each zone
+        sm1.df.columns = ['schweiker_' + string + '1' for string in sm1.df.columns]
+        sm2.df.columns = ['schweiker_' + string + '2' for string in sm2.df.columns]
+        sm3.df.columns = ['schweiker_' + string + '3' for string in sm3.df.columns]
+
+        # endregion
+
+        result = pd.concat([trnsys_df[['ta', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2',
+                                       'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2',
+                                       'ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2', 'met3']],
+                            sm1.df, sm2.df, sm3.df], axis=1)
+        result = result[['ta', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2',
+                         'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2','ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2',
+                         'met3', 'schweiker_pmv1', 'schweiker_pmv2', 'schweiker_pmv3', 'schweiker_ppd1',
+                         'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2', 'schweiker_clo3',
+                         'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
+
+        # trnsys_df = result  # overwrite with schweiker model data
 
         # endregion
 
@@ -169,7 +192,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
         ws = wb.sheets[raw_data_variant_sheet_name]
         ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
             ['File', 'Parameter', variant_folder]]
-        ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = trnsys_df
+        ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
         wb.save()
         wb.app.quit()
 
