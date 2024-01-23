@@ -80,7 +80,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
             raise ValueError(f'Did not find {variant_folder} in {variant_parameter_file}')
 
         # read trnsys output file
-        trnsys_df = pd.read_csv(variant_file_path, sep='\s+', skiprows=1, skipfooter=23, engine='python')
+        trnsys_df = pd.read_csv(variant_file_path, sep='\s+', skiprows=1, skipfooter=0, engine='python')
 
         # region todo: ppd1-3 muss im out5.txt vorhanden sein, dann können diese Zeilen entfernt werden
         trnsys_df['ppd1'] = np.nan
@@ -230,7 +230,7 @@ def main(trnsys_folder, filename_sim_variants_excel):
         # todo: es fehlt ein Tag, deshalb werden 23+2 Werte derzeit übersprungen
         result_column = pd.concat([
             result[var_list_result_column],
-            pd.DataFrame(index=['']*24),
+            pd.DataFrame(index=['']),
             header],
             axis=0)
         result_column = result_column.drop(result_column.columns[-1], axis=1)
