@@ -29,10 +29,10 @@ def main(trnsys_folder, filename_sim_variants_excel):
     raw_data_cumulative_sheet_name = 'Rohinputs'
     zone_1_input = 'Zusamm1'
     zone_3_input = 'Zusamm3'
-    zone_1_with_output = 'Zone1_mit'
-    zone_1_without_output = 'Zone1_ohne'
-    zone_3_with_output = 'Zone3_mit'
-    zone_3_without_output = 'Zone3_ohne'
+    zone_1_with_output = 'Zone1_Betrieb'
+    zone_1_without_output = 'Zone1ges'
+    zone_3_with_output = 'Zone3_Betrieb'
+    zone_3_without_output = 'Zone3ges'
 
     # selected_trnsys_columns = ['Period', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1',
     #                            'pmv2', 'pmv3']
