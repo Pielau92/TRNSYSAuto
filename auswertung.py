@@ -169,15 +169,18 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
         # endregion
 
-        result = pd.concat([trnsys_df[['ta', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2',
-                                       'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2',
-                                       'ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2', 'met3']],
+        # concatenate output
+        result = pd.concat([trnsys_df[['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges',
+                                       'qvolgesh', 'qc1', 'qc2','qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3',
+                                       'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2', 'met3']],
                             sm1.df, sm2.df, sm3.df], axis=1)
-        result = result[['ta', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2',
-                         'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2','ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2',
-                         'met3', 'schweiker_pmv1', 'schweiker_pmv2', 'schweiker_pmv3', 'schweiker_ppd1',
-                         'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2', 'schweiker_clo3',
-                         'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
+
+        # sort columns
+        result = result[['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1',
+                         'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2','ppd3', 'clo1',
+                         'clo2', 'clo3', 'met1', 'met2', 'met3', 'schweiker_pmv1', 'schweiker_pmv2', 'schweiker_pmv3',
+                         'schweiker_ppd1', 'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2',
+                         'schweiker_clo3', 'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
 
         # trnsys_df = result  # overwrite with schweiker model data
 
