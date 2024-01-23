@@ -222,6 +222,20 @@ def main(trnsys_folder, filename_sim_variants_excel):
         zone_3_without_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[2], header=None,
                                           nrows=None, skiprows=None)
 
+        # create column with all hourly values
+        var_list_result_column\
+            = ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
+        header = pd.DataFrame(var_list_result_column[1:] + ['']).transpose()
+        header.columns = var_list_result_column[:-1] + ['']
+        # todo: es fehlt ein Tag, deshalb werden 23+2 Werte derzeit übersprungen
+        result_column = pd.concat([
+            result[var_list_result_column],
+            pd.DataFrame(index=['']*24),
+            header],
+            axis=0)
+        result_column = result_column.drop(result_column.columns[-1], axis=1)
+        result_column = result_column.transpose().stack(dropna=False)
+
         with pd.ExcelWriter(cumulative_output_file, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
             if variant_cnt <= 1:
                 variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer,
@@ -242,6 +256,8 @@ def main(trnsys_folder, filename_sim_variants_excel):
                                     index=False, header=False)
             zone_3_without_df.to_excel(writer, sheet_name=zone_3_without_output, startrow=1, startcol=6 + variant_cnt,
                                        index=False, header=False)
+            result_column.to_excel(writer, sheet_name=raw_data_cumulative_sheet_name, startrow=60, startcol=1+variant_cnt,
+                                index=False, header=False)
         # print(calculated_variant_df)
 
         # endregion todo: Als eigene Methode isolieren
@@ -257,7 +273,6 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
     # Quit
     xlapp.Quit()
-
 
 
 def read_excel(file, sheet_name=0, usecols=None, nrows=None, skiprows=None):
