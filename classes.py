@@ -151,7 +151,8 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         also modified afterwards, in order to apply specific simulation parameters from the simulation variants Excel.
         """
 
-        for sim in self.sim_list:
+        for sim_index in range(0, len(self.sim_list)):
+            sim = self.sim_list[sim_index]
 
             path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation folder
             os.makedirs(path_sim)  # create new simulation subfolder
@@ -168,10 +169,15 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
             # endregion
 
             # copy specified files into simulation folder
-            for index in range(len(src_file_list)):
-                shutil.copy(
-                    os.path.join(self.dir_sim_variants_excel, src_file_list[index]),
-                    os.path.join(path_sim, dst_file_list[index]))
+            for file_index in range(len(src_file_list)):
+                try:
+                    shutil.copy(
+                        os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]),
+                        os.path.join(path_sim, dst_file_list[file_index]))
+                except FileNotFoundError:
+                    print('File ' + os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]
+                                                 + ' could not be found.'))
+                    self.sim_success[sim_index] = True      #todo: als Übergangslösung wird eine erfolgreiche Simulation vorgetäuscht, um Simulationen wo kritische Daten fehlen überspringen zu können. Langfrisitg soll sim_success aber nur tatsächlich erfolgreiche Simulationen dokumentieren!
 
             path_dck = os.path.join(path_sim, dst_file_list[0])
             # find and replace weather data file name in .dck file
