@@ -1,5 +1,5 @@
 import re
-
+# todo: Umstrukturieren
 
 def replace_text(match, parameters):
     """
@@ -41,3 +41,23 @@ def find_and_replace_text(path_file, pattern, parameters):
     # overwrite file
     with open(path_file, 'w') as file:
         file.write(text)
+
+
+def find_and_replace(path_file, pattern, repl):
+    """
+
+    Parameters
+    ----------
+    path_file : str
+        Path of the .txt file
+    pattern : str
+        Pattern which marks text to be replaced
+    repl : str
+        Text to be inserted
+    """
+
+    with open(path_file, 'r') as file:
+        text = file.read()  # read file
+        new_text = re.sub(pattern=pattern, repl=repl, string=text)
+    with open(path_file, 'w') as file:
+        file.write(new_text)  # overwrite file

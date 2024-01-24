@@ -150,59 +150,37 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
             path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation folder
             os.makedirs(path_sim)  # create new simulation subfolder
-            # shutil.copytree(dir_base_folder, path_sim)          # copy all files from base to simulation folder
 
             # region SOURCE/DESTINATION FILE PATHS FOR COPYING PROCESS
 
-            src_file = [  # todo: dynamisch neu machen, u.U. Funktion draus machen
-                os.path.join(self.dir_sim_variants_excel, 'templateDck.dck'),
-                os.path.join(self.dir_sim_variants_excel, 'Lastprofil.txt'),
-                os.path.join(self.dir_sim_variants_excel, 'b18', self.b18_series[sim]),
-                os.path.join(self.dir_sim_variants_excel, 'Wetterdaten', self.weather_series[sim]),
-                os.path.join(self.dir_sim_variants_excel, 'SzenarioAneu.txt'),
-                os.path.join(self.dir_sim_variants_excel, 'Qelww_CHR55025.txt'),
-                os.path.join(self.dir_sim_variants_excel, 'Windetc20190804.txt'),
-                os.path.join(self.dir_sim_variants_excel, 'StrahlungBruck.txt')]
-
-            dst_file = [
-                os.path.join(path_sim, 'templateDck.dck'),
-                os.path.join(path_sim, 'Lastprofil.txt'),
-                os.path.join(path_sim, self.b18_series[sim]),
-                os.path.join(path_sim, self.weather_series[sim]),
-                os.path.join(path_sim, 'SzenarioAneu.txt'),
-                os.path.join(path_sim, 'Qelww_CHR55025.txt'),
-                os.path.join(path_sim, 'Windetc20190804.txt'),
-                os.path.join(path_sim, 'StrahlungBruck.txt')]
+            file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt','Qelww_CHR55025.txt',
+                         'Windetc20190804.txt', 'StrahlungBruck.txt']
+            src_file_list = file_list + \
+                            [os.path.join('b18', self.b18_series[sim]),
+                             os.path.join('Wetterdaten', self.weather_series[sim])]
+            dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim]]
 
             # endregion
 
             # copy specified files into simulation folder
-            for index in range(len(src_file)):
-                shutil.copy(src_file[index], dst_file[index])
+            for index in range(len(src_file_list)):
+                shutil.copy(
+                    os.path.join(self.dir_sim_variants_excel, src_file_list[index]),
+                    os.path.join(path_sim, dst_file_list[index]))
 
-            # region FIND AND REPLACE WEATHER DATA FILE NAME IN .dck FILE todo: eigene Funktion draus machen
+            path_dck = os.path.join(path_sim, dst_file_list[0])
+            # find and replace weather data file name in .dck file
+            functions.find_and_replace(
+                path_dck, pattern=r'(\*ASSIGN "tm2")', repl=r'ASSIGN "' + self.weather_series[sim] + '"')
 
-            with open(dst_file[0], 'r') as file:
-                text = file.read()  # read file
-                new_text = re.sub(r'(\*ASSIGN "tm2")', r'ASSIGN "' + self.weather_series[sim] + '"', text)
-            with open(dst_file[0], 'w') as file:
-                file.write(new_text)  # overwrite file
-
-            # endregion
-
-            # region FIND AND REPLACE .b18/b.17 FILE NAME IN .dck FILE
-
-            with open(dst_file[0], 'r') as file:
-                text = file.read()  # read file
-                new_text = re.sub(r'(\*ASSIGN "b17")', r'ASSIGN "' + self.b18_series[sim] + '"', text)
-            with open(dst_file[0], 'w') as file:
-                file.write(new_text)  # overwrite file
-
-            # endregion
+            # find and replace .b17/.b18 file name in .dck file
+            functions.find_and_replace(
+                path_dck, pattern=r'(\*ASSIGN "b17")', repl=r'ASSIGN "' + self.b18_series[sim] + '"')
 
             # region FIND AND REPLACE PARAMETERS IN .dck FILE
-            functions.find_and_replace_text(dst_file[0], r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
-            functions.find_and_replace_text(dst_file[0], r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
+
+            functions.find_and_replace_text(path_dck, r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
+            functions.find_and_replace_text(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
 
             # endregion
 
@@ -285,7 +263,6 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         # create simulation series folder
         self.create_sim_series_folder()
 
-        processes = []  #todo: benutzen oder löschen
         lock = multiprocessing.Lock()
 
         while not all(self.sim_success):    # check if any simulation has not been simulated successfully yet
@@ -293,22 +270,23 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
             print('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
 
             for index in range(len(self.sim_list)):
-                sim = self.sim_list[index]  # name of simulation
-                path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)   # path of dck-file
-
-                # self.start_sim(path_dck, lock)  #debug
 
                 if not self.sim_success[index]:
+                    sim = self.sim_list[index]  # name of simulation
+                    path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)  # path of dck-file
+
+                    # self.start_sim(path_dck, lock)  # for debugging only
+
                     # create a new process instance
                     process = multiprocessing.Process(target=self.start_sim,
-                                                      args=(path_dck, lock))  # todo: Schleife auf Basis von processes?
-                    processes.append(process)   # todo: benutzen oder löschen
+                                                      args=(path_dck, lock))
                     with lock:
                         start_time = time.time()
                         while len(multiprocessing.active_children()) >= self.multiprocessing_max:
                             time.sleep(5)   # pause until number of active simulations drops below maximum
                             if time.time() - start_time > self.timeout:
                                 sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+                        time.sleep(5)
                         process.start()     # start process
                     lock.acquire()
 
