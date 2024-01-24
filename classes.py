@@ -136,6 +136,11 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         # initialize simulation success flags
         self.sim_success = [False] * len(self.sim_list)
 
+        # convert index into string (for stability reasons)
+        self.weather_series.index = self.weather_series.index.map(str)
+        self.b18_series.index = self.b18_series.index.map(str)
+        self.df_dck.index = self.df_dck.index.map(str)
+
     def create_sim_series_folder(self):
         """Create simulation series folder.
 
