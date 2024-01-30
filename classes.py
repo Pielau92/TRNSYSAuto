@@ -322,15 +322,16 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
             sim = self.sim_list[index]
 
             path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')    # path of output file
-            try:
-                with open(path_output) as f:
-                    reader = csv.reader(f, delimiter="\t")
-                    d = list(reader)
+            if not self.sim_success[index]:
+                try:
+                    with open(path_output) as f:
+                        reader = csv.reader(f, delimiter="\t")
+                        d = list(reader)
 
-                # simulation was successful, if hourly data is complete (8760 entries)
-                self.sim_success[index] = not len(d) < 8762
-            except FileNotFoundError:  # no file found
-                self.sim_success[index] = False
+                    # simulation was successful, if hourly data is complete (8760 entries)
+                    self.sim_success[index] = not len(d) < 8762
+                except FileNotFoundError:  # no file found
+                    self.sim_success[index] = False
 
         # print simulation success status
         if all(self.sim_success):
