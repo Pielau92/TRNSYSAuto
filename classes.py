@@ -253,12 +253,12 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
         path_sim = os.path.dirname(path_dck_file)
         # os.remove(path_dck_file[:-3] + 'lst')
-        os.remove(os.path.join(path_sim, 'out11.txt'))
-        os.remove(os.path.join(path_sim, 'out8.txt'))
-        os.remove(os.path.join(path_sim, 'out6.txt'))
-        os.remove(os.path.join(path_sim, 'out7.txt'))
-        os.remove(os.path.join(path_sim, 'out10.txt'))
-        os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
+        redundant_file_list =['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
+        for redundant_file in redundant_file_list:
+            try:
+                os.remove(os.path.join(path_sim, redundant_file))
+            except FileNotFoundError:
+                pass
 
         # endregion
 
