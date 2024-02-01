@@ -370,7 +370,7 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
 
     def evaluation(self):
 
-        print('Starting evaluation of simulation results')
+        self.logger.info('Starting evaluation for {}'.format(self.filename_sim_variants_excel))
         output_folder = os.path.join(self.dir_sim_series, 'evaluation')
 
         # region NAMES
@@ -434,18 +434,15 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
             variant_folder_path = os.path.join(self.dir_sim_series, variant_folder)
             variant_file_path = os.path.join(variant_folder_path, trnsys_data_file_name)
             variant_output_file = os.path.join(output_folder, 'variant' + variant_folder + '.xlsx')
-            print(variant_file_path)
 
             if not os.path.exists(variant_file_path):
-                print(f'File {variant_file_path} does not exist!')
-                # raise ValueError(f'File {variant_file_path} does not exist!')
+                self.logger.error(f'File {variant_file_path} does not exist!')
                 continue
 
             variant_list = variant_parameter_df.columns.to_list()
             variant_list = [str(variant) for variant in variant_list]
             if variant_folder not in variant_list:
-                print(f'Did not find {variant_folder} in {variant_parameter_file}')
-                # raise ValueError(f'Did not find {variant_folder} in {variant_parameter_file}')
+                self.logger.error(f'Did not find {variant_folder} in {variant_parameter_file}')
                 continue
 
             # read trnsys output file
@@ -899,8 +896,6 @@ class SchweikerDataFrame:
 
         # export to Excel file
         # self.write_output_excel()
-
-        print('Done')
 
     # def calcFloatingAverageTemperature(self, values_name='Aussentemp', dates_name='date'):
     #     # todo:  VERALTET, wurde durch eigene standalone funktion ersetzt
