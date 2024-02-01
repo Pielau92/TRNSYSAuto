@@ -1,5 +1,8 @@
+import numpy as np
+import pandas as pd
+from datetime import datetime, date
 import re
-# todo: Umstrukturieren
+
 
 def replace_text(match, parameters):
     """
@@ -61,3 +64,208 @@ def find_and_replace(path_file, pattern, repl):
         new_text = re.sub(pattern=pattern, repl=repl, string=text)
     with open(path_file, 'w') as file:
         file.write(new_text)  # overwrite file
+
+
+def isequal(array):
+    return all(x == array[0] for x in array)
+
+
+def datenum(yearColumn, monthColumn, dayColumn, hourColumn, minuteColumn, secondColumn):
+    if isinstance(yearColumn, np.int64):
+        datenum_single = \
+            date.toordinal(datetime(yearColumn, monthColumn, dayColumn, hourColumn, minuteColumn, secondColumn))
+        return datenum_single
+
+    elif isinstance(yearColumn, pd.core.series.Series):
+        datenum_array = []
+        for index in range(len(yearColumn)):
+            datenum_array.append(date.toordinal(datetime(yearColumn[index], monthColumn[index], dayColumn[index],
+                                                         hourColumn[index], minuteColumn[index], secondColumn[index])))
+        return datenum_array
+
+
+def weeknum(time_array=None, year=None, month=None, day=None):
+    if all(x is not None for x in [year, month, day]):
+        return date(year, month, day).isocalendar().week
+    elif time_array is not None:
+        return date(time_array[0], time_array[1], time_array[2]).isocalendar().week
+    else:
+        print('Wrong Input for weeknum function.')
+        return np.nan
+
+
+def read_excel(file, sheet_name=0, usecols=None, nrows=None, skiprows=None):
+    df = pd.read_excel(file, sheet_name=sheet_name, usecols=usecols, nrows=nrows, skiprows=skiprows)
+    return df
+
+
+def read_multi_header(file, sheet_name=0, index_col=None, usecols=None, to_row=None, header_top=0, header_bottom=1):
+    # if type(header) == list:
+    #    largest_header = header.pop(header.index(max(header)))
+    # else:
+    #    raise ValueError('given header is not a list')
+
+    if to_row is None:
+        nrows = None
+    else:
+        nrows = to_row - header_bottom
+
+    # get data and lowest header row
+    df = pd.read_excel(file,
+                       sheet_name=sheet_name,
+                       index_col=index_col,
+                       # header=0,
+                       usecols=usecols,
+                       nrows=nrows,
+                       skiprows=header_bottom - 1,
+                       parse_dates=False)
+    # print(df)
+
+    #
+    index = pd.read_excel(file,
+                          sheet_name=sheet_name,
+                          index_col=index_col,
+                          header=None,
+                          skiprows=header_top - 1,
+                          nrows=header_bottom - header_top + 1,
+                          usecols=usecols,
+                          parse_dates=False)
+    # print(index)
+    index = index.fillna(method='ffill', axis=1)
+    df.columns = pd.MultiIndex.from_arrays(index.values)
+    # print(df)
+
+
+def convert_time(data_frame_of_file, conversion, date_format=None):
+    if conversion == "unix":
+        data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index, unit='s')
+    elif conversion == "datetime":
+        if format == None:
+            data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index, errors='coerce')
+        else:
+            data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index, format=date_format)
+
+    elif conversion == 'split':
+        data_frame_of_file = data_frame_of_file.reset_index()
+        date_series = combine64(years=data_frame_of_file[data_frame_of_file.columns[0]],
+                                months=data_frame_of_file[data_frame_of_file.columns[1]],
+                                days=data_frame_of_file[data_frame_of_file.columns[2]],
+                                hours=data_frame_of_file[data_frame_of_file.columns[3]],
+                                minutes=data_frame_of_file[data_frame_of_file.columns[4]])
+        data_frame_of_file = data_frame_of_file.assign(date=date_series)
+        data_frame_of_file.set_index('date', inplace=True)
+
+    elif conversion == 'two':
+        data_frame_of_file = data_frame_of_file.reset_index(drop=True)
+        datetime_string_column = data_frame_of_file[data_frame_of_file.columns[0]] + ' ' + data_frame_of_file[
+            data_frame_of_file.columns[1]]
+
+        if format == None:
+            date_series = pd.to_datetime(datetime_string_column, errors='coerce')
+        else:
+            date_series = pd.to_datetime(datetime_string_column, format=date_format)
+
+        data_frame_of_file = data_frame_of_file.assign(date=date_series)
+        data_frame_of_file.set_index('date', inplace=True)
+    return data_frame_of_file
+
+
+def combine64(years, months=1, days=1, weeks=None, hours=None, minutes=None,
+              seconds=None, milliseconds=None, microseconds=None, nanoseconds=None):
+    years = np.asarray(years) - 1970
+    months = np.asarray(months) - 1
+    days = np.asarray(days) - 1
+    types = ('<M8[Y]', '<m8[M]', '<m8[D]', '<m8[W]', '<m8[h]',
+             '<m8[m]', '<m8[s]', '<m8[ms]', '<m8[us]', '<m8[ns]')
+    vals = (years, months, days, weeks, hours, minutes, seconds,
+            milliseconds, microseconds, nanoseconds)
+    return sum(np.asarray(v, dtype=t) for t, v in zip(types, vals)
+               if v is not None)
+
+
+def get_filename_without_extension(name):
+    name = name.replace("\\", '/')
+    return ".".join((name.split("/")[len(name.split("/")) - 1]).split(".")[:-1])
+
+
+def calcFloatingAverageTemperature(df_input, values_name='Aussentemp', dates_name='date'):
+    floating_alpha = 0.8
+
+    if df_input[dates_name].isnull().values.any() or df_input[values_name].isnull().values.any():
+        raise ValueError('Values are not allowed to be NaN, interpolate if necessary!')
+
+    average_name = f'{values_name}_mean'
+    floating_average_name = f'{values_name}_floating_average'
+
+    df = pd.DataFrame()
+    df[dates_name] = df_input[dates_name].copy()
+    df[values_name] = df_input[values_name].copy()
+    df = df.sort_values(dates_name)
+    df['ymd'] = pd.to_datetime(df[dates_name]).dt.date
+    mean_df = df.groupby('ymd').mean()
+    mean_df = mean_df.rename(columns={values_name: average_name})
+
+    df = df.merge(mean_df, how='left', on='ymd')
+    day_counter = 1
+    next_datapoint_time_delta = pd.Timedelta(0)
+    # temporary list which consists the index of the first row of each new day
+    new_day_datapoints = [0]
+
+    for i in range(len(df)):
+        # print(f'row: {i}')
+
+        if i != 0:
+            next_datapoint_time_delta = df.loc[i, 'ymd'] - df.loc[new_day_datapoints[-1], 'ymd']
+            # print(next_datapoint_time_delta)
+
+        if next_datapoint_time_delta >= pd.Timedelta('2D'):
+            # reset time counter when a time gap happens
+            new_day_datapoints = [i]
+            day_counter = 1
+        elif next_datapoint_time_delta >= pd.Timedelta('1D'):
+            new_day_datapoints.append(i)
+            day_counter = day_counter + 1
+
+        if day_counter > 8:
+            df.loc[i, floating_average_name] = (1 - floating_alpha) * df.loc[
+                new_day_datapoints[-2], average_name] + floating_alpha * df.loc[
+                                                   new_day_datapoints[-2], floating_average_name]
+        elif day_counter > 7:
+            # DIN 1525251 Formula
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                    new_day_datapoints[-6], average_name] + 0.3 * df.loc[
+                                                    new_day_datapoints[-7], average_name] + 0.2 * df.loc[
+                                                    new_day_datapoints[-8], average_name]) / 3.8
+        elif day_counter > 6:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                    new_day_datapoints[-6], average_name] + 0.3 * df.loc[
+                                                    new_day_datapoints[-7], average_name]) / 3.6
+        elif day_counter > 5:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                    new_day_datapoints[-6], average_name]) / 3.3
+        elif day_counter > 4:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                df.loc[new_day_datapoints[-5], average_name]) / 2.9
+        elif day_counter > 3:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name]) / 2.4
+        elif day_counter > 2:
+            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                new_day_datapoints[-3], average_name]) / 1.8
+        elif day_counter > 1:
+            df.loc[i, floating_average_name] = df.loc[new_day_datapoints[-2], average_name]
+        elif day_counter <= 1:
+            df.loc[i, floating_average_name] = df.loc[i, average_name]
+        else:
+            raise ValueError('day_counter case is not considered! Fix it!')
+
+    df_input['Aussentemp_mean'] = df[average_name]
+    df_input['Aussentemp_floating_average'] = df[floating_average_name]
+    return df_input

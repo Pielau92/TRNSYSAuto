@@ -2,9 +2,9 @@ import multiprocessing
 import classes
 import os
 import tkinter as tk
-from auswertung import main as evaluation
 
 from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work
+
 
 # region FIX askdirectory/askfilename window does not open
 # in case the askdirectory/askfile window does not open, try this (fixes compatibility issues tkinter <=> pywinauto)
@@ -23,7 +23,7 @@ def main():
     # endregion
 
     sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
-    start_sim_queue(sim_queue)      # start calculation
+    start_sim_queue(sim_queue)  # start calculation
 
 
 def create_sim_queue():
@@ -89,7 +89,7 @@ def start_sim_queue(sim_queue):
 
         # start evaluation routine, if enabled
         if sim_series.autostart_evaluation:
-            evaluation(sim_series.dir_sim_series, sim_series.filename_sim_variants_excel)
+            sim_series.evaluation()
 
 
 if __name__ == '__main__':
