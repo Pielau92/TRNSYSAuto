@@ -59,6 +59,8 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
     # read simulation variant parameters
     variant_parameter_df = pd.read_excel(variant_parameter_file, sheet_name='Simulationsvarianten')
+    variant_parameter_df.columns = [str(parameter) for parameter in variant_parameter_df.columns]
+
 
     # get top level directory list
     variant_folders = next(os.walk(trnsys_folder))[1]
