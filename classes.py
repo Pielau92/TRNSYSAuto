@@ -6,6 +6,7 @@ import re
 import multiprocessing
 import time
 import csv
+import logging
 
 import pandas as pd
 
@@ -39,6 +40,9 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
         self.path_sim_variants_excel = path_sim_variants_excel  # path to simulation variants Excel file
 
+        self.logger = None
+        self.logger_filename = 'log.log'
+
         # filenames and directories
         self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
         self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
@@ -46,6 +50,7 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         # simulation series folder in same directory as base folder
         self.dir_sim_series = \
             os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
+        self.dir_logfile = os.path.join(self.dir_sim_series, self.logger_filename)
 
         # simulation series data
         self.sim_list = None        # list of simulation variant names
@@ -63,6 +68,14 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         self.start_time_buffer = None   # time buffer (sec) between two simulations, for increased stability (optional)
         self.multiprocessing_max = None     # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False   # start the evaluation routine for the simulation results afterwards if True
+
+    def initialize_logging(self):
+        """Initialize logging file."""
+        # Set up logging file
+        self.logger = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.logger_filename)
+        handler = logging.FileHandler(self.dir_logfile)
+        self.logger.addHandler(handler)
 
     def import_settings_excel(self, filename_settings_excel, name_excelsheet_settings):
         """Import simulation series settings.
@@ -175,8 +188,8 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
                         os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]),
                         os.path.join(path_sim, dst_file_list[file_index]))
                 except FileNotFoundError:
-                    print('File ' + os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]
-                                                 + ' could not be found.'))
+                    self.logger.error('File ' + os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]
+                                                             + ' could not be found.'))
                     self.sim_success[sim_index] = True      #todo: als Übergangslösung wird eine erfolgreiche Simulation vorgetäuscht, um Simulationen wo kritische Daten fehlen überspringen zu können. Langfrisitg soll sim_success aber nur tatsächlich erfolgreiche Simulationen dokumentieren!
 
             path_dck = os.path.join(path_sim, dst_file_list[0])
@@ -278,7 +291,7 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
         while not all(self.sim_success):    # check if any simulation has not been simulated successfully yet
 
-            print('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
+            self.logger.info('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
 
             for index in range(len(self.sim_list)):
 
@@ -316,7 +329,7 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         Checks for each simulation inside the simulation series, if the simulation was calculated successfully. If so,
         its sim_success flag is switched from False to True."""
 
-        print('Checking for failed simulations')
+        self.logger.info('Checking for failed simulations')
 
         for index in range(len(self.sim_list)):
             sim = self.sim_list[index]
@@ -333,9 +346,9 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
                 except FileNotFoundError:  # no file found
                     self.sim_success[index] = False
 
-        # print simulation success status
+        # log simulation success status
         if all(self.sim_success):
-            print(('"{}" completed successfully'.format(self.filename_sim_variants_excel)))
+            self.logger.info(('"{}" completed successfully'.format(self.filename_sim_variants_excel)))
         else:
-            print('{} out of {} simulations completed successfully'.format(
+            self.logger.info('{} out of {} simulations completed successfully'.format(
                 sum(self.sim_success), len(self.sim_success)))

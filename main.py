@@ -78,6 +78,9 @@ def start_sim_queue(sim_queue):
         # create new folder for simulation series
         os.makedirs(sim_series.dir_sim_series)
 
+        # initialize logging file
+        sim_series.initialize_logging()
+
         # import simulation variants Excel file
         sim_series.import_input_excel()
 
