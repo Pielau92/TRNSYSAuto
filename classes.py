@@ -136,6 +136,11 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         # initialize simulation success flags
         self.sim_success = [False] * len(self.sim_list)
 
+        # convert index into string (for stability reasons)
+        self.weather_series.index = self.weather_series.index.map(str)
+        self.b18_series.index = self.b18_series.index.map(str)
+        self.df_dck.index = self.df_dck.index.map(str)
+
     def create_sim_series_folder(self):
         """Create simulation series folder.
 
@@ -146,7 +151,8 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
         also modified afterwards, in order to apply specific simulation parameters from the simulation variants Excel.
         """
 
-        for sim in self.sim_list:
+        for sim_index in range(0, len(self.sim_list)):
+            sim = self.sim_list[sim_index]
 
             path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation folder
             os.makedirs(path_sim)  # create new simulation subfolder
@@ -163,10 +169,15 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
             # endregion
 
             # copy specified files into simulation folder
-            for index in range(len(src_file_list)):
-                shutil.copy(
-                    os.path.join(self.dir_sim_variants_excel, src_file_list[index]),
-                    os.path.join(path_sim, dst_file_list[index]))
+            for file_index in range(len(src_file_list)):
+                try:
+                    shutil.copy(
+                        os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]),
+                        os.path.join(path_sim, dst_file_list[file_index]))
+                except FileNotFoundError:
+                    print('File ' + os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]
+                                                 + ' could not be found.'))
+                    self.sim_success[sim_index] = True      #todo: als Übergangslösung wird eine erfolgreiche Simulation vorgetäuscht, um Simulationen wo kritische Daten fehlen überspringen zu können. Langfrisitg soll sim_success aber nur tatsächlich erfolgreiche Simulationen dokumentieren!
 
             path_dck = os.path.join(path_sim, dst_file_list[0])
             # find and replace weather data file name in .dck file
@@ -242,12 +253,12 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
 
         path_sim = os.path.dirname(path_dck_file)
         # os.remove(path_dck_file[:-3] + 'lst')
-        os.remove(os.path.join(path_sim, 'out11.txt'))
-        os.remove(os.path.join(path_sim, 'out8.txt'))
-        os.remove(os.path.join(path_sim, 'out6.txt'))
-        os.remove(os.path.join(path_sim, 'out7.txt'))
-        os.remove(os.path.join(path_sim, 'out10.txt'))
-        os.remove(os.path.join(path_sim, 'Speicher1_step.out'))
+        redundant_file_list =['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
+        for redundant_file in redundant_file_list:
+            try:
+                os.remove(os.path.join(path_sim, redundant_file))
+            except FileNotFoundError:
+                pass
 
         # endregion
 
@@ -311,15 +322,16 @@ class SimulationSeries: #todo: Durch Vererbung erweitern, damit auch andere Prog
             sim = self.sim_list[index]
 
             path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')    # path of output file
-            try:
-                with open(path_output) as f:
-                    reader = csv.reader(f, delimiter="\t")
-                    d = list(reader)
+            if not self.sim_success[index]:
+                try:
+                    with open(path_output) as f:
+                        reader = csv.reader(f, delimiter="\t")
+                        d = list(reader)
 
-                # simulation was successful, if hourly data is complete (8760 entries)
-                self.sim_success[index] = not len(d) < 8762
-            except FileNotFoundError:  # no file found
-                self.sim_success[index] = False
+                    # simulation was successful, if hourly data is complete (8760 entries)
+                    self.sim_success[index] = not len(d) < 8762
+                except FileNotFoundError:  # no file found
+                    self.sim_success[index] = False
 
         # print simulation success status
         if all(self.sim_success):

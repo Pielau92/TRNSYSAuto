@@ -59,6 +59,8 @@ def main(trnsys_folder, filename_sim_variants_excel):
 
     # read simulation variant parameters
     variant_parameter_df = pd.read_excel(variant_parameter_file, sheet_name='Simulationsvarianten')
+    variant_parameter_df.columns = [str(parameter) for parameter in variant_parameter_df.columns]
+
 
     # get top level directory list
     variant_folders = next(os.walk(trnsys_folder))[1]
@@ -73,11 +75,18 @@ def main(trnsys_folder, filename_sim_variants_excel):
         variant_file_path = os.path.join(variant_folder_path, trnsys_data_file_name)
         variant_output_file = os.path.join(output_folder, 'variant' + variant_folder + '.xlsx')
         print(variant_file_path)
-        if not os.path.exists(variant_file_path):
-            raise ValueError(f'File {variant_file_path} does not exist!')
 
-        if variant_folder not in variant_parameter_df.columns:
-            raise ValueError(f'Did not find {variant_folder} in {variant_parameter_file}')
+        if not os.path.exists(variant_file_path):
+            print(f'File {variant_file_path} does not exist!')
+            # raise ValueError(f'File {variant_file_path} does not exist!')
+            continue
+
+        variant_list = variant_parameter_df.columns.to_list()
+        variant_list = [str(variant) for variant in variant_list]
+        if variant_folder not in variant_list:
+            print(f'Did not find {variant_folder} in {variant_parameter_file}')
+            # raise ValueError(f'Did not find {variant_folder} in {variant_parameter_file}')
+            continue
 
         # read trnsys output file
         trnsys_df = pd.read_csv(variant_file_path, sep='\s+', skiprows=1, skipfooter=0, engine='python')
