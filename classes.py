@@ -82,6 +82,13 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
 
+        # WORKAROUND
+        """Es wurden Simulationsvarianten definiert, die auf nicht existente.b17 Files zugreifen.Um dieses Problem zu 
+        lösen ohne die Simulationsvarianten zu ändern wird in einem zusätzlichen Schritt ein Mapping 
+        durchgeführt.Dabei werden die bestehenden Filenamen der fehlenden.b17 Files jeweils mit dem Filenamen 
+        ersetzt, der am ehesten übereinstimmt und auch tatsächlich im b18 - Ordner zu finden ist. """
+        self.b17mapping = {}
+
     def initialize_logging(self):
         """Initialize logging file."""
         # Set up logging file
@@ -648,6 +655,32 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
         # Quit
         xlapp.Quit()
 
+    def mapping_routine(self):
+        # WORKAROUND
+        """Es wurden Simulationsvarianten definiert, die auf nicht existente.b17 Files zugreifen.Um dieses Problem zu
+        lösen ohne die Simulationsvarianten zu ändern wird in einem zusätzlichen Schritt ein Mapping
+        durchgeführt.Dabei werden die bestehenden Filenamen der fehlenden.b17 Files jeweils mit dem Filenamen
+        ersetzt, der am ehesten übereinstimmt und auch tatsächlich im b18 - Ordner zu finden ist. """
+
+        # read input Excel file
+        excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, 'Mapping.xlsx'))
+
+        # convert Excel data into pandas DataFrame
+        b17mapping = excel_data.parse('Mapping')
+
+        # Save original values for comparison
+        original_values = self.b18_series.copy()
+
+        # mapping
+        self.b18_series.replace(b17mapping.set_index('Original')['Mapping'], inplace=True)
+
+        # Überprüfen, welche Werte tatsächlich ersetzt wurden
+        replaced_indices = original_values != self.b18_series
+        replaced_values = self.b18_series[replaced_indices]
+
+        # Ausgabe der ersetzen Werte
+        self.logger.warning("Im Rahmen des Mappings Ersetzte Werte:")
+        self.logger.warning(replaced_values)
 
 class SchweikerDataFrame:
     """Modified pandas Dataframe for the Schweiker-Model."""
