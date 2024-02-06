@@ -655,6 +655,8 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
         # Quit
         xlapp.Quit()
 
+        self.logger.info('Evaluation done.')
+
     def mapping_routine(self):
         # WORKAROUND
         """Es wurden Simulationsvarianten definiert, die auf nicht existente.b17 Files zugreifen.Um dieses Problem zu
