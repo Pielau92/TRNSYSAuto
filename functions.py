@@ -202,7 +202,7 @@ def calcFloatingAverageTemperature(df_input, values_name='Aussentemp', dates_nam
     df[values_name] = df_input[values_name].copy()
     df = df.sort_values(dates_name)
     df['ymd'] = pd.to_datetime(df[dates_name]).dt.date
-    mean_df = df.groupby('ymd').mean()
+    mean_df = df.groupby('ymd').mean(numeric_only=False)
     mean_df = mean_df.rename(columns={values_name: average_name})
 
     df = df.merge(mean_df, how='left', on='ymd')
