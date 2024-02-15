@@ -400,6 +400,11 @@ class SimulationSeries:
         # Logger entry "start"
         self.logger.info('Starting evaluation for {}'.format(self.filename_sim_variants_excel))
 
+        variant_result_columns = pd.DataFrame()
+        zone_1_with_df = pd.DataFrame()
+        zone_1_without_df = pd.DataFrame()
+        zone_3_with_df = pd.DataFrame()
+        zone_3_without_df = pd.DataFrame()
         # region COLUMN NAMES
 
         trnsys_outdoor_temperature = 'ta'
@@ -537,84 +542,81 @@ class SimulationSeries:
                  'schweiker_ppd1', 'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2',
                  'schweiker_clo3', 'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
 
-            # region EXCEL EXPORT
+            # region VARIANT EVALUATION
 
             # copy template and write data in it
             shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
-            functions.excel_write_1(self.sheet_name_variant_input, result, dir_variant, save_path_variant_output,
-                                    variant_parameter_df)
+            functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, dir_variant, save_path_variant_output,
+                                                      variant_parameter_df)
 
             # update excel to receive cross-referenced values and updates calculations
             functions.update_excel_file(save_path_variant_output)
 
-            # read data for all zones from variant excel file
-            zone_1_with_df = pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
-                                           usecols=[3], header=None, nrows=None, skiprows=None)
-            zone_1_without_df = pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
-                                              usecols=[2], header=None, nrows=None, skiprows=None)
-            zone_3_with_df = pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
-                                           usecols=[3], header=None, nrows=None, skiprows=None)
-            zone_3_without_df = pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
-                                              usecols=[2], header=None, nrows=None, skiprows=None)
-
-            # create column with all hourly values
-            var_list_result_column \
-                = ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
-            header = pd.DataFrame(var_list_result_column[1:] + ['']).transpose()
-            header.columns = var_list_result_column[:-1] + ['']
-            result_column = pd.concat([
-                result[var_list_result_column],
-                pd.DataFrame(index=['']),
-                header],
-                axis=0)
-            result_column = result_column.drop(result_column.columns[-1], axis=1)
-            result_column = result_column.transpose().stack(dropna=False)
-
-            # copy into cumulative evaluation file
-            self.excel_write_2(result_column, count_variant, dir_variant, variant_parameter_df, zone_1_with_df,
-                               zone_1_without_df, zone_3_with_df, zone_3_without_df)
+            # read data from variant evaluation excel file, for the cumulative evaluation excel file
+            zone_1_with_df = pd.concat([
+                zone_1_with_df,
+                pd.read_excel(save_path_variant_output,sheet_name=self.sheet_name_zone_1_input, usecols=[3],
+                              header=None, nrows=None, skiprows=None)], axis=1)
+            zone_1_without_df = pd.concat([
+                zone_1_without_df,
+                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[2],
+                              header=None, nrows=None, skiprows=None)], axis=1)
+            zone_3_with_df = pd.concat([
+                zone_3_with_df,
+                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[3],
+                              header=None, nrows=None, skiprows=None)], axis=1)
+            zone_3_without_df = pd.concat([
+                zone_3_without_df,
+                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[2],
+                              header=None, nrows=None, skiprows=None)], axis=1)
 
             # endregion
 
+            # region CUMULATIVE EVALUATION
+
+            # create single column with all hourly values, for the cumulative evaluation excel file
+            var_list_result_column \
+                = ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
+            result_column = functions.to_single_column(result[var_list_result_column])
+
+            # save single column
+            variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
+            # todo:output routine muss noch geschrieben werden, außerdem müssen zone_1_with_df, zone_1_without_df, zone_3_with_df und zone_3_without_df auch rein
+
+            # copy into cumulative evaluation file
+            # self.excel_write_2(result_column, count_variant, dir_variant, variant_parameter_df, zone_1_with_df,
+            #                    zone_1_without_df, zone_3_with_df, zone_3_without_df)
+
+            # endregion
+
+        # copy into cumulative evaluation file
+        self.excel_export_cumulative_evaluation(variant_result_columns, variant_parameter_df, zone_1_with_df, zone_1_without_df,
+                                                zone_3_with_df, zone_3_without_df)
         # update cumulative excel
         functions.update_excel_file(self.file_save_path_cumulative_evaluation)
 
         # logger entry "finish"
         self.logger.info('Evaluation done.')
 
-    def excel_write_2(self, result_column, count_variant, dir_variant, variant_parameter_df, zone_1_with_df,
-                      zone_1_without_df, zone_3_with_df, zone_3_without_df):
+    def excel_export_cumulative_evaluation(self, result_column, variant_parameter_df, zone_1_with_df,
+                                           zone_1_without_df, zone_3_with_df, zone_3_without_df):
         """Write data into cumulative evaluation file."""
-        # todo: Auf einen Schreibzugriff reduzieren! also alle Daten erstmal in ein df sammeln und dann gesammelt
-        #  reinschreiben!
 
         with pd.ExcelWriter(self.file_save_path_cumulative_evaluation, mode="a", engine="openpyxl",
                             if_sheet_exists='overlay') as writer:
-
-            if count_variant <= 1:
-                variant_parameter_df[['File', 'Parameter', dir_variant]].to_excel(
-                    writer, sheet_name=self.sheet_name_cumulative_input, startrow=1, startcol=0, index=False)
-            else:
-                variant_parameter_df[dir_variant].to_frame().to_excel(writer,
-                                                                      sheet_name=self.sheet_name_cumulative_input,
-                                                                      startrow=1, startcol=1 + count_variant,
-                                                                      index=False)
+            variant_parameter_df.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=1,
+                                          startcol=1, index=False)
 
             zone_1_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_with_operating_time, startrow=1,
-                                    startcol=6 + count_variant,
-                                    index=False, header=False)
+                                    startcol=7, index=False, header=False)
             zone_1_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_without_operating_time, startrow=1,
-                                       startcol=6 + count_variant,
-                                       index=False, header=False)
+                                       startcol=7, index=False, header=False)
             zone_3_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_with_operating_time, startrow=1,
-                                    startcol=6 + count_variant,
-                                    index=False, header=False)
+                                    startcol=7, index=False, header=False)
             zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time, startrow=1,
-                                       startcol=6 + count_variant,
-                                       index=False, header=False)
+                                       startcol=7, index=False, header=False)
             result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
-                                   startcol=1 + count_variant,
-                                   index=False, header=False)
+                                   startcol=1, index=False, header=False)
 
     def mapping_routine(self):
         # WORKAROUND

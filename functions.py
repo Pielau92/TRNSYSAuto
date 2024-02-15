@@ -288,7 +288,10 @@ def update_excel_file(path_excel_file):
     xlapp.Quit()
 
 
-def excel_write_1(sheet_name_variant_input, result, variant_folder, variant_output_file, variant_parameter_df):
+def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_folder, variant_output_file, variant_parameter_df):
+    """Output routine for variant excel file.
+
+    todo: Mit pandas Methode ins Excel schreiben, wie beim cumulative evaluation file  """
     wb = xw.Book(variant_output_file)
     ws = wb.sheets[sheet_name_variant_input]
     ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
