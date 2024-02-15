@@ -296,3 +296,20 @@ def excel_write_1(sheet_name_variant_input, result, variant_folder, variant_outp
     ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
     wb.save()
     wb.app.quit()
+
+
+def to_single_column(df_input):
+    """Turn pandas DataFrame into one single column.
+
+    All columns of df_input are stacked over each other with one free space and with the column header."""
+    var_list_result_column = df_input.columns
+    header = pd.DataFrame(var_list_result_column[1:] + ['']).transpose()
+    header.columns = var_list_result_column[:-1] + ['']
+    single_column = pd.concat([
+        df_input[var_list_result_column],
+        pd.DataFrame(index=['']),
+        header],
+        axis=0)
+    single_column = single_column.drop(single_column.columns[-1], axis=1)
+    single_column = single_column.transpose().stack(dropna=False)
+    return single_column
