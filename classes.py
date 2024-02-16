@@ -109,6 +109,7 @@ class SimulationSeries:
 
     def initialize_logging(self):
         """Initialize logging file."""
+
         # Set up logging file
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.logger_filename)
@@ -396,6 +397,7 @@ class SimulationSeries:
                 sum(self.sim_success), len(self.sim_success)))
 
     def evaluation(self):
+        """Perform evaluation routine."""
 
         # Logger entry "start"
         self.logger.info('Starting evaluation for {}'.format(self.filename_sim_variants_excel))
@@ -542,12 +544,38 @@ class SimulationSeries:
                  'schweiker_ppd1', 'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2',
                  'schweiker_clo3', 'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
 
+            # insert empty row
+            # result.insert(0, 'Empty', '')
+
             # region VARIANT EVALUATION
 
-            # copy template and write data in it
+            # save copy of variant evaluation template
             shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
+
+            # save data
             functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, dir_variant, save_path_variant_output,
                                                       variant_parameter_df)
+            # region SAVE DATA (ALTERNATIVE)
+            """Alternative, takes up to 10x more time though, therefore not in use at the moment."""
+            # variant_output = pd.concat([
+            #     variant_parameter_df[['File', 'Parameter', dir_variant]],           # variant parameters
+            #     pd.DataFrame(index=range(59 - 2 - len(variant_parameter_df)))],     # empty until row 60
+            #     ignore_index=True)
+            # variant_output.columns = range(len(variant_output.columns))
+            #
+            # # Add row with column names as first row
+            # result.loc[-1] = result.columns.tolist()
+            # result.index = result.index + 1
+            # result.sort_index(inplace=True)
+            # result.columns = range(1, len(result.columns)+1)
+            #
+            # variant_output = pd.concat([variant_output, result], ignore_index=True)     # results
+            #
+            # self.excel_export_variant_evaluation(save_path_variant_output, variant_output)
+
+            # endregion
+
+            self.logger.info('Finished evaluation for variant {}'.format(dir_variant))
 
             # update excel to receive cross-referenced values and updates calculations
             functions.update_excel_file(save_path_variant_output)
@@ -581,22 +609,24 @@ class SimulationSeries:
 
             # save single column
             variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
-            # todo:output routine muss noch geschrieben werden, außerdem müssen zone_1_with_df, zone_1_without_df, zone_3_with_df und zone_3_without_df auch rein
-
-            # copy into cumulative evaluation file
-            # self.excel_write_2(result_column, count_variant, dir_variant, variant_parameter_df, zone_1_with_df,
-            #                    zone_1_without_df, zone_3_with_df, zone_3_without_df)
 
             # endregion
 
         # copy into cumulative evaluation file
-        self.excel_export_cumulative_evaluation(variant_result_columns, variant_parameter_df, zone_1_with_df, zone_1_without_df,
-                                                zone_3_with_df, zone_3_without_df)
+        self.excel_export_cumulative_evaluation(variant_result_columns, variant_parameter_df, zone_1_with_df,
+                                                zone_1_without_df, zone_3_with_df, zone_3_without_df)
         # update cumulative excel
         functions.update_excel_file(self.file_save_path_cumulative_evaluation)
 
         # logger entry "finish"
         self.logger.info('Evaluation done.')
+
+    def excel_export_variant_evaluation(self, save_path_variant_output, result):
+        """Write data into variant evaluation file."""
+
+        with pd.ExcelWriter(save_path_variant_output, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
+
+            result.to_excel(writer, sheet_name=self.sheet_name_variant_input, startrow=2, index=False, header=False)
 
     def excel_export_cumulative_evaluation(self, result_column, variant_parameter_df, zone_1_with_df,
                                            zone_1_without_df, zone_3_with_df, zone_3_without_df):
@@ -676,6 +706,7 @@ class SchweikerDataFrame:
             self._df = self._df.reset_index(drop=True)
 
     def interface_TimberBioC(self):
+        """VERALTETE FUNKTION. Wird derzeit nicht verwendet."""
 
         # remove index from column headers
         for col in self._df.iloc[:, 1:].columns:
@@ -688,7 +719,7 @@ class SchweikerDataFrame:
             [date_info.dt.year, date_info.dt.month, date_info.dt.day, date_info.dt.hour, date_info.dt.minute], axis=1)
         date_df.columns = ['Jahr', 'Monat', 'Tag', 'Stunde', 'Minute']
 
-        # split zones and concatenate temporal information todo: 1)HARD CODED 2)Dummy Außentemperatur
+        # split zones and concatenate temporal information
         dummy = pd.DataFrame(np.random.randint(0, 100, size=(8760, 1)), columns=['Aussentemp'])
         df_z1 = pd.concat([date_df, self._df.iloc[:, 2:8], dummy], axis=1)
         df_z2 = pd.concat([date_df, self._df.iloc[:, 9:15], dummy], axis=1)
