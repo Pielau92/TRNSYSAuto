@@ -284,9 +284,6 @@ def update_excel_file(path_excel_file):
     wb.Save()
     xlapp.Quit()
 
-    # Quit todo: 2 mal Quit() nötig?
-    xlapp.Quit()
-
 
 def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_folder, variant_output_file, variant_parameter_df):
     """Output routine for variant excel file.
