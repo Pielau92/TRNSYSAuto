@@ -1,5 +1,7 @@
+import win32com.client
 import numpy as np
 import pandas as pd
+import xlwings as xw
 from datetime import datetime, date
 import re
 
@@ -269,3 +271,46 @@ def calcFloatingAverageTemperature(df_input, values_name='Aussentemp', dates_nam
     df_input['Aussentemp_mean'] = df[average_name]
     df_input['Aussentemp_floating_average'] = df[floating_average_name]
     return df_input
+
+
+def update_excel_file(path_excel_file):
+    """Update calculations in excel file.
+
+    https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python"""
+    xlapp = win32com.client.DispatchEx("Excel.Application")
+    wb = xlapp.Workbooks.Open(path_excel_file)
+    wb.RefreshAll()
+    xlapp.CalculateUntilAsyncQueriesDone()
+    wb.Save()
+    xlapp.Quit()
+
+
+def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_folder, variant_output_file,
+                                    variant_parameter_df):
+    """Output routine for variant excel file.
+
+    todo: Mit pandas Methode ins Excel schreiben, wie beim cumulative evaluation file  """
+    wb = xw.Book(variant_output_file)
+    ws = wb.sheets[sheet_name_variant_input]
+    ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
+        ['File', 'Parameter', variant_folder]]
+    ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
+    wb.save()
+    wb.app.quit()
+
+
+def to_single_column(df_input):
+    """Turn pandas DataFrame into one single column.
+
+    All columns of df_input are stacked over each other with one free space and with the column header."""
+    var_list_result_column = df_input.columns
+    header = pd.DataFrame(var_list_result_column[1:] + ['']).transpose()
+    header.columns = var_list_result_column[:-1] + ['']
+    single_column = pd.concat([
+        df_input[var_list_result_column],
+        pd.DataFrame(index=['']),
+        header],
+        axis=0)
+    single_column = single_column.drop(single_column.columns[-1], axis=1)
+    single_column = single_column.transpose().stack(dropna=False)
+    return single_column

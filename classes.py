@@ -26,11 +26,13 @@ from datetime import datetime
 # from line_profiler import LineProfiler
 # from tkinter import filedialog
 
-
-class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Programme als TRNSYS leichter automatisiert werden können
+# todo: SimulationSeries durch Vererbung erweitern, damit auch andere Programme als TRNSYS leichter automatisiert werden
+#  können
+class SimulationSeries:
     """Simulation series class.
 
-    A Simulation series is a series of TRNSYS simulations, which are computed using multiprocessing. todo allgemeiner ausdrücken
+    todo Beschreibung allgemeiner ausdrücken
+    A Simulation series is a series of TRNSYS simulations, which are computed using multiprocessing.
     """
 
     def __init__(self, path_sim_variants_excel):
@@ -64,6 +66,22 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
         self.dir_sim_series = \
             os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
         self.dir_logfile = os.path.join(self.dir_sim_series, self.logger_filename)
+        self.filename_trnsys_output = 'out5.txt'
+        self.dir_save_path_evaluation = os.path.join(self.dir_sim_series, 'evaluation')
+        self.file_save_path_cumulative_evaluation = os.path.join(self.dir_save_path_evaluation, 'gesamt.xlsx')
+        self.path_cumulative_evaluation_template = os.path.abspath('./Basisordner/Auswertung_Gesamt.xlsx')
+        self.path_variant_evaluation_template = './Basisordner/Auswertung_Variante.xlsx'
+
+        # excel sheet names
+        self.sheet_name_variant_input = 'Rohdaten'
+        self.sheet_name_calculation = 'Berechn1'
+        self.sheet_name_cumulative_input = 'Rohinputs'
+        self.sheet_name_zone_1_input = 'Zusamm1'
+        self.sheet_name_zone_3_input = 'Zusamm3'
+        self.sheet_name_zone_1_with_operating_time = 'Zone1_Betrieb'
+        self.sheet_name_zone_1_without_operating_time = 'Zone1ges'
+        self.sheet_name_zone_3_with_operating_time = 'Zone3_Betrieb'
+        self.sheet_name_zone_3_without_operating_time = 'Zone3ges'
 
         # simulation series data
         self.sim_list = None  # list of simulation variant names
@@ -91,6 +109,7 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
 
     def initialize_logging(self):
         """Initialize logging file."""
+
         # Set up logging file
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.logger_filename)
@@ -101,7 +120,7 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
         """Import simulation series settings.
 
         Imports simulation series settings from the settings Excel file and applies them to the corresponding attributes
-        of the SimulationSeries object. Parameter names in the settings Excel file (column "Parameter" must correspond
+        of the SimulationSeries object. Parameter names in the settings Excel file (column "Parameter") must correspond
         to an attribute name of the SimulationSeries class.
 
         Parameters
@@ -123,7 +142,7 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
         self.apply_settings()
 
     def apply_settings(
-            self):  # todo automatischer Namenabgleich einführen, am besten mit Prüfung und Meldung bei Unstimmigkeiten
+            self):  # todo automatischer Namensabgleich einführen, am besten mit Prüfung und Meldung bei Unstimmigkeiten
         """Apply imported settings to SimulationSeries object.
 
         Applies the imported settings from the settings Excel file to attributes of the SimulationSeries object with the
@@ -195,9 +214,8 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
 
             file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
                          'Windetc20190804.txt', 'StrahlungBruck.txt']
-            src_file_list = file_list + \
-                            [os.path.join('b18', self.b18_series[sim]),
-                             os.path.join('Wetterdaten', self.weather_series[sim])]
+            src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
+                                         os.path.join('Wetterdaten', self.weather_series[sim])]
             dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim]]
 
             # endregion
@@ -211,8 +229,11 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
                 except FileNotFoundError:
                     self.logger.error('File ' + os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]
                                                              + ' could not be found.'))
-                    self.sim_success[
-                        sim_index] = True  # todo: als Übergangslösung wird eine erfolgreiche Simulation vorgetäuscht, um Simulationen wo kritische Daten fehlen überspringen zu können. Langfrisitg soll sim_success aber nur tatsächlich erfolgreiche Simulationen dokumentieren!
+
+                    """ todo: als Übergangslösung wird eine erfolgreiche Simulation vorgetäuscht, um Simulationen wo
+                    kritische Daten fehlen überspringen zu können. Langfrisitg soll sim_success aber nur tatsächlich
+                    erfolgreiche Simulationen dokumentieren!"""
+                    self.sim_success[sim_index] = True
 
             path_dck = os.path.join(path_sim, dst_file_list[0])
             # find and replace weather data file name in .dck file
@@ -376,95 +397,101 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
                 sum(self.sim_success), len(self.sim_success)))
 
     def evaluation(self):
+        """Perform evaluation routine."""
 
+        # Logger entry "start"
         self.logger.info('Starting evaluation for {}'.format(self.filename_sim_variants_excel))
-        output_folder = os.path.join(self.dir_sim_series, 'evaluation')
 
-        # region NAMES
+        variant_result_columns = pd.DataFrame()
+        zone_1_with_df = pd.DataFrame()
+        zone_1_without_df = pd.DataFrame()
+        zone_3_with_df = pd.DataFrame()
+        zone_3_without_df = pd.DataFrame()
+        # region COLUMN NAMES
 
-        trnsys_data_file_name = 'out5.txt'
-        cumulative_template_file = os.path.abspath('./Basisordner/Auswertung_Gesamt.xlsx')
-        cumulative_output_file = os.path.join(output_folder, 'gesamt.xlsx')
-        variant_template_file = './Basisordner/Auswertung_Variante.xlsx'
+        trnsys_outdoor_temperature = 'ta'
 
-        raw_data_variant_sheet_name = 'Rohdaten'
-        calculation_sheetname = 'Berechn1'
-        raw_data_cumulative_sheet_name = 'Rohinputs'
-        zone_1_input = 'Zusamm1'
-        zone_3_input = 'Zusamm3'
-        zone_1_with_output = 'Zone1_Betrieb'
-        zone_1_without_output = 'Zone1ges'
-        zone_3_with_output = 'Zone3_Betrieb'
-        zone_3_without_output = 'Zone3ges'
-
-        # selected_trnsys_columns = ['Period', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1',
-        #                            'pmv2', 'pmv3']
-        selected_trnsys_columns = ['ta', 'top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3',
-                                   'qh1', 'qh2',
-                                   'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3',
-                                   'met1',
-                                   'met2', 'met3']
-
+        # zones 1-3
         var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1', 'met1',
                           'work1']
         var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2',
                           'met2', 'work2']
         var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3', 'clo3',
                           'met3', 'work3']
-        trnsys_outdoor_temperature = 'ta'
 
-        variant_parameter_file = os.path.join(self.dir_sim_series, self.filename_sim_variants_excel) + '.xlsx'
+        # endregion
 
-        # endregion NAMES
+        # region CREATE DATE COLUMN   #todo: Wird derzeit künstlich erzeugt, Jahreszahl ist hard coded
 
-        # remove existing files in output folder
-        for existing_output in glob.glob(output_folder + '/*.xlsx'):
-            os.remove(existing_output)
-        os.makedirs(output_folder, exist_ok=True)
+        year = 2023
+        time_increment_profiles = 60
+        date = pd.date_range(
+            start=str(year) + '-01-01',
+            end=str(year + 1) + '-01-01',
+            freq=str(time_increment_profiles) + 'min')
 
-        # create copy of evaluation file template
-        shutil.copy(cumulative_template_file, cumulative_output_file)
+        date = date.to_series()
+
+        date_df = pd.DataFrame({
+            'Tag': date.dt.day,
+            'Monat': date.dt.month,
+            'Jahr': date.dt.year,
+            'Stunde': date.dt.hour,
+            'Minute': date.dt.minute
+        })
+        date_df = date_df.reset_index()  # reset index
+
+        # endregion
+
+        # check for existing files in output folder
+        for existing_output in glob.glob(self.dir_save_path_evaluation + '/*.xlsx'):
+            os.remove(existing_output)  # remove existing files
+
+        # create evaluation directory
+        os.makedirs(self.dir_save_path_evaluation, exist_ok=True)
+
+        # create copy of cumulative evaluation file template
+        shutil.copy(self.path_cumulative_evaluation_template, self.file_save_path_cumulative_evaluation)
 
         # read simulation variant parameters
-        variant_parameter_df = pd.read_excel(variant_parameter_file, sheet_name='Simulationsvarianten')
+        variant_parameter_df = pd.read_excel(self.path_sim_variants_excel, sheet_name='Simulationsvarianten')
         variant_parameter_df.columns = [str(parameter) for parameter in variant_parameter_df.columns]
 
+        # ensure variant names list consists of strings
+        list_variants = variant_parameter_df.columns.to_list()
+        # list_variants = [str(variant) for variant in list_variants]
+
         # get top level directory list
-        variant_folders = next(os.walk(self.dir_sim_series))[1]
-        variant_folders.remove('evaluation')
-        variant_folders = natsorted(variant_folders)
+        list_variant_folders = next(os.walk(self.dir_sim_series))[1]
+        list_variant_folders.remove('evaluation')
+        list_variant_folders = natsorted(list_variant_folders)
 
         # read TRNSYS output and save data
-        variant_cnt = 0
-        for variant_folder in variant_folders:
-            variant_cnt = variant_cnt + 1
-            variant_folder_path = os.path.join(self.dir_sim_series, variant_folder)
-            variant_file_path = os.path.join(variant_folder_path, trnsys_data_file_name)
-            variant_output_file = os.path.join(output_folder, 'variant' + variant_folder + '.xlsx')
+        count_variant = 0
+        for dir_variant in list_variant_folders:
+            count_variant = count_variant + 1
+            path_variant_folder = os.path.join(self.dir_sim_series, dir_variant)
+            path_variant_file = os.path.join(path_variant_folder, self.filename_trnsys_output)
+            save_path_variant_output = os.path.join(self.dir_save_path_evaluation, 'variant' + dir_variant + '.xlsx')
 
-            if not os.path.exists(variant_file_path):
-                self.logger.error(f'File {variant_file_path} does not exist!')
+            # region CHECK IF...
+
+            # ...the trnsys output file is actually there
+            if not os.path.exists(path_variant_file):
+                self.logger.error(f'File {path_variant_file} does not exist!')
                 continue
 
-            variant_list = variant_parameter_df.columns.to_list()
-            variant_list = [str(variant) for variant in variant_list]
-            if variant_folder not in variant_list:
-                self.logger.error(f'Did not find {variant_folder} in {variant_parameter_file}')
+            # ...the variant has a corresponding folder
+            if dir_variant not in list_variants:
+                self.logger.error(f'Did not find {dir_variant} in {self.path_sim_variants_excel}')
                 continue
 
-            # read trnsys output file
-            trnsys_df = pd.read_csv(variant_file_path, sep='\s+', skiprows=1, skipfooter=0, engine='python')
-
-            # region todo: ppd1-3 muss im out5.txt vorhanden sein, dann können diese Zeilen entfernt werden
-            trnsys_df['ppd1'] = np.nan
-            trnsys_df['ppd2'] = np.nan
-            trnsys_df['ppd3'] = np.nan
             # endregion
 
-            # todo: ab da etwas chaotisch
-            # region DATA
-            selected_trnsys_df = trnsys_df[selected_trnsys_columns]
-            selected_trnsys_df = selected_trnsys_df.reindex(selected_trnsys_columns, axis=1)
+            # read trnsys output file
+            trnsys_df = pd.read_csv(path_variant_file, sep='\s+', skiprows=1, skipfooter=0, engine='python')
+
+            # region SCHWEIKER MODEL
 
             # Schweiker model for zones 1, 2 & 3
             sm1 = SchweikerDataFrame()
@@ -480,60 +507,21 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
             sm2.df.columns = var_list
             sm3.df.columns = var_list
 
-            # region CREATE DATE COLUMN   #todo: Wird derzeit künstlich erzeugt
-            year = 2023  # todo: Jahr derzeit hard coded
-            time_increment_profiles = 60
-            time = pd.date_range(
-                start=str(year) + '-01-01',
-                end=str(year + 1) + '-01-01',
-                freq=str(time_increment_profiles) + 'min')
-
-            time = time.to_series()
-
-            time_df = pd.DataFrame({
-                'Tag': time.dt.day,
-                'Monat': time.dt.month,
-                'Jahr': time.dt.year,
-                'Stunde': time.dt.hour,
-                'Minute': time.dt.minute
-            })
-
-            time_df = time_df[:-(len(time_df) - len(sm1.df))]  # adapt length
-
-            # endregion
-
             # insert date columns
-            time_df = time_df.reset_index()  # reset index
-            sm1._df = pd.concat([time_df, sm1.df], axis=1)
-            sm2._df = pd.concat([time_df, sm2.df], axis=1)
-            sm3._df = pd.concat([time_df, sm3.df], axis=1)
+            sm1._df = pd.concat([date_df[0:len(sm1.df)], sm1.df], axis=1)
+            sm2._df = pd.concat([date_df[0:len(sm1.df)], sm2.df], axis=1)
+            sm3._df = pd.concat([date_df[0:len(sm1.df)], sm3.df], axis=1)
 
             # schweiker main
             sm1.schweiker_main()
             sm2.schweiker_main()
             sm3.schweiker_main()
 
-            # combine zones data to one single DataFrame
-            # result = pd.concat([sm1.df, sm2.df, sm2.df], axis=1)
-
-            # top1 = (sm1.df.tzone + sm1.df.TMSURF_ZONE) / 2
-            # top2 = (sm2.df.tzone + sm2.df.TMSURF_ZONE) / 2
-            # top3 = (sm3.df.tzone + sm3.df.TMSURF_ZONE) / 2
-            #
-            # result = pd.concat([top1, top2, top3], axis=1)
-            # result.columns = ['top1', 'top2', 'top3']
-            # result['Qventfges'] = ''
-            # result['qvolgesh'] = ''
-            # result['qc1'] = ''
-            # result['qc2'] = ''
-            # result['qc3'] = ''
-
-            # region RENAME sm
-
             # remove redundant columns
-            sm1.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
-            sm2.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
-            sm3.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
+            redundant_columns = ['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period']
+            sm1.df.drop(redundant_columns, axis=1, inplace=True)
+            sm2.df.drop(redundant_columns, axis=1, inplace=True)
+            sm3.df.drop(redundant_columns, axis=1, inplace=True)
 
             # numerate column names for each zone
             sm1.df.columns = ['schweiker_' + string + '1' for string in sm1.df.columns]
@@ -544,8 +532,7 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
 
             # concatenate output
             result = pd.concat([trnsys_df[['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges',
-                                           'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2',
-                                           'pmv3',
+                                           'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3',
                                            'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2', 'met3']],
                                 sm1.df, sm2.df, sm3.df], axis=1)
 
@@ -557,111 +544,115 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
                  'schweiker_ppd1', 'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2',
                  'schweiker_clo3', 'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
 
-            # trnsys_df = result  # overwrite with schweiker model data
+            # insert empty row
+            # result.insert(0, 'Empty', '')
+
+            # region VARIANT EVALUATION
+
+            # save copy of variant evaluation template
+            shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
+
+            # save data
+            functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, dir_variant, save_path_variant_output,
+                                                      variant_parameter_df)
+            # region SAVE DATA (ALTERNATIVE)
+            """Alternative, takes up to 10x more time though, therefore not in use at the moment."""
+            # variant_output = pd.concat([
+            #     variant_parameter_df[['File', 'Parameter', dir_variant]],           # variant parameters
+            #     pd.DataFrame(index=range(59 - 2 - len(variant_parameter_df)))],     # empty until row 60
+            #     ignore_index=True)
+            # variant_output.columns = range(len(variant_output.columns))
+            #
+            # # Add row with column names as first row
+            # result.loc[-1] = result.columns.tolist()
+            # result.index = result.index + 1
+            # result.sort_index(inplace=True)
+            # result.columns = range(1, len(result.columns)+1)
+            #
+            # variant_output = pd.concat([variant_output, result], ignore_index=True)     # results
+            #
+            # self.excel_export_variant_evaluation(save_path_variant_output, variant_output)
 
             # endregion
 
-            # region EXCEL EXPORT
-
-            # copy template and write data in it
-            shutil.copy(variant_template_file, variant_output_file)
-
-            wb = xw.Book(variant_output_file)
-            ws = wb.sheets[raw_data_variant_sheet_name]
-            ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
-                ['File', 'Parameter', variant_folder]]
-            ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
-            wb.save()
-            wb.app.quit()
+            self.logger.info('Finished evaluation for variant {}'.format(dir_variant))
 
             # update excel to receive cross-referenced values and updates calculations
-            # https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
-            xlapp = win32com.client.DispatchEx("Excel.Application")
-            wb = xlapp.Workbooks.Open(variant_output_file)
-            wb.RefreshAll()
-            xlapp.CalculateUntilAsyncQueriesDone()
-            wb.Save()
-            xlapp.Quit()
+            functions.update_excel_file(save_path_variant_output)
 
-            # Quit
-            xlapp.Quit()
+            # read data from variant evaluation excel file, for the cumulative evaluation excel file
+            zone_1_with_df = pd.concat([
+                zone_1_with_df,
+                pd.read_excel(save_path_variant_output,sheet_name=self.sheet_name_zone_1_input, usecols=[3],
+                              header=None, nrows=None, skiprows=None)], axis=1)
+            zone_1_without_df = pd.concat([
+                zone_1_without_df,
+                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[2],
+                              header=None, nrows=None, skiprows=None)], axis=1)
+            zone_3_with_df = pd.concat([
+                zone_3_with_df,
+                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[3],
+                              header=None, nrows=None, skiprows=None)], axis=1)
+            zone_3_without_df = pd.concat([
+                zone_3_without_df,
+                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[2],
+                              header=None, nrows=None, skiprows=None)], axis=1)
 
-            # copy all zones and all classifications in cumulative file
-            # read calculated values from variant and copy in cumulative file
-            zone_1_with_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[3], header=None,
-                                           nrows=None, skiprows=None)
-            zone_1_without_df = pd.read_excel(variant_output_file, sheet_name=zone_1_input, usecols=[2],
-                                              header=None,
-                                              nrows=None, skiprows=None)
-            zone_3_with_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[3], header=None,
-                                           nrows=None, skiprows=None)
-            zone_3_without_df = pd.read_excel(variant_output_file, sheet_name=zone_3_input, usecols=[2],
-                                              header=None,
-                                              nrows=None, skiprows=None)
+            # endregion
 
-            # create column with all hourly values
+            # region CUMULATIVE EVALUATION
+
+            # create single column with all hourly values, for the cumulative evaluation excel file
             var_list_result_column \
                 = ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
-            header = pd.DataFrame(var_list_result_column[1:] + ['']).transpose()
-            header.columns = var_list_result_column[:-1] + ['']
-            # todo: es fehlt ein Tag, deshalb werden 23+2 Werte derzeit übersprungen
-            result_column = pd.concat([
-                result[var_list_result_column],
-                pd.DataFrame(index=['']),
-                header],
-                axis=0)
-            result_column = result_column.drop(result_column.columns[-1], axis=1)
-            result_column = result_column.transpose().stack(dropna=False)
+            result_column = functions.to_single_column(result[var_list_result_column])
 
-            with pd.ExcelWriter(cumulative_output_file, mode="a", engine="openpyxl",
-                                if_sheet_exists='overlay') as writer:
-                if variant_cnt <= 1:
-                    variant_parameter_df[['File', 'Parameter', variant_folder]].to_excel(writer,
-                                                                                         sheet_name=raw_data_cumulative_sheet_name,
-                                                                                         startrow=1, startcol=0,
-                                                                                         index=False)
-                else:
-                    variant_parameter_df[variant_folder].to_frame().to_excel(writer,
-                                                                             sheet_name=raw_data_cumulative_sheet_name,
-                                                                             startrow=1, startcol=1 + variant_cnt,
-                                                                             index=False)
+            # save single column
+            variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
 
-                zone_1_with_df.to_excel(writer, sheet_name=zone_1_with_output, startrow=1, startcol=6 + variant_cnt,
-                                        index=False, header=False)
-                zone_1_without_df.to_excel(writer, sheet_name=zone_1_without_output, startrow=1,
-                                           startcol=6 + variant_cnt,
-                                           index=False, header=False)
-                zone_3_with_df.to_excel(writer, sheet_name=zone_3_with_output, startrow=1, startcol=6 + variant_cnt,
-                                        index=False, header=False)
-                zone_3_without_df.to_excel(writer, sheet_name=zone_3_without_output, startrow=1,
-                                           startcol=6 + variant_cnt,
-                                           index=False, header=False)
-                result_column.to_excel(writer, sheet_name=raw_data_cumulative_sheet_name, startrow=60,
-                                       startcol=1 + variant_cnt,
-                                       index=False, header=False)
-            # print(calculated_variant_df)
+            # endregion
 
-            # endregion todo: Als eigene Methode isolieren
-
+        # copy into cumulative evaluation file
+        self.excel_export_cumulative_evaluation(variant_result_columns, variant_parameter_df, zone_1_with_df,
+                                                zone_1_without_df, zone_3_with_df, zone_3_without_df)
         # update cumulative excel
-        # https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
-        xlapp = win32com.client.DispatchEx("Excel.Application")
-        wb = xlapp.Workbooks.Open(cumulative_output_file)
-        wb.RefreshAll()
-        xlapp.CalculateUntilAsyncQueriesDone()
-        wb.Save()
-        xlapp.Quit()
+        functions.update_excel_file(self.file_save_path_cumulative_evaluation)
 
-        # Quit
-        xlapp.Quit()
-
+        # logger entry "finish"
         self.logger.info('Evaluation done.')
+
+    def excel_export_variant_evaluation(self, save_path_variant_output, result):
+        """Write data into variant evaluation file."""
+
+        with pd.ExcelWriter(save_path_variant_output, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
+
+            result.to_excel(writer, sheet_name=self.sheet_name_variant_input, startrow=2, index=False, header=False)
+
+    def excel_export_cumulative_evaluation(self, result_column, variant_parameter_df, zone_1_with_df,
+                                           zone_1_without_df, zone_3_with_df, zone_3_without_df):
+        """Write data into cumulative evaluation file."""
+
+        with pd.ExcelWriter(self.file_save_path_cumulative_evaluation, mode="a", engine="openpyxl",
+                            if_sheet_exists='overlay') as writer:
+            variant_parameter_df.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=1,
+                                          startcol=1, index=False)
+
+            zone_1_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_with_operating_time, startrow=1,
+                                    startcol=7, index=False, header=False)
+            zone_1_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_without_operating_time, startrow=1,
+                                       startcol=7, index=False, header=False)
+            zone_3_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_with_operating_time, startrow=1,
+                                    startcol=7, index=False, header=False)
+            zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time, startrow=1,
+                                       startcol=7, index=False, header=False)
+            result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
+                                   startcol=1, index=False, header=False)
 
     def mapping_routine(self):
         # WORKAROUND
-        """Es wurden Simulationsvarianten definiert, die auf nicht existente.b17 Files zugreifen.Um dieses Problem zu
-        lösen ohne die Simulationsvarianten zu ändern wird in einem zusätzlichen Schritt ein Mapping
-        durchgeführt.Dabei werden die bestehenden Filenamen der fehlenden.b17 Files jeweils mit dem Filenamen
+        """Es wurden Simulationsvarianten definiert, die auf nicht existente.b17 Files zugreifen. Um dieses Problem zu
+        lösen, ohne die Simulationsvarianten zu ändern, wird in einem zusätzlichen Schritt ein Mapping
+        durchgeführt. Dabei werden die bestehenden Filenamen der fehlenden.b17 Files jeweils mit dem Filenamen
         ersetzt, der am ehesten übereinstimmt und auch tatsächlich im b18 - Ordner zu finden ist. """
 
         # read input Excel file
@@ -683,6 +674,7 @@ class SimulationSeries:  # todo: Durch Vererbung erweitern, damit auch andere Pr
         # Ausgabe der ersetzen Werte
         self.logger.warning("Im Rahmen des Mappings Ersetzte Werte:")
         self.logger.warning(replaced_values)
+
 
 class SchweikerDataFrame:
     """Modified pandas Dataframe for the Schweiker-Model."""
@@ -714,6 +706,7 @@ class SchweikerDataFrame:
             self._df = self._df.reset_index(drop=True)
 
     def interface_TimberBioC(self):
+        """VERALTETE FUNKTION. Wird derzeit nicht verwendet."""
 
         # remove index from column headers
         for col in self._df.iloc[:, 1:].columns:
@@ -726,7 +719,7 @@ class SchweikerDataFrame:
             [date_info.dt.year, date_info.dt.month, date_info.dt.day, date_info.dt.hour, date_info.dt.minute], axis=1)
         date_df.columns = ['Jahr', 'Monat', 'Tag', 'Stunde', 'Minute']
 
-        # split zones and concatenate temporal information todo: 1)HARD CODED 2)Dummy Außentemperatur
+        # split zones and concatenate temporal information
         dummy = pd.DataFrame(np.random.randint(0, 100, size=(8760, 1)), columns=['Aussentemp'])
         df_z1 = pd.concat([date_df, self._df.iloc[:, 2:8], dummy], axis=1)
         df_z2 = pd.concat([date_df, self._df.iloc[:, 9:15], dummy], axis=1)
@@ -912,6 +905,7 @@ class SchweikerDataFrame:
 
         return pmvColumn, ppdColumn
 
+    #
     def schweiker_main(self):
 
         self._df = functions.calcFloatingAverageTemperature(self.df, values_name='ta', dates_name='index')
@@ -928,88 +922,3 @@ class SchweikerDataFrame:
         self.df['pmv'] = pmv
         self.df['ppd'] = ppd
         df_z1 = self._df
-
-        # export to Excel file
-        # self.write_output_excel()
-
-    # def calcFloatingAverageTemperature(self, values_name='Aussentemp', dates_name='date'):
-    #     # todo:  VERALTET, wurde durch eigene standalone funktion ersetzt
-    #     floating_alpha = 0.8
-    #
-    #     if self.df[dates_name].isnull().values.any() or self.df[values_name].isnull().values.any():
-    #         raise ValueError('Values are not allowed to be NaN, interpolate if necessary!')
-    #
-    #     average_name = f'{values_name}_mean'
-    #     floating_average_name = f'{values_name}_floating_average'
-    #
-    #     df = pd.DataFrame()
-    #     df[dates_name] = self.df[dates_name].copy()
-    #     df[values_name] = self.df[values_name].copy()
-    #     df = df.sort_values(dates_name)
-    #     df['ymd'] = pd.to_datetime(df[dates_name]).dt.date
-    #     mean_df = df.groupby('ymd').mean()
-    #     mean_df = mean_df.rename(columns={values_name: average_name})
-    #
-    #     df = df.merge(mean_df, how='left', on='ymd')
-    #     day_counter = 1
-    #     next_datapoint_time_delta = pd.Timedelta(0)
-    #     # temporary list which consists the index of the first row of each new day
-    #     new_day_datapoints = [0]
-    #
-    #     for i in range(len(df)):
-    #         # print(f'row: {i}')
-    #
-    #         if i != 0:
-    #             next_datapoint_time_delta = df.loc[i, 'ymd'] - df.loc[new_day_datapoints[-1], 'ymd']
-    #             # print(next_datapoint_time_delta)
-    #
-    #         if next_datapoint_time_delta >= pd.Timedelta('2D'):
-    #             # reset time counter when a time gap happens
-    #             new_day_datapoints = [i]
-    #             day_counter = 1
-    #         elif next_datapoint_time_delta >= pd.Timedelta('1D'):
-    #             new_day_datapoints.append(i)
-    #             day_counter = day_counter + 1
-    #
-    #         if day_counter > 8:
-    #             df.loc[i, floating_average_name] = (1 - floating_alpha) * df.loc[
-    #                 new_day_datapoints[-2], average_name] + floating_alpha * df.loc[
-    #                                                    new_day_datapoints[-2], floating_average_name]
-    #         elif day_counter > 7:
-    #             # DIN 1525251 Formula
-    #             df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-    #                 new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
-    #                                                 df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
-    #                                                     new_day_datapoints[-6], average_name] + 0.3 * df.loc[
-    #                                                     new_day_datapoints[-7], average_name] + 0.2 * df.loc[
-    #                                                     new_day_datapoints[-8], average_name]) / 3.8
-    #         elif day_counter > 6:
-    #             df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-    #                 new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
-    #                                                 df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
-    #                                                     new_day_datapoints[-6], average_name] + 0.3 * df.loc[
-    #                                                     new_day_datapoints[-7], average_name]) / 3.6
-    #         elif day_counter > 5:
-    #             df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-    #                 new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
-    #                                                 df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
-    #                                                     new_day_datapoints[-6], average_name]) / 3.3
-    #         elif day_counter > 4:
-    #             df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-    #                 new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
-    #                                                 df.loc[new_day_datapoints[-5], average_name]) / 2.9
-    #         elif day_counter > 3:
-    #             df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-    #                 new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name]) / 2.4
-    #         elif day_counter > 2:
-    #             df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-    #                 new_day_datapoints[-3], average_name]) / 1.8
-    #         elif day_counter > 1:
-    #             df.loc[i, floating_average_name] = df.loc[new_day_datapoints[-2], average_name]
-    #         elif day_counter <= 1:
-    #             df.loc[i, floating_average_name] = df.loc[i, average_name]
-    #         else:
-    #             raise ValueError('day_counter case is not considered! Fix it!')
-    #
-    #     self.df['Aussentemp_mean'] = df[average_name]
-    #     self.df['Aussentemp_floating_average'] = df[floating_average_name]
