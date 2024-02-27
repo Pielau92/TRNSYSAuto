@@ -276,6 +276,8 @@ class SimulationSeries:
 
         try:
             app.connect(title="Öffnen", timeout=2)  # self.timeout)
+            app.Öffnen.wait('visible')
+            app.Öffnen.set_focus()
 
             # insert .dck file path
             app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)
@@ -285,10 +287,12 @@ class SimulationSeries:
             Button.click_input()
 
             # wait for the simulation window to open
-            while len(app.windows()) < 1:
-                time.sleep(1)
+            app.Öffnen.wait_not('visible', timeout=10)
+            # while len(app.windows()) < 1:
+            #     time.sleep(1)
 
         except Exception:  # TimeoutError:
+            app.kill()  # close window
             lock.release()
             return
 
@@ -296,11 +300,17 @@ class SimulationSeries:
         time.sleep(self.start_time_buffer)
         lock.release()
 
+        # window_title = 'TRNEXE: '+path_dck_file
+        window_title = 'TRNSYS: ' + path_dck_file
+
+        success_message = app.window(title=window_title)#.window(control_type="Text")
+        success_message.wait('visible', timeout=60*10)
+
         # check if simulation has ended and asks if the online plotter should be closed
-        interval = 5  # checking interval in seconds
-        start_time = time.time()
-        while time.time() - start_time < self.timeout and len(app.windows()) < 2 and app.is_process_running():
-            time.sleep(interval)
+        # interval = 5  # checking interval in seconds
+        # start_time = time.time()
+        # while time.time() - start_time < self.timeout and len(app.windows()) < 2 and app.is_process_running():
+        #     time.sleep(interval)
 
         app.kill()  # close window
         time.sleep(5)
