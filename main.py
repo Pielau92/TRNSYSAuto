@@ -3,13 +3,15 @@ import classes
 import os
 import tkinter as tk
 
-from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work
-
+from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
 
 # region FIX askdirectory/askfilename window does not open
-# in case the askdirectory/askfile window does not open, try this (fixes compatibility issues tkinter <=> pywinauto)
+"""In case the askdirectory/askfile window does not open, try this (fixes compatibility issues between tkinter and
+ pywinauto)."""
+
 # import sys
 # sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
+
 # endregion
 
 
@@ -17,13 +19,15 @@ def main():
     """Main method."""
 
     # region FIX directory/file asked multiple times
-    # for some unknown reason, when producing an exe-File main is also affected by multiprocessing (therefore
-    # directory/file is asked multiple times), therefore the function "freeze_support" is necessary
+    """for some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
+    directory/file is asked multiple times), therefore the function "freeze_support" is necessary."""
+
     multiprocessing.freeze_support()
+
     # endregion
 
     sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
-    start_sim_queue(sim_queue)  # start calculation
+    start_sim_queue(sim_queue)  # start calculation, evaluation included
 
 
 def create_sim_queue():
@@ -48,7 +52,7 @@ def create_sim_queue():
     for path in path_sim_variants_excel:
         path = path.replace("/", "\\")
 
-        # create simulation series object
+        # create simulation series object and append to list
         sim_queue.append(classes.SimulationSeries(path))
 
     return sim_queue
@@ -58,7 +62,7 @@ def start_sim_queue(sim_queue):
     """Start simulation series queue.
 
     Starts each SimulationSeries object stored in sim_queue successively. Additionally, after each simulation series an
-    evaluation routine starts, provided the parameter "autostart_evaluation" is set to True.
+    evaluation routine starts, provided the parameter "autostart_evaluation" is set to True in the settings Excel file.
 
     Parameters
     ----------
@@ -68,21 +72,18 @@ def start_sim_queue(sim_queue):
 
     for sim_series in sim_queue:
 
-        # store essential paths in SimulationSeries object
-        # sim_series.set_paths()
-
         # import and apply settings Excel file
         sim_series.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
                                          name_excelsheet_settings='Einstellungen')
 
-        # create new folder for simulation series
+        # create new directory for the simulation series
         os.makedirs(sim_series.dir_sim_series)
 
         # initialize logging file
         sim_series.initialize_logging()
 
         # import simulation variants Excel file
-        sim_series.import_input_excel()
+        sim_series.import_sim_variants_excel()
 
         # WORKAROUND - perform Mapping
         sim_series.mapping_routine()

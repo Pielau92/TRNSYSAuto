@@ -38,9 +38,9 @@ class SimulationSeries:
     def __init__(self, path_sim_variants_excel):
         """ Initialize simulation series object.
 
-        A simulation series is saved in a folder in the same directory as the base folder (which contains templates,
+        A simulation series is saved in a directory in the same directory as the base folder (which contains templates,
         b17/18 files, dck file, the simulation variants Excel file, weather data, load profiles, ...). The simulation
-        series folder is named after its corresponding simulation variants Excel file, followed by a timestamp at the
+        series directory is named after its corresponding simulation variants Excel file, followed by a timestamp at the
         time of the execution of the main method. TRNSYS has to be installed in order to perform the simulations
         successfully.
 
@@ -62,7 +62,7 @@ class SimulationSeries:
         self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
         self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
         self.filename_sim_variants_excel = os.path.basename(self.path_sim_variants_excel).split('.')[0]
-        # simulation series folder in same directory as base folder
+        # simulation series directory in same directory as base folder
         self.dir_sim_series = \
             os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
         self.dir_logfile = os.path.join(self.dir_sim_series, self.logger_filename)
@@ -103,21 +103,20 @@ class SimulationSeries:
         # WORKAROUND
         """Es wurden Simulationsvarianten definiert, die auf nicht existente.b17 Files zugreifen.Um dieses Problem zu 
         lösen ohne die Simulationsvarianten zu ändern wird in einem zusätzlichen Schritt ein Mapping 
-        durchgeführt.Dabei werden die bestehenden Filenamen der fehlenden.b17 Files jeweils mit dem Filenamen 
+        durchgeführt. Dabei werden die bestehenden Filenamen der fehlenden.b17 Files jeweils mit dem Filenamen 
         ersetzt, der am ehesten übereinstimmt und auch tatsächlich im b18 - Ordner zu finden ist. """
         self.b17mapping = {}
 
     def initialize_logging(self):
         """Initialize logging file."""
 
-        # Set up logging file
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.logger_filename)
         handler = logging.FileHandler(self.dir_logfile)
         self.logger.addHandler(handler)
 
     def import_settings_excel(self, filename_settings_excel, name_excelsheet_settings):
-        """Import simulation series settings.
+        """Import simulation series settings from settings Excel file.
 
         Imports simulation series settings from the settings Excel file and applies them to the corresponding attributes
         of the SimulationSeries object. Parameter names in the settings Excel file (column "Parameter") must correspond
@@ -136,17 +135,18 @@ class SimulationSeries:
         # convert Excel data into pandas DataFrame
         df = excel_data.parse(name_excelsheet_settings, index_col=0)
 
+        # extract values from the column "Wert"
         self.settings = df.Wert
 
         # apply imported settings
         self.apply_settings()
 
-    def apply_settings(
-            self):  # todo automatischer Namensabgleich einführen, am besten mit Prüfung und Meldung bei Unstimmigkeiten
+    # todo: automatischer Namensabgleich einführen, am besten mit Prüfung und Meldung bei Unstimmigkeiten
+    def apply_settings(self):
         """Apply imported settings to SimulationSeries object.
 
-        Applies the imported settings from the settings Excel file to attributes of the SimulationSeries object with the
-        same name.
+        Applies the imported settings from the settings Excel file to the corresponding attributes of the
+        SimulationSeries object with the same name.
         """
 
         self.path_exe = self.settings.loc['path_exe']
@@ -161,10 +161,12 @@ class SimulationSeries:
         else:
             self.multiprocessing_max = self.settings.loc['multiprocessing_max']
 
-    def import_input_excel(self):
-        """Import simulation variants Excel file."""
+    def import_sim_variants_excel(self):
+        """Import simulation variants Excel file.
 
-        # read input Excel file
+        Imports the simulation variants Excel file and applies the data to the SimulationSeries object."""
+
+        # read simulation variants Excel file
         excel_data = pd.ExcelFile(self.path_sim_variants_excel)
 
         # convert Excel data into pandas DataFrame
@@ -194,33 +196,43 @@ class SimulationSeries:
         self.b18_series.index = self.b18_series.index.map(str)
         self.df_dck.index = self.df_dck.index.map(str)
 
-    def create_sim_series_folder(self):
-        """Create simulation series folder.
+    # todo: Methode aufteilen (Textmanipulation in eigene Methode geben)
+    def create_dir_sim_series(self):
+        """Create simulation series directory.
 
-        Creates a folder for storing data of the simulation series. Also fills the folder with the following:
+        Creates a directory to save the results of the simulation series. Also fills the directory with the following:
         -   copy of the simulation variants Excel file
-        -   separate subfolder for each simulation within the simulation series
-        Each simulation subfolder contains a copy of each file and template necessary for the simulation. Some files are
-        also modified afterwards, in order to apply specific simulation parameters from the simulation variants Excel.
+        -   separate subdirectories for each simulation within the simulation series, containing a copy of each file and
+        template necessary for the simulation.
+
+        Afterwards, the copied template files are modified in order to apply specific simulation parameters from the
+        simulation variants Excel file.
         """
 
         for sim_index in range(0, len(self.sim_list)):
-            sim = self.sim_list[sim_index]
+            sim = self.sim_list[sim_index]  # name of the simulation variant
+            path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation subdirectory
 
-            path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation folder
-            os.makedirs(path_sim)  # create new simulation subfolder
+            # create new simulation subdirectory
+            os.makedirs(path_sim)
 
-            # region SOURCE/DESTINATION FILE PATHS FOR COPYING PROCESS
+            # region PREPARE COPYING PROCESS
 
+            # file name list of files to be copied
             file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
                          'Windetc20190804.txt', 'StrahlungBruck.txt']
+
+            # source paths
             src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
                                          os.path.join('Wetterdaten', self.weather_series[sim])]
+            # destination paths
             dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim]]
 
             # endregion
 
-            # copy specified files into simulation folder
+            path_dck = os.path.join(path_sim, dst_file_list[0])     # path of .dck file
+
+            # copy specified files into simulation directory
             for file_index in range(len(src_file_list)):
                 try:
                     shutil.copy(
@@ -230,28 +242,31 @@ class SimulationSeries:
                     self.logger.error('File ' + os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]
                                                              + ' could not be found.'))
 
-                    """ todo: als Übergangslösung wird eine erfolgreiche Simulation vorgetäuscht, um Simulationen wo
+                    # todo
+                    """als Übergangslösung wird eine erfolgreiche Simulation vorgetäuscht, um Simulationen wo
                     kritische Daten fehlen überspringen zu können. Langfrisitg soll sim_success aber nur tatsächlich
                     erfolgreiche Simulationen dokumentieren!"""
+                    # todo: anstatt sim_success zu verwenden soll eine "ignore"-Liste eingeführt werden, die vor Start
+                    #  der Simulationsreihe auf sim_success angewendet wird
                     self.sim_success[sim_index] = True
-
-            path_dck = os.path.join(path_sim, dst_file_list[0])
-            # find and replace weather data file name in .dck file
-            functions.find_and_replace(
-                path_dck, pattern=r'(\*ASSIGN "tm2")', repl=r'ASSIGN "' + self.weather_series[sim] + '"')
-
-            # find and replace .b17/.b18 file name in .dck file
-            functions.find_and_replace(
-                path_dck, pattern=r'(\*ASSIGN "b17")', repl=r'ASSIGN "' + self.b18_series[sim] + '"')
 
             # region FIND AND REPLACE PARAMETERS IN .dck FILE
 
-            functions.find_and_replace_text(path_dck, r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
-            functions.find_and_replace_text(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
+            # find and replace weather data file name in .dck file
+            functions.find_and_replace(
+                path_dck, pattern=r'(\*ASSIGN "tm2")', replacement=r'ASSIGN "' + self.weather_series[sim] + '"')
+
+            # find and replace .b17/.b18 file name in .dck file
+            functions.find_and_replace(
+                path_dck, pattern=r'(\*ASSIGN "b17")', replacement=r'ASSIGN "' + self.b18_series[sim] + '"')
+
+            # find and replace
+            functions.find_and_replace_parameter_values(path_dck, r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
+            functions.find_and_replace_parameter_values(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
 
             # endregion
 
-        # copy simulation variants Excel file into simulation series folder
+        # copy simulation variants Excel file into simulation series directory
         shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
 
     def start_sim(self, path_dck_file, lock):
@@ -331,14 +346,15 @@ class SimulationSeries:
     def start_sim_series(self):
         """Start simulation series.
 
-        Creates a simulation series folder and starts the calculation of the simulation series, multiple simulation may
-        run simultaneously, depending on the class attribute "multiprocessing_max". After all simulations are done, the
-        method checks if all simulations were calculated successfully. If needed, unsuccessful simulations are
-        calculated and checked again (this process is repeated until all simulations were calculated successfilly).
+        Starts the calculation of the simulation series and creates a simulation series directory to store the
+        simulation results. Multiple simulation may run simultaneously, depending on the class attribute
+        "multiprocessing_max". After all simulations are done, the method checks if all simulations were calculated
+        successfully. If needed, unsuccessful simulations are calculated and checked again (this process is repeated
+        until all simulations were calculated successfully).
         """
 
-        # create simulation series folder
-        self.create_sim_series_folder()
+        # create simulation series directory
+        self.create_dir_sim_series()
 
         lock = multiprocessing.Lock()
 
@@ -453,7 +469,7 @@ class SimulationSeries:
 
         # endregion
 
-        # check for existing files in output folder
+        # check for existing files in output directory
         for existing_output in glob.glob(self.dir_save_path_evaluation + '/*.xlsx'):
             os.remove(existing_output)  # remove existing files
 
@@ -472,16 +488,16 @@ class SimulationSeries:
         # list_variants = [str(variant) for variant in list_variants]
 
         # get top level directory list
-        list_variant_folders = next(os.walk(self.dir_sim_series))[1]
-        list_variant_folders.remove('evaluation')
-        list_variant_folders = natsorted(list_variant_folders)
+        list_variant_directories = next(os.walk(self.dir_sim_series))[1]
+        list_variant_directories.remove('evaluation')
+        list_variant_directories = natsorted(list_variant_directories)
 
         # read TRNSYS output and save data
         count_variant = 0
-        for dir_variant in list_variant_folders:
+        for dir_variant in list_variant_directories:
             count_variant = count_variant + 1
-            path_variant_folder = os.path.join(self.dir_sim_series, dir_variant)
-            path_variant_file = os.path.join(path_variant_folder, self.filename_trnsys_output)
+            path_variant_directory = os.path.join(self.dir_sim_series, dir_variant)
+            path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
             save_path_variant_output = os.path.join(self.dir_save_path_evaluation, 'variant' + dir_variant + '.xlsx')
 
             # region CHECK IF...
@@ -491,7 +507,7 @@ class SimulationSeries:
                 self.logger.error(f'File {path_variant_file} does not exist!')
                 continue
 
-            # ...the variant has a corresponding folder
+            # ...the variant has a corresponding directory
             if dir_variant not in list_variants:
                 self.logger.error(f'Did not find {dir_variant} in {self.path_sim_variants_excel}')
                 continue
@@ -615,7 +631,7 @@ class SimulationSeries:
             # create single column with all hourly values, for the cumulative evaluation excel file
             var_list_result_column \
                 = ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
-            result_column = functions.to_single_column(result[var_list_result_column])
+            result_column = functions.to_single_column(result[var_list_result_column])  # todo: Noch falsch: 1) muss eine Spalte nach rechts. 2) der letzte Parameter fehlt.
 
             # save single column
             variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
@@ -659,17 +675,20 @@ class SimulationSeries:
                                    startcol=1, index=False, header=False)
 
     def mapping_routine(self):
-        # WORKAROUND
-        """Es wurden Simulationsvarianten definiert, die auf nicht existente.b17 Files zugreifen. Um dieses Problem zu
-        lösen, ohne die Simulationsvarianten zu ändern, wird in einem zusätzlichen Schritt ein Mapping
-        durchgeführt. Dabei werden die bestehenden Filenamen der fehlenden.b17 Files jeweils mit dem Filenamen
-        ersetzt, der am ehesten übereinstimmt und auch tatsächlich im b18 - Ordner zu finden ist. """
+        """TEMPORARY WORKAROUND.
+
+        At the moment, simulation variants exist that point to non-existent .b17 files. As a temporary solution to solve
+        this problem (without changing the simulation variants), this method performs a mapping process. Thereby, the
+        file names of the non-existent files is changed to the next similar .b17 file that actually exists."""
+
+        file_name = 'Mapping.xlsx'  # file name of Excel file containing the mapping instructions
+        sheet_name = 'Mapping'      # name of sheet within the Excel file
 
         # read input Excel file
-        excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, 'Mapping.xlsx'))
+        excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, file_name))
 
         # convert Excel data into pandas DataFrame
-        b17mapping = excel_data.parse('Mapping')
+        b17mapping = excel_data.parse(sheet_name)
 
         # Save original values for comparison
         original_values = self.b18_series.copy()
@@ -677,11 +696,11 @@ class SimulationSeries:
         # mapping
         self.b18_series.replace(b17mapping.set_index('Original')['Mapping'], inplace=True)
 
-        # Überprüfen, welche Werte tatsächlich ersetzt wurden
+        # check which values were actually replaced
         replaced_indices = original_values != self.b18_series
         replaced_values = self.b18_series[replaced_indices]
 
-        # Ausgabe der ersetzen Werte
+        # Write replaced values into logging file
         self.logger.warning("Im Rahmen des Mappings Ersetzte Werte:")
         self.logger.warning(replaced_values)
 
