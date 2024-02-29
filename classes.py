@@ -341,7 +341,14 @@ class SimulationSeries:
 
         while not all(np.logical_or(self.sim_success, self.sim_ignore)):  # check for remaining simulations
 
-            self.logger.info('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
+            # initialize progress bar
+            progress = 0
+            total = len(self.sim_list) - sum(np.logical_or(self.sim_success, self.sim_ignore))
+            functions.progress_bar(progress, total)
+
+            message = 'Starting simulation series from "{}"'.format(self.filename_sim_variants_excel)
+            self.logger.info(message)
+            print(message)
 
             for index in range(len(self.sim_list)):
 
@@ -361,6 +368,8 @@ class SimulationSeries:
                         time.sleep(5)
                         process.start()  # start process
                     lock.acquire()
+                    progress += 1
+                    functions.progress_bar(progress, total)
 
             # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:
@@ -404,7 +413,9 @@ class SimulationSeries:
     def evaluation(self):
         """Perform evaluation routine."""
 
-        self.logger.info('Starting evaluation for {}'.format(self.filename_sim_variants_excel))
+        message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
+        self.logger.info(message)
+        print(message)
 
         variant_result_columns = pd.DataFrame()
         zone_1_with_df = pd.DataFrame()
@@ -470,6 +481,11 @@ class SimulationSeries:
         list_variant_directories = next(os.walk(self.dir_sim_series))[1]
         list_variant_directories.remove('evaluation')
         list_variant_directories = natsorted(list_variant_directories)
+
+        # initialize progress bar
+        progress = 0
+        total = len(list_variant_directories)
+        functions.progress_bar(progress, total)
 
         # read TRNSYS output and save data
         count_variant = 0
@@ -596,6 +612,9 @@ class SimulationSeries:
             variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
 
             # endregion
+
+            progress += 1
+            functions.progress_bar(progress, total)
 
         # copy into cumulative evaluation file
         self.excel_export_cumulative_evaluation(variant_result_columns, variant_parameter_df, zone_1_with_df,
