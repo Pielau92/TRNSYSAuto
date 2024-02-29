@@ -341,6 +341,11 @@ class SimulationSeries:
 
         while not all(np.logical_or(self.sim_success, self.sim_ignore)):  # check for remaining simulations
 
+            # initialize progress bar
+            progress = 0
+            total = len(self.sim_list) - sum(np.logical_or(self.sim_success, self.sim_ignore))
+            functions.progress_bar(progress, total)
+
             self.logger.info('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
 
             for index in range(len(self.sim_list)):
@@ -361,6 +366,8 @@ class SimulationSeries:
                         time.sleep(5)
                         process.start()  # start process
                     lock.acquire()
+                    progress += 1
+                    functions.progress_bar(progress, total)
 
             # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:

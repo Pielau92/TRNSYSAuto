@@ -148,6 +148,12 @@ def to_single_column(df_input):
     single_column = single_column.transpose().stack(dropna=False)
     return single_column
 
+
+def progress_bar(progress, total):
+    percent = 100 * (progress / float(total))
+    bar = '█' * int(percent) + '-' * (100 - int(percent))
+    print(f"\r|{bar}| {percent:.2f}%", end="\r")
+
 # region BIN
 
 
