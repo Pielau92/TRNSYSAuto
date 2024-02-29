@@ -672,7 +672,7 @@ class SimulationSeries:
             zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time, startrow=1,
                                        startcol=7, index=False, header=False)
             result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
-                                   startcol=1, index=False, header=False)
+                                   startcol=2, index=False, header=False)
 
     def mapping_routine(self):
         """TEMPORARY WORKAROUND.

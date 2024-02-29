@@ -225,7 +225,7 @@ def to_single_column(df_input):
         pd.DataFrame(index=['']),
         header],
         axis=0)
-    single_column = single_column.drop(single_column.columns[-1], axis=1)
+    # single_column = single_column.drop(single_column.columns[-1], axis=1)
     single_column = single_column.transpose().stack(dropna=False)
     return single_column
 
