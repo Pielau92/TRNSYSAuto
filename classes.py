@@ -6,25 +6,17 @@ import time
 import csv
 import logging
 import glob
-import win32com.client
 import math
 import functions
 import openpyxl
-import re
 
 import numpy as np
 import pandas as pd
-import xlwings as xw
-import tkinter as tk
 
-from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work
 from natsort import natsorted
 from pywinauto.application import Application
 from datetime import datetime
 
-
-# from line_profiler import LineProfiler
-# from tkinter import filedialog
 
 # todo: SimulationSeries durch Vererbung erweitern, damit auch andere Programme als TRNSYS leichter automatisiert werden
 #  können
@@ -86,6 +78,7 @@ class SimulationSeries:
         # simulation series data
         self.sim_list = None  # list of simulation variant names
         self.sim_success = None  # boolean list, documenting the successful simulation of each simulation variant
+        self.sim_ignore = None  # boolean list, documenting the simulation variants that are to be ignored
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # pandas series with the .b18 data file names
         self.weather_series = None  # pandas series with the weather data file names
@@ -100,11 +93,10 @@ class SimulationSeries:
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
 
-        # WORKAROUND
-        """Es wurden Simulationsvarianten definiert, die auf nicht existente.b17 Files zugreifen.Um dieses Problem zu 
-        lösen ohne die Simulationsvarianten zu ändern wird in einem zusätzlichen Schritt ein Mapping 
-        durchgeführt. Dabei werden die bestehenden Filenamen der fehlenden.b17 Files jeweils mit dem Filenamen 
-        ersetzt, der am ehesten übereinstimmt und auch tatsächlich im b18 - Ordner zu finden ist. """
+        # TEMPORARY WORKAROUND
+        """At the moment, simulation variants exist that point to non-existent .b17 files. As a temporary solution to solve
+        this problem (without changing the simulation variants), this method performs a mapping process. Thereby, the
+        file names of the non-existent files is changed to the next similar .b17 file that actually exists."""
         self.b17mapping = {}
 
     def initialize_logging(self):
@@ -191,6 +183,9 @@ class SimulationSeries:
         # initialize simulation success flags
         self.sim_success = [False] * len(self.sim_list)
 
+        # initialize simulation ignore flags
+        self.sim_ignore = [False] * len(self.sim_list)
+
         # convert index into string (for stability reasons)
         self.weather_series.index = self.weather_series.index.map(str)
         self.b18_series.index = self.b18_series.index.map(str)
@@ -230,7 +225,7 @@ class SimulationSeries:
 
             # endregion
 
-            path_dck = os.path.join(path_sim, dst_file_list[0])     # path of .dck file
+            path_dck = os.path.join(path_sim, dst_file_list[0])  # path of .dck file
 
             # copy specified files into simulation directory
             for file_index in range(len(src_file_list)):
@@ -240,15 +235,9 @@ class SimulationSeries:
                         os.path.join(path_sim, dst_file_list[file_index]))
                 except FileNotFoundError:
                     self.logger.error('File ' + os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]
-                                                             + ' could not be found.'))
-
-                    # todo
-                    """als Übergangslösung wird eine erfolgreiche Simulation vorgetäuscht, um Simulationen wo
-                    kritische Daten fehlen überspringen zu können. Langfrisitg soll sim_success aber nur tatsächlich
-                    erfolgreiche Simulationen dokumentieren!"""
-                    # todo: anstatt sim_success zu verwenden soll eine "ignore"-Liste eingeführt werden, die vor Start
-                    #  der Simulationsreihe auf sim_success angewendet wird
-                    self.sim_success[sim_index] = True
+                                                             + ' could not be found, simulation variant added to ignore'
+                                                               'list.'))
+                    self.sim_ignore[sim_index] = True  # simulation variant will be ignored
 
             # region FIND AND REPLACE PARAMETERS IN .dck FILE
 
@@ -273,9 +262,8 @@ class SimulationSeries:
         """Start simulation.
 
         Starts a TRNSYS simulation using a specified dck-file. Also, a lock is passed which ensures no other simulation
-        starts until a specific point is reached. In this case, the lock is released as soon as the program presses the
-        button "Öffnen" from the explorer window. Optionally, start_time_buffer acts as a time buffer before releasing
-        the lock.
+        starts until a specific point is reached. In this case, the lock is released as soon as the TRNSYS simulation
+        window opens. Optionally, start_time_buffer acts as a time buffer before releasing the lock.
 
         Parameters
         ----------
@@ -303,11 +291,10 @@ class SimulationSeries:
 
             # wait for the simulation window to open
             app.Öffnen.wait_not('visible', timeout=10)
-            # while len(app.windows()) < 1:
-            #     time.sleep(1)
 
-        except Exception:  # TimeoutError:
-            app.kill()  # close window
+        except Exception:  # TimeoutError:  todo: Add specific exceptions
+            # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
+            app.kill()
             lock.release()
             return
 
@@ -315,17 +302,10 @@ class SimulationSeries:
         time.sleep(self.start_time_buffer)
         lock.release()
 
-        # window_title = 'TRNEXE: '+path_dck_file
         window_title = 'TRNSYS: ' + path_dck_file
 
-        success_message = app.window(title=window_title)#.window(control_type="Text")
-        success_message.wait('visible', timeout=60*10)
-
-        # check if simulation has ended and asks if the online plotter should be closed
-        # interval = 5  # checking interval in seconds
-        # start_time = time.time()
-        # while time.time() - start_time < self.timeout and len(app.windows()) < 2 and app.is_process_running():
-        #     time.sleep(interval)
+        success_message = app.window(title=window_title)  # .window(control_type="Text")
+        success_message.wait('visible', timeout=60 * 10)
 
         app.kill()  # close window
         time.sleep(5)
@@ -350,25 +330,24 @@ class SimulationSeries:
         simulation results. Multiple simulation may run simultaneously, depending on the class attribute
         "multiprocessing_max". After all simulations are done, the method checks if all simulations were calculated
         successfully. If needed, unsuccessful simulations are calculated and checked again (this process is repeated
-        until all simulations were calculated successfully).
+        until all simulations were calculated successfully, unless some simulations are on the "ignore" list anyway).
         """
 
         # create simulation series directory
         self.create_dir_sim_series()
 
+        # initialize lock
         lock = multiprocessing.Lock()
 
-        while not all(self.sim_success):  # check if any simulation has not been simulated successfully yet
+        while not all(np.logical_or(self.sim_success, self.sim_ignore)):  # check for remaining simulations
 
             self.logger.info('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
 
             for index in range(len(self.sim_list)):
 
-                if not self.sim_success[index]:
+                if not self.sim_success[index] or not self.sim_ignore[index]:
                     sim = self.sim_list[index]  # name of simulation
                     path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)  # path of dck-file
-
-                    # self.start_sim(path_dck, lock)  # for debugging only
 
                     # create a new process instance
                     process = multiprocessing.Process(target=self.start_sim,
@@ -383,7 +362,7 @@ class SimulationSeries:
                         process.start()  # start process
                     lock.acquire()
 
-            # after all simulations have started, wait until all are done
+            # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:
                 time.sleep(5)
                 if time.time() - start_time > self.timeout:
@@ -425,7 +404,6 @@ class SimulationSeries:
     def evaluation(self):
         """Perform evaluation routine."""
 
-        # Logger entry "start"
         self.logger.info('Starting evaluation for {}'.format(self.filename_sim_variants_excel))
 
         variant_result_columns = pd.DataFrame()
@@ -433,6 +411,7 @@ class SimulationSeries:
         zone_1_without_df = pd.DataFrame()
         zone_3_with_df = pd.DataFrame()
         zone_3_without_df = pd.DataFrame()
+
         # region COLUMN NAMES
 
         trnsys_outdoor_temperature = 'ta'
@@ -539,9 +518,9 @@ class SimulationSeries:
             sm3._df = pd.concat([date_df[0:len(sm1.df)], sm3.df], axis=1)
 
             # schweiker main
-            sm1.schweiker_main()
-            sm2.schweiker_main()
-            sm3.schweiker_main()
+            sm1.calculate()
+            sm2.calculate()
+            sm3.calculate()
 
             # remove redundant columns
             redundant_columns = ['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period']
@@ -570,36 +549,15 @@ class SimulationSeries:
                  'schweiker_ppd1', 'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2',
                  'schweiker_clo3', 'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
 
-            # insert empty row
-            # result.insert(0, 'Empty', '')
-
             # region VARIANT EVALUATION
 
             # save copy of variant evaluation template
             shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
 
             # save data
-            functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, dir_variant, save_path_variant_output,
+            functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, dir_variant,
+                                                      save_path_variant_output,
                                                       variant_parameter_df)
-            # region SAVE DATA (ALTERNATIVE)
-            """Alternative, takes up to 10x more time though, therefore not in use at the moment."""
-            # variant_output = pd.concat([
-            #     variant_parameter_df[['File', 'Parameter', dir_variant]],           # variant parameters
-            #     pd.DataFrame(index=range(59 - 2 - len(variant_parameter_df)))],     # empty until row 60
-            #     ignore_index=True)
-            # variant_output.columns = range(len(variant_output.columns))
-            #
-            # # Add row with column names as first row
-            # result.loc[-1] = result.columns.tolist()
-            # result.index = result.index + 1
-            # result.sort_index(inplace=True)
-            # result.columns = range(1, len(result.columns)+1)
-            #
-            # variant_output = pd.concat([variant_output, result], ignore_index=True)     # results
-            #
-            # self.excel_export_variant_evaluation(save_path_variant_output, variant_output)
-
-            # endregion
 
             self.logger.info('Finished evaluation for variant {}'.format(dir_variant))
 
@@ -609,7 +567,7 @@ class SimulationSeries:
             # read data from variant evaluation excel file, for the cumulative evaluation excel file
             zone_1_with_df = pd.concat([
                 zone_1_with_df,
-                pd.read_excel(save_path_variant_output,sheet_name=self.sheet_name_zone_1_input, usecols=[3],
+                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[3],
                               header=None, nrows=None, skiprows=None)], axis=1)
             zone_1_without_df = pd.concat([
                 zone_1_without_df,
@@ -631,7 +589,8 @@ class SimulationSeries:
             # create single column with all hourly values, for the cumulative evaluation excel file
             var_list_result_column \
                 = ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
-            result_column = functions.to_single_column(result[var_list_result_column])  # todo: Noch falsch: 1) muss eine Spalte nach rechts. 2) der letzte Parameter fehlt.
+            result_column = functions.to_single_column(result[
+                                                           var_list_result_column])
 
             # save single column
             variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
@@ -651,7 +610,6 @@ class SimulationSeries:
         """Write data into variant evaluation file."""
 
         with pd.ExcelWriter(save_path_variant_output, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
-
             result.to_excel(writer, sheet_name=self.sheet_name_variant_input, startrow=2, index=False, header=False)
 
     def excel_export_cumulative_evaluation(self, result_column, variant_parameter_df, zone_1_with_df,
@@ -661,7 +619,7 @@ class SimulationSeries:
         with pd.ExcelWriter(self.file_save_path_cumulative_evaluation, mode="a", engine="openpyxl",
                             if_sheet_exists='overlay') as writer:
             variant_parameter_df.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=1,
-                                          startcol=1, index=False)
+                                          startcol=0, index=False)
 
             zone_1_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_with_operating_time, startrow=1,
                                     startcol=7, index=False, header=False)
@@ -682,7 +640,7 @@ class SimulationSeries:
         file names of the non-existent files is changed to the next similar .b17 file that actually exists."""
 
         file_name = 'Mapping.xlsx'  # file name of Excel file containing the mapping instructions
-        sheet_name = 'Mapping'      # name of sheet within the Excel file
+        sheet_name = 'Mapping'  # name of sheet within the Excel file
 
         # read input Excel file
         excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, file_name))
@@ -704,6 +662,49 @@ class SimulationSeries:
         self.logger.warning("Im Rahmen des Mappings Ersetzte Werte:")
         self.logger.warning(replaced_values)
 
+    # region BIN
+
+    # def interface_TimberBioC(self):
+    #     # remove index from column headers
+    #     for col in self._df.iloc[:, 1:].columns:
+    #         # print(col)
+    #         self._df.columns = self._df.columns.str.replace(col, col[:-1])
+    #
+    #     # create table with temporal information
+    #     date_info = pd.to_datetime(self.df[self.df.columns[0]])
+    #     date_df = pd.concat(
+    #         [date_info.dt.year, date_info.dt.month, date_info.dt.day, date_info.dt.hour, date_info.dt.minute], axis=1)
+    #     date_df.columns = ['Jahr', 'Monat', 'Tag', 'Stunde', 'Minute']
+    #
+    #     # split zones and concatenate temporal information
+    #     dummy = pd.DataFrame(np.random.randint(0, 100, size=(8760, 1)), columns=['Aussentemp'])
+    #     df_z1 = pd.concat([date_df, self._df.iloc[:, 2:8], dummy], axis=1)
+    #     df_z2 = pd.concat([date_df, self._df.iloc[:, 9:15], dummy], axis=1)
+    #     df_z3 = pd.concat([date_df, self._df.iloc[:, 16:22], dummy], axis=1)
+    #
+    #     return df_z1, df_z2, df_z3
+    # region SAVE DATA (ALTERNATIVE)
+    """Alternative, takes up to 10x more time though, therefore not in use at the moment."""
+    # variant_output = pd.concat([
+    #     variant_parameter_df[['File', 'Parameter', dir_variant]],           # variant parameters
+    #     pd.DataFrame(index=range(59 - 2 - len(variant_parameter_df)))],     # empty until row 60
+    #     ignore_index=True)
+    # variant_output.columns = range(len(variant_output.columns))
+    #
+    # # Add row with column names as first row
+    # result.loc[-1] = result.columns.tolist()
+    # result.index = result.index + 1
+    # result.sort_index(inplace=True)
+    # result.columns = range(1, len(result.columns)+1)
+    #
+    # variant_output = pd.concat([variant_output, result], ignore_index=True)     # results
+    #
+    # self.excel_export_variant_evaluation(save_path_variant_output, variant_output)
+
+    # endregion
+
+    # endregion
+
 
 class SchweikerDataFrame:
     """Modified pandas Dataframe for the Schweiker-Model."""
@@ -718,66 +719,112 @@ class SchweikerDataFrame:
     def df(self):
         return self._df
 
-    def read_input_excel(self, sheet_name='Sheet1', skiprows=0):
-        # ask simulation variants Excel file path(s)
-        root = tk.Tk()
-        root.withdraw()
-        path_input_file = filedialog.askopenfilename(filetypes=[("Excel files", ".xlsx .xls")],
-                                                     title='Select input Excel file')
-        # read Excel data
-        excel_data = pd.ExcelFile(path_input_file)
-        # convert Excel data into pandas DataFrame
-        self._df = pd.DataFrame(excel_data.parse(sheet_name))  # , index_col=0)
+    def calculate(self):
 
-        if skiprows > 0:
-            self._df.columns = self._df.iloc[skiprows]  # set column headers
-            self._df = self._df.drop(range(0, skiprows + 1))  # remove unwanted rows
-            self._df = self._df.reset_index(drop=True)
+        self.calcFloatingAverageTemperature()
 
-    def interface_TimberBioC(self):
-        """VERALTETE FUNKTION. Wird derzeit nicht verwendet."""
+        # adapt metabolic rate
+        self.df['metAdaptedColumn'] = self.df['met'] - (0.234 * self.Aussentemp_floating_average) / 58.2
 
-        # remove index from column headers
-        for col in self._df.iloc[:, 1:].columns:
-            # print(col)
-            self._df.columns = self._df.columns.str.replace(col, col[:-1])
+        # determine clothing factor
+        self.df['clo'] = 10 ** (-0.172 - 0.000485 * self.df['Aussentemp_floating_average']
+                                + 0.0818 * self.df['metAdaptedColumn']
+                                - 0.00527 * self.df['Aussentemp_floating_average'] * self.df['metAdaptedColumn'])
 
-        # create table with temporal information
-        date_info = pd.to_datetime(self.df[self.df.columns[0]])
-        date_df = pd.concat(
-            [date_info.dt.year, date_info.dt.month, date_info.dt.day, date_info.dt.hour, date_info.dt.minute], axis=1)
-        date_df.columns = ['Jahr', 'Monat', 'Tag', 'Stunde', 'Minute']
+        # calculate comfort
+        [pmv, ppd] = self.calcComfort()
+        self.df['pmv'] = pmv
+        self.df['ppd'] = ppd
 
-        # split zones and concatenate temporal information
-        dummy = pd.DataFrame(np.random.randint(0, 100, size=(8760, 1)), columns=['Aussentemp'])
-        df_z1 = pd.concat([date_df, self._df.iloc[:, 2:8], dummy], axis=1)
-        df_z2 = pd.concat([date_df, self._df.iloc[:, 9:15], dummy], axis=1)
-        df_z3 = pd.concat([date_df, self._df.iloc[:, 16:22], dummy], axis=1)
+    def calcFloatingAverageTemperature(self):
+        """Calculate floating average temperature."""
+        # todo: foreign code without documentation
 
-        return df_z1, df_z2, df_z3
+        floating_alpha = 0.8
+        values_name = 'ta'
+        dates_name = 'index'
 
-    def write_output_excel(self):
-        # ask output Excel file path
-        root = tk.Tk()
-        root.withdraw()
-        output_path = filedialog.askopenfilename(filetypes=[("Excel files", ".xlsx .xls")],
-                                                 title='Select output Excel file')
+        if self.df[dates_name].isnull().values.any() or self.df[values_name].isnull().values.any():
+            raise ValueError('Values are not allowed to be NaN, interpolate if necessary!')
 
-        # write into Excel file
-        with pd.ExcelWriter(output_path, engine="openpyxl", mode="a", datetime_format="DD.MM.YYYY HH:MM") as writer:
+        average_name = f'{values_name}_mean'
+        floating_average_name = f'{values_name}_floating_average'
 
-            key = 'output'
-            self._df.to_excel(writer, sheet_name=key)
-            ws = writer.sheets[key]
-            dims = {}
-            for row in ws.rows:
-                for cell in row:
-                    if cell.value:
-                        dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
-            for col, value in dims.items():
-                ws.column_dimensions[col].width = value + 2
+        df = pd.DataFrame()
+        df[dates_name] = self.df[dates_name].copy()
+        df[values_name] = self.df[values_name].copy()
+        df = df.sort_values(dates_name)
+        df['ymd'] = pd.to_datetime(df[dates_name]).dt.date
+        mean_df = df.groupby('ymd').mean(numeric_only=False)
+        mean_df = mean_df.rename(columns={values_name: average_name})
+
+        df = df.merge(mean_df, how='left', on='ymd')
+        day_counter = 1
+        next_datapoint_time_delta = pd.Timedelta(0)
+        # temporary list which consists the index of the first row of each new day
+        new_day_datapoints = [0]
+
+        for i in range(len(df)):
+            # print(f'row: {i}')
+
+            if i != 0:
+                next_datapoint_time_delta = df.loc[i, 'ymd'] - df.loc[new_day_datapoints[-1], 'ymd']
+                # print(next_datapoint_time_delta)
+
+            if next_datapoint_time_delta >= pd.Timedelta('2D'):
+                # reset time counter when a time gap happens
+                new_day_datapoints = [i]
+                day_counter = 1
+            elif next_datapoint_time_delta >= pd.Timedelta('1D'):
+                new_day_datapoints.append(i)
+                day_counter = day_counter + 1
+
+            if day_counter > 8:
+                df.loc[i, floating_average_name] = (1 - floating_alpha) * df.loc[
+                    new_day_datapoints[-2], average_name] + floating_alpha * df.loc[
+                                                       new_day_datapoints[-2], floating_average_name]
+            elif day_counter > 7:
+                # DIN 1525251 Formula
+                df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                    new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                    df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                        new_day_datapoints[-6], average_name] + 0.3 * df.loc[
+                                                        new_day_datapoints[-7], average_name] + 0.2 * df.loc[
+                                                        new_day_datapoints[-8], average_name]) / 3.8
+            elif day_counter > 6:
+                df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                    new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                    df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                        new_day_datapoints[-6], average_name] + 0.3 * df.loc[
+                                                        new_day_datapoints[-7], average_name]) / 3.6
+            elif day_counter > 5:
+                df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                    new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                    df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
+                                                        new_day_datapoints[-6], average_name]) / 3.3
+            elif day_counter > 4:
+                df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                    new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
+                                                    df.loc[new_day_datapoints[-5], average_name]) / 2.9
+            elif day_counter > 3:
+                df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                    new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name]) / 2.4
+            elif day_counter > 2:
+                df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
+                    new_day_datapoints[-3], average_name]) / 1.8
+            elif day_counter > 1:
+                df.loc[i, floating_average_name] = df.loc[new_day_datapoints[-2], average_name]
+            elif day_counter <= 1:
+                df.loc[i, floating_average_name] = df.loc[i, average_name]
+            else:
+                raise ValueError('day_counter case is not considered! Fix it!')
+
+        self.df['Aussentemp_mean'] = df[average_name]
+        self.df['Aussentemp_floating_average'] = df[floating_average_name]
 
     def calcComfort(self):
+        # todo: foreign code without documentation
+
         # PMV und PPD Berechnung
         # nach DIN EN ISO 7730 (mit Berichtigung)
 
@@ -786,6 +833,7 @@ class SchweikerDataFrame:
         row_count = self.df.shape[0]
 
         # region INITIALIZATION
+
         P1 = 0
         P2 = 0
         P3 = 0
@@ -934,20 +982,46 @@ class SchweikerDataFrame:
 
         return pmvColumn, ppdColumn
 
+    # region BIN
+
+    # def read_input_excel(self, sheet_name='Sheet1', skiprows=0):
+    #     # ask simulation variants Excel file path(s)
+    #     root = tk.Tk()
+    #     root.withdraw()
+    #     path_input_file = filedialog.askopenfilename(filetypes=[("Excel files", ".xlsx .xls")],
+    #                                                  title='Select input Excel file')
+    #     # read Excel data
+    #     excel_data = pd.ExcelFile(path_input_file)
+    #     # convert Excel data into pandas DataFrame
+    #     self._df = pd.DataFrame(excel_data.parse(sheet_name))  # , index_col=0)
     #
-    def schweiker_main(self):
+    #     if skiprows > 0:
+    #         self._df.columns = self._df.iloc[skiprows]  # set column headers
+    #         self._df = self._df.drop(range(0, skiprows + 1))  # remove unwanted rows
+    #         self._df = self._df.reset_index(drop=True)
+    #
+    # def write_output_excel(self):
+    #     # ask output Excel file path
+    #     root = tk.Tk()
+    #     root.withdraw()
+    #     output_path = filedialog.askopenfilename(filetypes=[("Excel files", ".xlsx .xls")],
+    #                                              title='Select output Excel file')
+    #
+    #     # write into Excel file
+    #     with pd.ExcelWriter(output_path, engine="openpyxl", mode="a", datetime_format="DD.MM.YYYY HH:MM") as writer:
+    #
+    #         key = 'output'
+    #         self._df.to_excel(writer, sheet_name=key)
+    #         ws = writer.sheets[key]
+    #         dims = {}
+    #         for row in ws.rows:
+    #             for cell in row:
+    #                 if cell.value:
+    #                     dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
+    #         for col, value in dims.items():
+    #             ws.column_dimensions[col].width = value + 2
 
-        self._df = functions.calcFloatingAverageTemperature(self.df, values_name='ta', dates_name='index')
+    # endregion
 
-        # adapt metabolic rate
-        self.df['metAdaptedColumn'] = self.df['met'] - (0.234 * self.Aussentemp_floating_average) / 58.2
-        # self.df['metAdaptedColumn'] = self.df['metabolischeRate'] - (0.234 * self.Aussentemp_floating_average) / 58.2
-        # determine clothing factor
-        self.df['clo'] = 10 ** (-0.172 - 0.000485 * self.df['Aussentemp_floating_average']
-                                + 0.0818 * self.df['metAdaptedColumn']
-                                - 0.00527 * self.df['Aussentemp_floating_average'] * self.df['metAdaptedColumn'])
-        # calculate comfort
-        [pmv, ppd] = self.calcComfort()
-        self.df['pmv'] = pmv
-        self.df['ppd'] = ppd
-        df_z1 = self._df
+
+

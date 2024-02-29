@@ -1,11 +1,7 @@
 import win32com.client
-import numpy as np
 import pandas as pd
 import xlwings as xw
-from datetime import datetime, date
 import re
-
-import functions
 
 
 def replace_parameter_value(match, parameters):
@@ -33,22 +29,21 @@ def find_and_replace_parameter_values(path_file, pattern, parameters):
         name of the marked parameter
 
     Example:
+        # .txt file containing "@Parameter1=1; Parameter2=2; @Parameter3=3."
+        path_file = 'C:\\Users\\JohnDoe\\Desktop\\text.txt'
 
-    # .txt file containing "@Parameter1=1; Parameter2=2; @Parameter3=3."
-    path_file = 'C:\\Users\\JohnDoe\\Desktop\\text.txt'
+        # @ at the start, followed by text, '=' in the middle and a number at the end
+        pattern = r'(@\w+)\s*=\s*([\d.]+)'
 
-    # @ at the start, followed by text, '=' in the middle and a number at the end
-    pattern = r'(@\w+)\s*=\s*([\d.]+)'
+        replacements = pd.Series({
+            'Parameter1': 4,
+            'Parameter2': 5,
+            'Parameter3': 6
+        })
 
-    replacements = pd.Series({
-        'Parameter1': 4,
-        'Parameter2': 5,
-        'Parameter3': 6
-    })
+        find_and_replace_parameter_values(path_file, pattern, replacements)
 
-    find_and_replace_parameter_values(path_file, pattern, replacements)
-
-    # .txt file now shows "Parameter1=4; Parameter2=2; Parameter3=6."
+        # .txt file now shows "Parameter1=4; Parameter2=2; Parameter3=6."
 
     Parameters
     ----------
@@ -98,94 +93,12 @@ def find_and_replace(path_file, pattern, replacement):
         file.write(new_text)  # overwrite file
 
 
-def calcFloatingAverageTemperature(df_input, values_name='Aussentemp', dates_name='date'):
-    floating_alpha = 0.8
-
-    if df_input[dates_name].isnull().values.any() or df_input[values_name].isnull().values.any():
-        raise ValueError('Values are not allowed to be NaN, interpolate if necessary!')
-
-    average_name = f'{values_name}_mean'
-    floating_average_name = f'{values_name}_floating_average'
-
-    df = pd.DataFrame()
-    df[dates_name] = df_input[dates_name].copy()
-    df[values_name] = df_input[values_name].copy()
-    df = df.sort_values(dates_name)
-    df['ymd'] = pd.to_datetime(df[dates_name]).dt.date
-    mean_df = df.groupby('ymd').mean(numeric_only=False)
-    mean_df = mean_df.rename(columns={values_name: average_name})
-
-    df = df.merge(mean_df, how='left', on='ymd')
-    day_counter = 1
-    next_datapoint_time_delta = pd.Timedelta(0)
-    # temporary list which consists the index of the first row of each new day
-    new_day_datapoints = [0]
-
-    for i in range(len(df)):
-        # print(f'row: {i}')
-
-        if i != 0:
-            next_datapoint_time_delta = df.loc[i, 'ymd'] - df.loc[new_day_datapoints[-1], 'ymd']
-            # print(next_datapoint_time_delta)
-
-        if next_datapoint_time_delta >= pd.Timedelta('2D'):
-            # reset time counter when a time gap happens
-            new_day_datapoints = [i]
-            day_counter = 1
-        elif next_datapoint_time_delta >= pd.Timedelta('1D'):
-            new_day_datapoints.append(i)
-            day_counter = day_counter + 1
-
-        if day_counter > 8:
-            df.loc[i, floating_average_name] = (1 - floating_alpha) * df.loc[
-                new_day_datapoints[-2], average_name] + floating_alpha * df.loc[
-                                                   new_day_datapoints[-2], floating_average_name]
-        elif day_counter > 7:
-            # DIN 1525251 Formula
-            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
-                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
-                                                    new_day_datapoints[-6], average_name] + 0.3 * df.loc[
-                                                    new_day_datapoints[-7], average_name] + 0.2 * df.loc[
-                                                    new_day_datapoints[-8], average_name]) / 3.8
-        elif day_counter > 6:
-            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
-                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
-                                                    new_day_datapoints[-6], average_name] + 0.3 * df.loc[
-                                                    new_day_datapoints[-7], average_name]) / 3.6
-        elif day_counter > 5:
-            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
-                                                df.loc[new_day_datapoints[-5], average_name] + 0.4 * df.loc[
-                                                    new_day_datapoints[-6], average_name]) / 3.3
-        elif day_counter > 4:
-            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name] + 0.5 *
-                                                df.loc[new_day_datapoints[-5], average_name]) / 2.9
-        elif day_counter > 3:
-            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-                new_day_datapoints[-3], average_name] + 0.6 * df.loc[new_day_datapoints[-4], average_name]) / 2.4
-        elif day_counter > 2:
-            df.loc[i, floating_average_name] = (df.loc[new_day_datapoints[-2], average_name] + 0.8 * df.loc[
-                new_day_datapoints[-3], average_name]) / 1.8
-        elif day_counter > 1:
-            df.loc[i, floating_average_name] = df.loc[new_day_datapoints[-2], average_name]
-        elif day_counter <= 1:
-            df.loc[i, floating_average_name] = df.loc[i, average_name]
-        else:
-            raise ValueError('day_counter case is not considered! Fix it!')
-
-    df_input['Aussentemp_mean'] = df[average_name]
-    df_input['Aussentemp_floating_average'] = df[floating_average_name]
-    return df_input
-
-
 def update_excel_file(path_excel_file):
     """Update calculations in excel file.
 
     https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
     """
+
     xlapp = win32com.client.DispatchEx("Excel.Application")
     wb = xlapp.Workbooks.Open(path_excel_file)
     wb.RefreshAll()
@@ -196,10 +109,8 @@ def update_excel_file(path_excel_file):
 
 def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_folder, variant_output_file,
                                     variant_parameter_df):
-    """Output routine for variant excel file.
+    """Output routine for variant excel file."""
 
-    todo: Mit pandas Methode ins Excel schreiben, wie beim cumulative evaluation file
-    """
     wb = xw.Book(variant_output_file)
     ws = wb.sheets[sheet_name_variant_input]
     ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
@@ -215,8 +126,16 @@ def to_single_column(df_input):
     All columns of df_input are stacked over each other with one free row inbetween and the column headers on top.
 
     Example:
+        df = pd.DataFrame({
+        'col1': [1, 2, 3],
+        'col2': [4, 5, 6],
+        'col3': [7, 8, 9]
+        })
 
-    """
+        result = functions.to_single_column(df)
+        print(result)
+        """
+
     var_list_result_column = df_input.columns
     header = pd.DataFrame(var_list_result_column[1:] + ['']).transpose()
     header.columns = var_list_result_column[:-1] + ['']
