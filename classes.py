@@ -356,20 +356,29 @@ class SimulationSeries:
                     sim = self.sim_list[index]  # name of simulation
                     path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)  # path of dck-file
 
-                    # create a new process instance
-                    process = multiprocessing.Process(target=self.start_sim,
-                                                      args=(path_dck, lock))
-                    with lock:
-                        start_time = time.time()
-                        while len(multiprocessing.active_children()) >= self.multiprocessing_max:
-                            time.sleep(5)  # pause until number of active simulations drops below maximum
-                            if time.time() - start_time > self.timeout:
-                                sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-                        time.sleep(5)
-                        process.start()  # start process
-                    lock.acquire()
-                    progress += 1
-                    functions.progress_bar(progress, total)
+                    try:
+
+                            # create a new process instance
+                            process = multiprocessing.Process(target=self.start_sim,
+                                                              args=(path_dck, lock))
+                            with lock:
+                                start_time = time.time()
+                                while len(multiprocessing.active_children()) >= self.multiprocessing_max:
+                                    time.sleep(5)  # pause until number of active simulations drops below maximum
+                                    if time.time() - start_time > self.timeout:
+                                        sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+                                time.sleep(5)
+                                process.start()  # start process
+                            lock.acquire()
+
+                    except:
+
+                        message = 'Error occurred during simulation of {}.'.format(sim)
+                        self.logger.error(message)
+                        print(message)
+
+                progress += 1
+                functions.progress_bar(progress, total)
 
             # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:
