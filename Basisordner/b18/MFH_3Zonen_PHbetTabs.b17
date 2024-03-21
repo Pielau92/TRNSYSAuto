@@ -1,17 +1,17 @@
-*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
-*  TRNBuild   2.0.208
-*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+*********************************************************************************
+*  TRNBuild   3.0.302
+*********************************************************************************
 *   BUILDING DESCRIPTIONS FILE TRNSYS
-*   FOR BUILDING:   D:\Owncloud\Mikroquartiere\Simulation\Vorlage\Vorlagen\9Zonen\Diss_3Zonen\MFH_3Zonen_PHbetTabs.b17
+*   FOR BUILDING:   C:\Users\pierre\PycharmProjects\TimberBioC\Basisordner\b18\MFH_3Zonen_PHbetTabs.b17
 *   GET BY WORKING WITH TRNBuild 1.0 for Windows
-*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+*********************************************************************************
 *
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  C o m m e n t s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  P r o j e c t
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *+++ PROJECT
 *+++ TITLE=UNDEFINED
 *+++ DESCRIPTION=UNDEFINED
@@ -19,87 +19,183 @@
 *+++ ADDRESS=UNDEFINED
 *+++ CITY=UNDEFINED
 *+++ SWITCH=UNDEFINED
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  P r o p e r t i e s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 PROPERTIES
  DENSITY=1.204 : CAPACITY=1.012 : PRESSURE=101325.000 : HVAPOR=2454.0 : SIGMA=2.041e-007 : RTEMP=293.15
-*--- alpha calculation -------------------
+*--- convective heat transfer coefficient calculation ---------------------
  KFLOORUP=7.2 : EFLOORUP=0.31 : KFLOORDOWN=3.888 : EFLOORDOWN=0.31
  KCEILUP=7.2 : ECEILUP=0.31 : KCEILDOWN=3.888 : ECEILDOWN=0.31
  KVERTICAL=5.76 : EVERTICAL=0.3
+*--- radiance parameters -------------------
+ SCENE_ROTATION_ANGLE=0 : GROUND_IDS= : GROUND_REFLECTANCE=0.2 : SHADER_REFLECTANCE=0
+ CALC_MODE=RAD : LATITUDE=48 : LONGITUDE=-9.2 : TIME_ZONE=-15 : SITE_ELEVATION=200
+ AB=5 : AD=1000 : AS=20 : AR=300 : AA=0.1
+ LR=6 : ST=0.15 : SJ=1 : LW=0.004 : DJ=0 : DS=0.2 : DR=2 : DP=512
+*--- comfort parameters -------------------
+ DIAM-SENSOR=0.07 : EPS-SENSOR=0.82 : REFL-SENSOR=0.47 : ELV_AIRSPEED1=0.3 : ELV_AIRSPEED2=0.7 : ELV_AIRSPEED3=1.2
+*--- solar matrix parameters -------------------
+ FSCAL_TREGENZA=MEDIUM : SHM_MODE=0 : SURFGRID=0.2 : GRIDDISTANCE=0.03
+*--- daylight  -------------------
+ UDIMIN=100 : UDIMAX=2000 : DAMIN=300
 *
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 TYPES
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 *
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  L a y e r s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 LAYER HLZ
- CONDUCTIVITY=  1.404 : CAPACITY=      1 : DENSITY=   1280
+ CONDUCTIVITY=  1.404 : CAPACITY=      1 : DENSITY=   1280 : PERT=      0 : PENRT=      0
 LAYER EPS
- CONDUCTIVITY=  0.144 : CAPACITY=    1.5 : DENSITY=     18
+ CONDUCTIVITY=  0.144 : CAPACITY=    1.5 : DENSITY=     18 : PERT=      0 : PENRT=      0
 LAYER STAHLBETON
- CONDUCTIVITY=   8.28 : CAPACITY=      1 : DENSITY=   2300
+ CONDUCTIVITY=   8.28 : CAPACITY=      1 : DENSITY=   2300 : PERT=      0 : PENRT=      0
 LAYER ESTRICH
- CONDUCTIVITY=   5.04 : CAPACITY=      1 : DENSITY=   2000
+ CONDUCTIVITY=   5.04 : CAPACITY=      1 : DENSITY=   2000 : PERT=      0 : PENRT=      0
 LAYER OSB
- CONDUCTIVITY=  0.468 : CAPACITY=    1.7 : DENSITY=    680
+ CONDUCTIVITY=  0.468 : CAPACITY=    1.7 : DENSITY=    680 : PERT=      0 : PENRT=      0
 LAYER GIPSKARTON
- CONDUCTIVITY=  0.756 : CAPACITY=    2.1 : DENSITY=    900
+ CONDUCTIVITY=  0.756 : CAPACITY=    2.1 : DENSITY=    900 : PERT=      0 : PENRT=      0
 LAYER MW
- CONDUCTIVITY=  0.144 : CAPACITY=      1 : DENSITY=     25
+ CONDUCTIVITY=  0.144 : CAPACITY=      1 : DENSITY=     25 : PERT=      0 : PENRT=      0
 LAYER FERTIGPARKETT
- CONDUCTIVITY=  0.612 : CAPACITY=      2 : DENSITY=    740
+ CONDUCTIVITY=  0.612 : CAPACITY=      2 : DENSITY=    740 : PERT=      0 : PENRT=      0
 LAYER ERDE
- CONDUCTIVITY=    7.2 : CAPACITY=      2 : DENSITY=   1500
+ CONDUCTIVITY=    7.2 : CAPACITY=      2 : DENSITY=   1500 : PERT=      0 : PENRT=      0
 LAYER ASPAHLT
- CONDUCTIVITY=    3.6 : CAPACITY=      1 : DENSITY=   1500
+ CONDUCTIVITY=    3.6 : CAPACITY=      1 : DENSITY=   1500 : PERT=      0 : PENRT=      0
 LAYER DECKSCHICHT
- CONDUCTIVITY=   2.88 : CAPACITY=      1 : DENSITY=   1800
+ CONDUCTIVITY=   2.88 : CAPACITY=      1 : DENSITY=   1800 : PERT=      0 : PENRT=      0
 LAYER FLIESE
- CONDUCTIVITY=   6.12 : CAPACITY=      1 : DENSITY=   1800
+ CONDUCTIVITY=   6.12 : CAPACITY=      1 : DENSITY=   1800 : PERT=      0 : PENRT=      0
 LAYER WEICHFASERPLATTE
- CONDUCTIVITY=   0.18 : CAPACITY=      2 : DENSITY=    270
+ CONDUCTIVITY=   0.18 : CAPACITY=      2 : DENSITY=    270 : PERT=      0 : PENRT=      0
 LAYER HOLZ
- CONDUCTIVITY=  0.468 : CAPACITY=      2 : DENSITY=    500
+ CONDUCTIVITY=  0.468 : CAPACITY=      2 : DENSITY=    500 : PERT=      0 : PENRT=      0
 LAYER KIES
- CONDUCTIVITY=   2.52 : CAPACITY=      1 : DENSITY=   1800
+ CONDUCTIVITY=   2.52 : CAPACITY=      1 : DENSITY=   1800 : PERT=      0 : PENRT=      0
 LAYER VOLLZIEGEL
- CONDUCTIVITY=   2.52 : CAPACITY=      1 : DENSITY=   1800
+ CONDUCTIVITY=   2.52 : CAPACITY=      1 : DENSITY=   1800 : PERT=      0 : PENRT=      0
 LAYER HLZ027
- CONDUCTIVITY=  0.972 : CAPACITY=      1 : DENSITY=    850
+ CONDUCTIVITY=  0.972 : CAPACITY=      1 : DENSITY=    850 : PERT=      0 : PENRT=      0
 LAYER GLAS
- CONDUCTIVITY=    3.6 : CAPACITY=      1 : DENSITY=   2500
+ CONDUCTIVITY=    3.6 : CAPACITY=      1 : DENSITY=   2500 : PERT=      0 : PENRT=      0
 LAYER TDPT3
- RESISTANCE=  0.208333
+ RESISTANCE=  0.208333 : PERT=      0 : PENRT=      0
 LAYER WD_AW
- RESISTANCE=  2.24382
+ RESISTANCE=  2.24382 : PERT=      0 : PENRT=      0
 LAYER WD_IW
- RESISTANCE=  1.38889
+ RESISTANCE=  1.38889 : PERT=      0 : PENRT=      0
 LAYER WD_KD
- RESISTANCE=  1.52778
+ RESISTANCE=  1.52778 : PERT=      0 : PENRT=      0
 LAYER WD_DA
- RESISTANCE=  2.63889
+ RESISTANCE=  2.63889 : PERT=      0 : PENRT=      0
 LAYER WB
- RESISTANCE=  0.0347479
+ RESISTANCE=  0.0347479 : PERT=      0 : PENRT=      0
 LAYER BETONKERNAKTIVIERUNG
- PSPACING=    0.2 : PDIAMETER=   0.02 : PWALLTHICKNESS=  0.001 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18
+ PSPACING=    0.2 : PDIAMETER=   0.02 : PWALLTHICKNESS=  0.001 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18 : PERT=      0 : PENRT=      0
 LAYER HEIZKUHLMATTE
- PSPACING=   0.01 : PDIAMETER= 0.0035 : PWALLTHICKNESS= 0.0005 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18
+ PSPACING=   0.01 : PDIAMETER= 0.0035 : PWALLTHICKNESS= 0.0005 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18 : PERT=      0 : PENRT=      0
 LAYER ACTIVELAYER_FB
- PSPACING=    0.1 : PDIAMETER=  0.016 : PWALLTHICKNESS=  0.002 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18
+ PSPACING=    0.1 : PDIAMETER=  0.016 : PWALLTHICKNESS=  0.002 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18 : PERT=      0 : PENRT=      0
 LAYER FBH_TROCKEN
- PSPACING=   0.05 : PDIAMETER=   0.01 : PWALLTHICKNESS=  0.002 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ PSPACING=   0.05 : PDIAMETER=   0.01 : PWALLTHICKNESS=  0.002 : PCONDUCTIVITY=   1.26 : CPFLUID= 4.18 : PERT=      0 : PENRT=      0
+*--------------------------------------------------------------------------------
 *  I n p u t s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 INPUTS INT01 INT02 INT03 TERD1 TERD2 TERD3 PERS1 PERS2 PERS3 COMP1 COMP2 COMP3 LICHT1 LICHT2 LICHT3 ILF1 ILF2 ILF3 INF1 INF2 INF3 VENT1 VENT2 VENT3 TZU1 TZU2 TZU3 ABSZU1 ABSZU2 ABSZU3 SCHATTS1 SCHATTS2 SCHATTS3 SCHATTW1 SCHATTW2 SCHATTW3 SCHATTO1 SCHATTO2 SCHATTO3 SCHATTN1 SCHATTN2 SCHATTN3 SCHATTI1 SCHATTI2 SCHATTI3 CLO1 CLO2 CLO3 MET1 MET2 MET3 VEL1 VEL2 VEL3 HEIZ1 HEIZ2 HEIZ3 HEIZMAX1 HEIZMAX2 ;
  HEIZMAX3 TKUEHL1 TKUEHL2 TKUEHL3 KUEHLMAX1 KUEHLMAX2 KUEHLMAX3 RELMIN1 RELMIN2 RELMIN3 ABSMAX1 ABSMAX2 ABSMAX3 TINBTA1 TINBTA2 TINBTA3 MINBTA1 MINBTA2 MINBTA3 WIND DRUCK QDAMPF TINBTAO1 TINBTAO2 TINBTAO3
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+INPUTS_DESCRIPTION
+ INT01 : any : Input
+ INT02 : any : Input
+ INT03 : any : Input
+ TERD1 : any : Input
+ TERD2 : any : Input
+ TERD3 : any : Input
+ PERS1 : any : Input
+ PERS2 : any : Input
+ PERS3 : any : Input
+ COMP1 : any : Input
+ COMP2 : any : Input
+ COMP3 : any : Input
+ LICHT1 : any : Input
+ LICHT2 : any : Input
+ LICHT3 : any : Input
+ ILF1 : any : Input
+ ILF2 : any : Input
+ ILF3 : any : Input
+ INF1 : any : Input
+ INF2 : any : Input
+ INF3 : any : Input
+ VENT1 : any : Input
+ VENT2 : any : Input
+ VENT3 : any : Input
+ TZU1 : any : Input
+ TZU2 : any : Input
+ TZU3 : any : Input
+ ABSZU1 : any : Input
+ ABSZU2 : any : Input
+ ABSZU3 : any : Input
+ SCHATTS1 : any : Input
+ SCHATTS2 : any : Input
+ SCHATTS3 : any : Input
+ SCHATTW1 : any : Input
+ SCHATTW2 : any : Input
+ SCHATTW3 : any : Input
+ SCHATTO1 : any : Input
+ SCHATTO2 : any : Input
+ SCHATTO3 : any : Input
+ SCHATTN1 : any : Input
+ SCHATTN2 : any : Input
+ SCHATTN3 : any : Input
+ SCHATTI1 : any : Input
+ SCHATTI2 : any : Input
+ SCHATTI3 : any : Input
+ CLO1 : any : Input
+ CLO2 : any : Input
+ CLO3 : any : Input
+ MET1 : any : Input
+ MET2 : any : Input
+ MET3 : any : Input
+ VEL1 : any : Input
+ VEL2 : any : Input
+ VEL3 : any : Input
+ HEIZ1 : any : Input
+ HEIZ2 : any : Input
+ HEIZ3 : any : Input
+ HEIZMAX1 : any : Input
+ HEIZMAX2 : any : Input
+ HEIZMAX3 : any : Input
+ TKUEHL1 : any : Input
+ TKUEHL2 : any : Input
+ TKUEHL3 : any : Input
+ KUEHLMAX1 : any : Input
+ KUEHLMAX2 : any : Input
+ KUEHLMAX3 : any : Input
+ RELMIN1 : any : Input
+ RELMIN2 : any : Input
+ RELMIN3 : any : Input
+ ABSMAX1 : any : Input
+ ABSMAX2 : any : Input
+ ABSMAX3 : any : Input
+ TINBTA1 : any : Input
+ TINBTA2 : any : Input
+ TINBTA3 : any : Input
+ MINBTA1 : any : Input
+ MINBTA2 : any : Input
+ MINBTA3 : any : Input
+ WIND : any : Input
+ DRUCK : any : Input
+ QDAMPF : any : Input
+ TINBTAO1 : any : Input
+ TINBTAO2 : any : Input
+ TINBTAO3 : any : Input
+*--------------------------------------------------------------------------------
 *  S c h e d u l e s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 SCHEDULE NATLUFT
  HOURS =0.000 6.000 20.000 24.0
  VALUES=1. 0 1. 1. 
@@ -220,301 +316,332 @@ SCHEDULE WKUEHLVOR
 SCHEDULE WSCHLAFT
  DAYS=1 2 3 4 5 6 7
  HOURLY=NACHT NACHT NACHT NACHT NACHT NACHT NACHT
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  W a l l s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-WALL DE1O
+*--------------------------------------------------------------------------------
+*  C O N S T R U C T I O N (Wall, Floor, Ceiling,..)
+*--------------------------------------------------------------------------------
+CONSTRUCTION DE1O
  LAYERS   = FERTIGPARKETT ESTRICH TDPT3 STAHLBETON STAHLBETON STAHLBETON STAHLBETON 
  THICKNESS= 0.015         0.07    0     0.05       0.05       0.05       0.05       
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 1e-005
-WALL DE1U
+CONSTRUCTION DE1U
  LAYERS   = STAHLBETON STAHLBETON STAHLBETON STAHLBETON TDPT3 ESTRICH FERTIGPARKETT 
  THICKNESS= 0.05       0.05       0.05       0.05       0     0.07    0.015         
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 1e-005
-WALL DE1O_BTA
+CONSTRUCTION DE1O_BTA
  LAYERS   = FERTIGPARKETT ESTRICH ESTRICH TDPT3 STAHLBETON BETONKERNAKTIVIERUNG STAHLBETON 
  THICKNESS= 0.015         0.04    0.01    0     0.13       0                    0.07       
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = FLOOR : HBACK= CEILING
-WALL DE1U_BTA
+CONSTRUCTION DE1U_BTA
  LAYERS   = STAHLBETON BETONKERNAKTIVIERUNG STAHLBETON TDPT3 ESTRICH ESTRICH FERTIGPARKETT 
  THICKNESS= 0.07       0                    0.13       0     0.01    0.04    0.015         
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = CEILING : HBACK= FLOOR
-WALL AW1
+CONSTRUCTION AW1
  LAYERS   = DECKSCHICHT STAHLBETON WD_AW DECKSCHICHT 
  THICKNESS= 0.006       0.18       0     0.01        
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 64
-WALL IW1
+CONSTRUCTION IW1
  LAYERS   = DECKSCHICHT STAHLBETON DECKSCHICHT 
  THICKNESS= 0.01        0.18       0.01        
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 11
-WALL IW2
+CONSTRUCTION IW2
  LAYERS   = DECKSCHICHT STAHLBETON DECKSCHICHT 
  THICKNESS= 0.01        0.18       0.01        
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 11
-WALL DA1
+CONSTRUCTION DA1
  LAYERS   = DECKSCHICHT STAHLBETON STAHLBETON STAHLBETON STAHLBETON WD_DA KIES  
  THICKNESS= 0.015       0.05       0.05       0.05       0.05       0     0.05  
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 64
-WALL DA1_BTA
+CONSTRUCTION DA1_BTA
  LAYERS   = DECKSCHICHT STAHLBETON STAHLBETON STAHLBETON STAHLBETON WD_DA KIES  
  THICKNESS= 0.015       0.05       0.05       0.05       0.05       0     0.05  
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 64
-WALL KD1
+CONSTRUCTION KD1
  LAYERS   = FERTIGPARKETT ESTRICH TDPT3 STAHLBETON WD_KD DECKSCHICHT 
  THICKNESS= 0.015         0.07    0     0.2        0     0.015       
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = FLOOR : HBACK= 0.0001
-WALL KD1_BTA
+CONSTRUCTION KD1_BTA
  LAYERS   = FERTIGPARKETT ESTRICH TDPT3 STAHLBETON WD_KD DECKSCHICHT 
  THICKNESS= 0.015         0.07    0     0.2        0     0.015       
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = FLOOR : HBACK= 0.0001
-WALL IIWSPEICHER
+CONSTRUCTION IIWSPEICHER
  LAYERS   = WEICHFASERPLATTE 
  THICKNESS= 0.02             
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 11
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  W i n d o w s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 WINDOW EXT_WINDOW1
- WINID=13005 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=5 : WWID=0 : WHEIG=0 : FFRAME=0.306667 : UFRAME=5.35815 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576
+ WINID=13005 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=5 : WWID=0 : WHEIG=0 : FFRAME=0.306667 : UFRAME=5.35815 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
 WINDOW EXT_WINDOW2
- WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0.77 : WHEIG=1.08 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576
+ WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0.77 : WHEIG=1.08 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
 WINDOW ADJ_WINDOW
- WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0 : WHEIG=0 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576
+ WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0 : WHEIG=0 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
 WINDOW ADJ_WINDOW2
- WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0.77 : WHEIG=1.08 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  D e f a u l t  G a i n s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  O t h e r  G a i n s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0.77 : WHEIG=1.08 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
+*--------------------------------------------------------------------------------
+*  G a i n s / L o s s e s
+*--------------------------------------------------------------------------------
 GAIN GAIN001
- CONVECTIVE=INPUT 1*INT01 : RADIATIVE=0 : HUMIDITY=0.07642
+ CONVECTIVE=INPUT 1*INT01 : RADIATIVE=0 : HUMIDITY=0.07642 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN GAIN002
- CONVECTIVE=INPUT 1*INT02 : RADIATIVE=0 : HUMIDITY=0.07464
+ CONVECTIVE=INPUT 1*INT02 : RADIATIVE=0 : HUMIDITY=0.07464 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN GAIN003
- CONVECTIVE=INPUT 1*INT03 : RADIATIVE=0 : HUMIDITY=0.10338
+ CONVECTIVE=INPUT 1*INT03 : RADIATIVE=0 : HUMIDITY=0.10338 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN PERSON
- CONVECTIVE=144 : RADIATIVE=144 : HUMIDITY=0.05
+ CONVECTIVE=144 : RADIATIVE=144 : HUMIDITY=0.05 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN COMPSTANDARD
- CONVECTIVE=178.2 : RADIATIVE=19.8 : HUMIDITY=0
+ CONVECTIVE=178.2 : RADIATIVE=19.8 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN COMPKUNDEN
- CONVECTIVE=307.8 : RADIATIVE=34.2 : HUMIDITY=0
+ CONVECTIVE=307.8 : RADIATIVE=34.2 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN COMPKREATION
- CONVECTIVE=583.2 : RADIATIVE=64.8 : HUMIDITY=0
+ CONVECTIVE=583.2 : RADIATIVE=64.8 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN COMPMEDIEN
- CONVECTIVE=777.6 : RADIATIVE=86.4 : HUMIDITY=0
+ CONVECTIVE=777.6 : RADIATIVE=86.4 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN LICHT
- CONVECTIVE=1.8 : RADIATIVE=1.8 : HUMIDITY=0
+ CONVECTIVE=1.8 : RADIATIVE=1.8 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN COMPUTER
- CONVECTIVE=3.24 : RADIATIVE=0.36 : HUMIDITY=0
+ CONVECTIVE=3.24 : RADIATIVE=0.36 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN FEUCHTE
- CONVECTIVE=3.6 : RADIATIVE=0 : HUMIDITY=0
+ CONVECTIVE=3.6 : RADIATIVE=0 : HUMIDITY=0 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN PERSON_HALLE
- CONVECTIVE=180 : RADIATIVE=180 : HUMIDITY=0.05
+ CONVECTIVE=180 : RADIATIVE=180 : HUMIDITY=0.05 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN BEFEUCHT1KG
- CONVECTIVE=INPUT 1*QDAMPF : RADIATIVE=0 : HUMIDITY=1
+ CONVECTIVE=INPUT 1*QDAMPF : RADIATIVE=0 : HUMIDITY=1 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
 GAIN PFLANZ
- CONVECTIVE=INPUT 0.5*QDAMPF : RADIATIVE=0 : HUMIDITY=1
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ CONVECTIVE=INPUT 0.5*QDAMPF : RADIATIVE=0 : HUMIDITY=1 : ELPOWERFRAC=0 :  ABSOLUTE : CATEGORY=MISCELLANEOUS
+*--------------------------------------------------------------------------------
 *  C o m f o r t
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 COMFORT COMF1
- CLOTHING=INPUT 1*CLO1 : MET=INPUT 1*MET1 : WORK=0 : VELOCITY=INPUT 1*VEL1
+ CLOTHING=INPUT 1*CLO1 : MET=INPUT 1*MET1 : WORK=0 : VELOCITY=INPUT 1*VEL1 : ELV_AIRSPEED=0 : FSHADE=1 : FPROJECT=0
 COMFORT COMF2
- CLOTHING=INPUT 1*CLO2 : MET=INPUT 1*MET2 : WORK=0 : VELOCITY=INPUT 1*VEL2
+ CLOTHING=INPUT 1*CLO2 : MET=INPUT 1*MET2 : WORK=0 : VELOCITY=INPUT 1*VEL2 : ELV_AIRSPEED=0 : FSHADE=1 : FPROJECT=0
 COMFORT COMF3
- CLOTHING=INPUT 1*CLO3 : MET=INPUT 1*MET3 : WORK=0 : VELOCITY=INPUT 1*VEL3
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ CLOTHING=INPUT 1*CLO3 : MET=INPUT 1*MET3 : WORK=0 : VELOCITY=INPUT 1*VEL3 : ELV_AIRSPEED=0 : FSHADE=1 : FPROJECT=0
+*--------------------------------------------------------------------------------
 *  I n f i l t r a t i o n
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 INFILTRATION INF1
  AIRCHANGE=INPUT 1*INF1
 INFILTRATION INF2
  AIRCHANGE=INPUT 1*INF2
 INFILTRATION INF3
  AIRCHANGE=INPUT 1*INF3
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  V e n t i l a t i o n
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 VENTILATION VENT1
  TEMPERATURE=INPUT 1*TZU1
  AIRCHANGE=INPUT 1*VENT1
- ABSHUMIDITY=INPUT 1*ABSZU1
+ SPECFANPOWER=0
+ SENSHR=0
+ ABSMINHUM=INPUT 1*ABSZU1
+ ABSMAXHUM=INPUT 1*ABSZU1
+ CALCQAHU=0
 VENTILATION VENT2
  TEMPERATURE=INPUT 1*TZU2
  AIRCHANGE=INPUT 1*VENT2
- ABSHUMIDITY=INPUT 1*ABSZU2
+ SPECFANPOWER=0
+ SENSHR=0
+ ABSMINHUM=INPUT 1*ABSZU2
+ ABSMAXHUM=INPUT 1*ABSZU2
+ CALCQAHU=0
 VENTILATION VENT3
  TEMPERATURE=INPUT 1*TZU3
  AIRCHANGE=INPUT 1*VENT3
- ABSHUMIDITY=INPUT 1*ABSZU3
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ SPECFANPOWER=0
+ SENSHR=0
+ ABSMINHUM=INPUT 1*ABSZU3
+ ABSMAXHUM=INPUT 1*ABSZU3
+ CALCQAHU=0
+*--------------------------------------------------------------------------------
 *  C o o l i n g
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 COOLING KUEHL1
  ON=INPUT 1*TKUEHL1
  POWER=INPUT 3.6*KUEHLMAX1
  ABSHUMIDITY=INPUT 1*ABSMAX1
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
 COOLING KUEHL2
  ON=INPUT 1*TKUEHL2
  POWER=INPUT 3.6*KUEHLMAX2
  ABSHUMIDITY=INPUT 1*ABSMAX2
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
 COOLING KUEHL3
  ON=INPUT 1*TKUEHL3
  POWER=INPUT 3.6*KUEHLMAX3
  ABSHUMIDITY=INPUT 1*ABSMAX3
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
+*--------------------------------------------------------------------------------
 *  H e a t i n g
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 HEATING HEIZ1
  ON=INPUT 1*HEIZ1
  POWER=INPUT 3.6*HEIZMAX1
  HUMIDITY=INPUT 1*RELMIN1
  RRAD=0
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
 HEATING HEIZ2
  ON=INPUT 1*HEIZ2
  POWER=INPUT 3.6*HEIZMAX2
  HUMIDITY=INPUT 1*RELMIN2
  RRAD=0
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
 HEATING HEIZ3
  ON=INPUT 1*HEIZ3
  POWER=INPUT 3.6*HEIZMAX3
  HUMIDITY=INPUT 1*RELMIN3
  RRAD=0
+ ELPOWERFRAC=0
+ AREA_RELATED_POWER=0
+*--------------------------------------------------------------------------------
+*  D a y l i g h t   C o n t r o l 
+*--------------------------------------------------------------------------------
 *
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  Z o n e s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 ZONES ZONE1 ZONE2 ZONE3
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  O r i e n t a t i o n s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 HEMISPHERE NORTHERN
 ORIENTATIONS HORI SUED WEST NORD OST ORI21 ORI22 ORI23 ORI24
+INTERNAL_CALCULATION HORI SUED WEST NORD OST ORI21 ORI22 ORI23 ORI24
 *
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 BUILDING
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 *
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  Z o n e  ZONE1  /  A i r n o d e  ZONE1
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 ZONE ZONE1
 RADIATIONMODE
  BEAM=STANDARD : DIFFUSE=STANDARD : LONGWAVE=STANDARD : GEOMODE=MANUAL : FSOLAIR=0
+DAYLIGHTMODE
+ DLSHADE =-1
 AIRNODE ZONE1
-WALL  =DE1O_BTA   : SURF= 20 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO1 : MFLOW = INPUT 1*MINBTA1 : NLOOP = 2 : MFLOWMIN = 16
-WALL  =IW1        : SURF= 37 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL  =IW2        : SURF= 38 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=52 : FRONT : COUPL=200
-WALL  =IW1        : SURF= 40 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL  =AW1        : SURF= 41 : AREA=         8 : EXTERNAL : ORI=SUED : FSKY=0.5
+WALL         =DE1O_BTA   : SURF= 20 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO1 : MFLOW = INPUT 1*MINBTA1 : NLOOP = 2 : MFLOWMIN = 16
+WALL         =IW1        : SURF= 37 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =IW2        : SURF= 38 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=52 : FRONT : COUPL=200
+WALL         =IW1        : SURF= 40 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =AW1        : SURF= 41 : AREA=         8 : EXTERNAL : ORI=SUED : FSKY=0.5
 WINDOW=EXT_WINDOW1 : SURF= 42 : AREA=       4.5 : EXTERNAL : ORI=SUED : FSKY=0.5 : ESHADE=INPUT 1*SCHATTS1
-WALL  =DE1U_BTA   : SURF= 69 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA1 : MFLOW = INPUT 1*MINBTA1 : NLOOP = 2 : MFLOWMIN = 16
-WALL  =IIWSPEICHER : SURF=  1 : AREA=       100 : INTERNAL
+WALL         =DE1U_BTA   : SURF= 69 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA1 : MFLOW = INPUT 1*MINBTA1 : NLOOP = 2 : MFLOWMIN = 16
+WALL         =IIWSPEICHER : SURF=  1 : AREA=       100 : INTERNAL
  REGIME
- GAIN        = GAIN001    : SCALE= 0 : GEOPOS= 0
- GAIN        = PERSON     : SCALE= INPUT 1*PERS1 : GEOPOS= 0
- GAIN        = COMPUTER   : SCALE= INPUT 20*COMP1 : GEOPOS= 0
- GAIN        = LICHT      : SCALE= INPUT 20*LICHT1 : GEOPOS= 0
- GAIN        = PFLANZ     : SCALE= INPUT 20*ILF1 : GEOPOS= 0
+ GAIN        = GAIN001    : SCALE= 0 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PERSON     : SCALE= INPUT 1*PERS1 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = COMPUTER   : SCALE= INPUT 20*COMP1 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = LICHT      : SCALE= INPUT 20*LICHT1 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PFLANZ     : SCALE= INPUT 20*ILF1 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
  COMFORT     = COMF1      : COMFID=   1 : MRT= INTERNAL : GEOPOS= 0
  INFILTRATION= INF1
  VENTILATION = VENT1
  COOLING     = KUEHL1
  HEATING     = HEIZ1
- CAPACITANCE = 67.5    : VOLUME= 56.25   : TINITIAL= 21      : PHINITIAL= 40     
+ CAPACITANCE = 67.5    : VOLUME= 56.25   : REFAREA= 1       : TINITIAL= 21      : PHINITIAL= 40     
  KSURF       = 0.163   : KDEEP = 1      
  MSURF       = 438.1   : MDEEP = 170    
  BSURF       = 496.5   : BDEEP = 165.5  
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  Z o n e  ZONE2  /  A i r n o d e  ZONE2
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 ZONE ZONE2
 RADIATIONMODE
  BEAM=STANDARD : DIFFUSE=STANDARD : LONGWAVE=STANDARD : GEOMODE=MANUAL : FSOLAIR=0
+DAYLIGHTMODE
+ DLSHADE =-1
 AIRNODE ZONE2
-WALL  =DE1U_BTA   : SURF= 35 : AREA=         8 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA2 : MFLOW = INPUT 1*MINBTA2 : NLOOP = 1 : MFLOWMIN = 16
-WALL  =IW1        : SURF= 19 : AREA=         5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL  =IW1        : SURF= 21 : AREA=         5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL  =IW2        : SURF= 52 : AREA=      12.5 : ADJACENT=ZONE1 : ADJ_SURF=38 : BACK : COUPL=233.75
-WALL  =DE1O_BTA   : SURF= 70 : AREA=         8 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO2 : MFLOW = INPUT 1*MINBTA2 : NLOOP = 1 : MFLOWMIN = 16
-WALL  =IW2        : SURF= 29 : AREA=      12.5 : ADJACENT=ZONE3 : ADJ_SURF=31 : FRONT : COUPL=233.75
-WALL  =IIWSPEICHER : SURF=  4 : AREA=        40 : INTERNAL
-WALL  =AW1        : SURF=  7 : AREA=       0.9 : EXTERNAL : ORI=WEST : FSKY=0.5
+WALL         =DE1U_BTA   : SURF= 35 : AREA=         8 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA2 : MFLOW = INPUT 1*MINBTA2 : NLOOP = 1 : MFLOWMIN = 16
+WALL         =IW1        : SURF= 19 : AREA=         5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =IW1        : SURF= 21 : AREA=         5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =IW2        : SURF= 52 : AREA=      12.5 : ADJACENT=ZONE1 : ADJ_SURF=38 : BACK : COUPL=233.75
+WALL         =DE1O_BTA   : SURF= 70 : AREA=         8 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO2 : MFLOW = INPUT 1*MINBTA2 : NLOOP = 1 : MFLOWMIN = 16
+WALL         =IW2        : SURF= 29 : AREA=      12.5 : ADJACENT=ZONE3 : ADJ_SURF=31 : FRONT : COUPL=233.75
+WALL         =IIWSPEICHER : SURF=  4 : AREA=        40 : INTERNAL
+WALL         =AW1        : SURF=  7 : AREA=       0.9 : EXTERNAL : ORI=WEST : FSKY=0.5
 WINDOW=EXT_WINDOW1 : SURF=  8 : AREA=       0.1 : EXTERNAL : ORI=WEST : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI2 : ESHADE=INPUT 1*SCHATTW2
  REGIME
- GAIN        = GAIN001    : SCALE= 0 : GEOPOS= 0
- GAIN        = PERSON     : SCALE= INPUT 1*PERS2 : GEOPOS= 0
- GAIN        = COMPUTER   : SCALE= INPUT 8*COMP2 : GEOPOS= 0
- GAIN        = LICHT      : SCALE= INPUT 8*LICHT2 : GEOPOS= 0
- GAIN        = PFLANZ     : SCALE= INPUT 8*ILF2 : GEOPOS= 0
+ GAIN        = GAIN001    : SCALE= 0 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PERSON     : SCALE= INPUT 1*PERS2 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = COMPUTER   : SCALE= INPUT 8*COMP2 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = LICHT      : SCALE= INPUT 8*LICHT2 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PFLANZ     : SCALE= INPUT 8*ILF2 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
  COMFORT     = COMF2      : COMFID=   1 : MRT= INTERNAL : GEOPOS= 0
  INFILTRATION= INF2
  VENTILATION = VENT2
  COOLING     = KUEHL2
  HEATING     = HEIZ2
- CAPACITANCE = 22.5    : VOLUME= 18.75   : TINITIAL= 21      : PHINITIAL= 40     
+ CAPACITANCE = 22.5    : VOLUME= 18.75   : REFAREA= 1       : TINITIAL= 21      : PHINITIAL= 40     
  KSURF       = 0.14    : KDEEP = 1      
  MSURF       = 207.7   : MDEEP = 69.6   
  BSURF       = 249     : BDEEP = 83     
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  Z o n e  ZONE3  /  A i r n o d e  ZONE3
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 ZONE ZONE3
 RADIATIONMODE
  BEAM=STANDARD : DIFFUSE=STANDARD : LONGWAVE=STANDARD : GEOMODE=MANUAL : FSOLAIR=0
+DAYLIGHTMODE
+ DLSHADE =-1
 AIRNODE ZONE3
-WALL  =IW1        : SURF=  2 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL  =IW1        : SURF=  3 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL  =AW1        : SURF=  6 : AREA=         8 : EXTERNAL : ORI=NORD : FSKY=0.5
+WALL         =IW1        : SURF=  2 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =IW1        : SURF=  3 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
+WALL         =AW1        : SURF=  6 : AREA=         8 : EXTERNAL : ORI=NORD : FSKY=0.5
 WINDOW=EXT_WINDOW1 : SURF=  9 : AREA=       4.5 : EXTERNAL : ORI=NORD : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI3 : ESHADE=INPUT 1*SCHATTN3
-WALL  =DE1O_BTA   : SURF= 73 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
-WALL  =DE1U_BTA   : SURF= 74 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
-WALL  =IW2        : SURF= 31 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=29 : BACK : COUPL=200
-WALL  =IIWSPEICHER : SURF=  5 : AREA=       100 : INTERNAL
+WALL         =DE1O_BTA   : SURF= 73 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
+WALL         =DE1U_BTA   : SURF= 74 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
+WALL         =IW2        : SURF= 31 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=29 : BACK : COUPL=200
+WALL         =IIWSPEICHER : SURF=  5 : AREA=       100 : INTERNAL
  REGIME
- GAIN        = GAIN003    : SCALE= 0 : GEOPOS= 0
- GAIN        = PERSON     : SCALE= INPUT 1*PERS3 : GEOPOS= 0
- GAIN        = COMPUTER   : SCALE= INPUT 20*COMP3 : GEOPOS= 0
- GAIN        = LICHT      : SCALE= INPUT 20*LICHT3 : GEOPOS= 0
- GAIN        = PFLANZ     : SCALE= INPUT 20*ILF3 : GEOPOS= 0
+ GAIN        = GAIN003    : SCALE= 0 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PERSON     : SCALE= INPUT 1*PERS3 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = COMPUTER   : SCALE= INPUT 20*COMP3 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = LICHT      : SCALE= INPUT 20*LICHT3 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
+ GAIN        = PFLANZ     : SCALE= INPUT 20*ILF3 : GEOPOS= 0 : SCALE2= 1 : FRAC_REFAREA= -1
  COMFORT     = COMF3      : COMFID=   1 : MRT= INTERNAL : GEOPOS= 0
  INFILTRATION= INF3
  VENTILATION = VENT3
  COOLING     = KUEHL3
  HEATING     = HEIZ3
- CAPACITANCE = 67.5    : VOLUME= 56.25   : TINITIAL= 21      : PHINITIAL= 40     
+ CAPACITANCE = 67.5    : VOLUME= 56.25   : REFAREA= 1       : TINITIAL= 21      : PHINITIAL= 40     
  KSURF       = 0.163   : KDEEP = 1      
  MSURF       = 438.1   : MDEEP = 170    
  BSURF       = 496.5   : BDEEP = 165.5  
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  O u t p u t s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 OUTPUTS
  TRANSFER : TIMEBASE=1.000
  AIRNODES = ZONE1 ZONE2 ZONE3 
@@ -570,84 +697,9 @@ OUTPUTS
  NTYPES =  17 : SURF = 2, 3, 6, 73, 74, 31, 5, 9,  : TSI - inside surface temperature
  AIRNODES = ZONE2 
  NTYPES =  17 : SURF = 8, 7,  : TSI - inside surface temperature
-*
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  T R N S F L O W Multizone Airflow Network (Model COMIS 3.1)
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-MULTIZONE_AIRFLOW_NETWORK
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-CALCFLOWS=0
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  A d d  T R N S F L O W  C o m m a n d s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-POLLUTANTS
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-LINKTYPES
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  C r a c k s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  F a n s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  S t r a i g h t   D u c t s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  F l o w   C o n t r o l l e r s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  L a r g e    V e r t i c a l   Openings (Windows+Doors)
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  T e s t   D a t a   C o m p o n e n t s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-NODETYPES
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  E x t e r n a l   N o d e s  (CP VALUES)
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  A u x i l i a r y   N o d e s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  T h e r m a l  Z o n e   N o d e s
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  W i n d   v e  l o c i t y   p r o f i l e
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-WIND_VELOPROF
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*  A i r l i n k   N e t w o r k
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-AIRLINK_NETWORK
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 *  E n d
-*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*--------------------------------------------------------------------------------
 END
 
 _EXTENSION_WINPOOL_START_
@@ -685,7 +737,7 @@ Tvis  0.769 0.768 0.766 0.759 0.745 0.713 0.640 0.489 0.236 0.000 0.663
 Rfvis 0.129 0.129 0.129 0.132 0.142 0.170 0.241 0.396 0.664 1.000 0.216
 Rbvis 0.138 0.118 0.118 0.120 0.129 0.154 0.218 0.359 0.606 1.000 0.197
 SHGC  0.586 0.585 0.584 0.581 0.575 0.562 0.531 0.446 0.249 0.000 0.529
-SC: 0.58
+Tvis_daylight: 0.769
 Layer ID#         4046     4061        0        0        0        0
 Tir              0.000    0.000        0        0        0        0
 Emis F           0.840    0.040        0        0        0        0
@@ -735,7 +787,7 @@ Tvis  0.713 0.713 0.710 0.703 0.687 0.654 0.584 0.442 0.207 0.000 0.609
 Rfvis 0.110 0.110 0.110 0.112 0.119 0.142 0.199 0.327 0.563 1.000 0.181
 Rbvis 0.113 0.129 0.129 0.132 0.142 0.169 0.238 0.391 0.657 1.000 0.215
 SHGC  0.440 0.440 0.440 0.439 0.438 0.436 0.427 0.385 0.241 0.000 0.414
-SC: 0.44
+Tvis_daylight: 0.713
 Layer ID#         4062F    4046        0        0        0        0
 Tir              0.000    0.000        0        0        0        0
 Emis F           0.840    0.840        0        0        0        0
@@ -785,7 +837,7 @@ Tvis  0.658 0.660 0.654 0.646 0.632 0.596 0.512 0.355 0.149 0.000 0.547
 Rfvis 0.174 0.173 0.174 0.178 0.190 0.221 0.299 0.453 0.678 1.000 0.264
 Rbvis 0.174 0.185 0.185 0.189 0.201 0.232 0.307 0.455 0.684 1.000 0.273
 SHGC  0.451 0.451 0.450 0.447 0.441 0.429 0.398 0.320 0.169 0.000 0.401
-SC: 0.45
+Tvis_daylight: 0.658
 Layer ID#         4061F    4046     4061        0        0        0
 Tir              0.000    0.000    0.000        0        0        0
 Emis F           0.840    0.840    0.040        0        0        0
@@ -835,7 +887,7 @@ Tvis  0.670 0.678 0.660 0.639 0.612 0.563 0.459 0.288 0.107 0.000 0.521
 Rfvis 0.175 0.164 0.159 0.163 0.180 0.210 0.264 0.371 0.580 0.999 0.235
 Rbvis 0.175 0.164 0.159 0.163 0.180 0.210 0.264 0.371 0.580 0.999 0.235
 SHGC  0.402 0.406 0.401 0.393 0.383 0.362 0.319 0.236 0.115 0.000 0.338
-SC: 0.41
+Tvis_daylight: 0.67
 Layer ID#         7202F    4054     7202        0        0        0
 Tir              0.000    0.000    0.000        0        0        0
 Emis F           0.840    0.840    0.040        0        0        0
@@ -852,9 +904,9 @@ Solar      WdSpd  hcout hrout  hin
 783        0.00  12.25  3.40  7.51  0.66 0.66  0.60 0.60  0.62 0.62  0.65 0.65
 783        6.71  25.47  3.30  7.41  0.70 0.70  0.61 0.61  0.62 0.62  0.65 0.65
 *** END OF LIBRARY ***
-***************************************************************************************************
-*WinID   Description                              Design         U-Value g-value T-sol Rf-sol T-vis
-***************************************************************************************************
+************************************************************************************************************
+*WinID   Description                              Design         U-Value g-value T-sol Rf-sol T-vis-daylight
+************************************************************************************************************
  12003   Pilkington OPTITHERM S Besch.#3 4/16/4   4/16/4           1.06  0.586  0.485  0.269  0.769
  12006   Pilkington OPTITHERM S2 Besch.#2 4/16/4  4/16/4           0.98  0.44  0.387  0.365  0.713
  12008   Pilkington OPTITHERM S Besch.#2#5 4/16/4/16/4  4/16/4/16/4      0.59  0.451  0.358  0.361  0.658
@@ -1196,6 +1248,14 @@ _EXTENSION_ExternalShadingGeometry_END_
 
 _EXTENSION_GeoPositionGeometry_START_
 _EXTENSION_GeoPositionGeometry_END_
+
+
+_EXTENSION_DaylightSensorPoints_START_
+_EXTENSION_DaylightSensorPoints_END_
+
+
+_EXTENSION_AdditionalDaylightGeometry_START_
+_EXTENSION_AdditionalDaylightGeometry_END_
 
 
 _EXTENSION_VAMPARAMS_START_
