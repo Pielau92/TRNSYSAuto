@@ -2,7 +2,7 @@
 *  TRNBuild   3.0.298
 *********************************************************************************
 *   BUILDING DESCRIPTIONS FILE TRNSYS
-*   FOR BUILDING:   D:\BBSR_Sommertauglichkit\Trnsys\Pierre\Test\Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1_suedBand.b17
+*   FOR BUILDING:   D:\BBSR_Sommertauglichkit\Trnsys\Pierre\Test\Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1_suedvollG1.b17
 *   GET BY WORKING WITH TRNBuild 1.0 for Windows
 *********************************************************************************
 *
@@ -555,8 +555,8 @@ WALL         =DE1O_BTA   : SURF= 20 : AREA=        20 : BOUNDARY=IDENTICAL : GEO
 WALL         =IW1        : SURF= 37 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
 WALL         =IW2        : SURF= 38 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=52 : FRONT : COUPL=200
 WALL         =IW1        : SURF= 40 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL         =AW1        : SURF= 41 : AREA=      4.26 : EXTERNAL : ORI=SUED : FSKY=0.5
-WINDOW=EXT_WINDOW1 : SURF= 42 : AREA=      8.24 : EXTERNAL : ORI=SUED : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI1 : ESHADE=INPUT 1*SCHATTS1
+WALL         =AW1        : SURF= 41 : AREA=       0.1 : EXTERNAL : ORI=SUED : FSKY=0.5
+WINDOW=EXT_WINDOW1 : SURF= 42 : AREA=      12.4 : EXTERNAL : ORI=SUED : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI1 : ESHADE=INPUT 1*SCHATTS1
 WALL         =DE1U_BTA   : SURF= 69 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA1 : MFLOW = INPUT 1*MINBTA1 : NLOOP = 2 : MFLOWMIN = 16
 WALL         =IIWSPEICHER : SURF=  1 : AREA=       100 : INTERNAL
  REGIME
@@ -616,8 +616,8 @@ DAYLIGHTMODE
 AIRNODE ZONE3
 WALL         =IW1        : SURF=  2 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
 WALL         =IW1        : SURF=  3 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL         =AW1        : SURF=  6 : AREA=      4.26 : EXTERNAL : ORI=NORD : FSKY=0.5
-WINDOW=EXT_WINDOW1 : SURF=  9 : AREA=      8.24 : EXTERNAL : ORI=NORD : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI3 : ESHADE=INPUT 1*SCHATTN3
+WALL         =AW1        : SURF=  6 : AREA=       0.1 : EXTERNAL : ORI=NORD : FSKY=0.5
+WINDOW=EXT_WINDOW1 : SURF=  9 : AREA=      12.4 : EXTERNAL : ORI=NORD : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI3 : ESHADE=INPUT 1*SCHATTN3
 WALL         =DE1O_BTA   : SURF= 73 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
 WALL         =DE1U_BTA   : SURF= 74 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
 WALL         =IW2        : SURF= 31 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=29 : BACK : COUPL=200
@@ -1027,6 +1027,56 @@ Solar      WdSpd  hcout hrout  hin
 0        6.71  25.47  3.21  7.58  1.41 1.41  1.06 1.06  1.08 1.08  1.21 1.21
 783        0.00  12.25  3.45  6.96  1.26 1.26  1.08 1.08  1.15 1.15  1.33 1.33
 783        6.71  25.47  3.33  7.21  1.38 1.38  1.09 1.09  1.14 1.14  1.31 1.31
+BERKELEY LAB WINDOW v7.4.6.0  DOE-2 Data File : Multi Band Calculation : generated with Trnsys18.std
+Unit System : SI
+Name        : DOE-2 WINDOW LIB
+Desc        : GU_ClimaGuard_N_#2#5_Ar90
+Window ID   : 3300
+Tilt        : 90.0
+Glazings    : 3
+Frame       :  3 Wood                  2.270
+Spacer      :  2 Class2                0.068   1.550  -0.143
+Total Height: 1500.0 mm
+Total Width : 1200.0 mm
+Glass Height: 1360.3 mm
+Glass Width : 1060.3 mm
+Mullion     : None
+Gap        Thick    Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
+1 Ar90/Air1 16.0 0.01712  5.410  2.062  6.300  1.711 -0.0060  0.687 -0.0001
+2 Ar90/Air1 16.0 0.01712  5.410  2.062  6.300  1.711 -0.0060  0.687 -0.0001
+3              0       0      0      0      0      0       0      0       0
+4              0       0      0      0      0      0       0      0       0
+5              0       0      0      0      0      0       0      0       0
+Angle     0    10    20    30    40    50    60    70    80    90 Hemis
+Tsol  0.436 0.435 0.430 0.423 0.414 0.392 0.334 0.228 0.095 0.000 0.359
+Abs1  0.155 0.156 0.159 0.161 0.161 0.161 0.165 0.167 0.134 0.000 0.158
+Abs2  0.056 0.056 0.057 0.058 0.060 0.062 0.063 0.060 0.050 0.000 0.059
+Abs3  0.063 0.064 0.065 0.065 0.064 0.062 0.058 0.048 0.025 0.000 0.058
+Abs4      0     0     0     0     0     0     0     0     0     0     0
+Abs5      0     0     0     0     0     0     0     0     0     0     0
+Abs6      0     0     0     0     0     0     0     0     0     0     0
+Rfsol 0.290 0.289 0.289 0.292 0.301 0.323 0.379 0.497 0.695 1.000 0.356
+Rbsol 0.290 0.289 0.289 0.292 0.301 0.323 0.379 0.497 0.695 1.000 0.356
+Tvis  0.627 0.627 0.619 0.611 0.598 0.565 0.482 0.327 0.137 0.000 0.517
+Rfvis 0.159 0.157 0.159 0.163 0.174 0.206 0.282 0.433 0.668 1.000 0.248
+Rbvis 0.159 0.157 0.159 0.163 0.174 0.206 0.282 0.433 0.668 1.000 0.248
+SHGC  0.540   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A
+Tvis_daylight:  0.710
+Layer ID#        33009    33000    33009        0        0        0
+Tir              0.000    0.000    0.000        0        0        0
+Emis F           0.860    0.860    0.040        0        0        0
+Emis B           0.040    0.860    0.860        0        0        0
+Thickness(mm)      4.0      4.0      4.0        0        0        0
+Cond(W/m2-K     ) 250.0    250.0    250.0        0        0        0
+Spectral File 33009_GU_Cli 33000_GU_Flo 33009_GU_Cli         None         None         None
+Overall and Center of Glass Ig U-values (W/m2-K)
+Outdoor Temperature                 -17.8 C      15.6 C      26.7 C      37.8 C
+Solar      WdSpd  hcout hrout  hin
+(W/m2)     (m/s)     (W/m2-K)
+0        0.00   0.00  0.00  0.00  0.67 0.67  0.60 0.60  0.62 0.62  0.63 0.63
+0        6.71   0.00  0.00  0.00  0.67 0.67  0.60 0.60  0.62 0.62  0.63 0.63
+783        0.00   0.00  0.00  0.00  0.67 0.67  0.60 0.60  0.62 0.62  0.63 0.63
+783        6.71   0.00  0.00  0.00  0.67 0.67  0.60 0.60  0.62 0.62  0.63 0.63
 *** END OF LIBRARY ***
 ************************************************************************************************************
 *WinID   Description                              Design         U-Value g-value T-sol Rf-sol T-vis-daylight
@@ -1036,6 +1086,7 @@ Solar      WdSpd  hcout hrout  hin
  12008   Pilkington OPTITHERM S Besch.#2#5 4/16/4/16/4  4/16/4/16/4      0.59  0.451  0.358  0.361  0.658
  13005   Saint Gobain CLIMATOP FUTUR AR 4/16/4/16/4  4/16/4/16/4      0.59  0.402  0.33  0.396  0.67
  14002   Interpane IPLUS Neutral R #2  4/16/4     4/16/4           1.08  0.499  0.462  0.267  0.758
+  3300   GU_ClimaGuard_N_#2#5_Ar90                4/16/4/16/4      0.62  0.54  0.436  0.29  0.71
 _EXTENSION_WINPOOL_END_
 
 _EXTENSION_BuildingGeometry_START_

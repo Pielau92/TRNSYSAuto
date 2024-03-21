@@ -2,7 +2,7 @@
 *  TRNBuild   3.0.298
 *********************************************************************************
 *   BUILDING DESCRIPTIONS FILE TRNSYS
-*   FOR BUILDING:   D:\BBSR_Sommertauglichkit\Trnsys\Pierre\Test\Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1_suedBand.b17
+*   FOR BUILDING:   D:\BBSR_Sommertauglichkit\Trnsys\Pierre\wetransfer_main-exe_2023-05-31_1037\Basisordner\b18\Bruckverdichtet_3Zonen31cc_OIBLeichtstatTabs_suedvoll.b17
 *   GET BY WORKING WITH TRNBuild 1.0 for Windows
 *********************************************************************************
 *
@@ -86,13 +86,13 @@ LAYER GLAS
 LAYER TDPT3
  RESISTANCE=  0.208333 : PERT=      0 : PENRT=      0
 LAYER WD_AW
- RESISTANCE=  0.854861 : PERT=      0 : PENRT=      0
+ RESISTANCE=  1.93056 : PERT=      0 : PENRT=      0
 LAYER WD_IW
  RESISTANCE=  1.38889 : PERT=      0 : PENRT=      0
 LAYER WD_KD
- RESISTANCE=  0.347222 : PERT=      0 : PENRT=      0
+ RESISTANCE=  0.923611 : PERT=      0 : PENRT=      0
 LAYER WD_DA
- RESISTANCE=  0.694444 : PERT=      0 : PENRT=      0
+ RESISTANCE=  2.22222 : PERT=      0 : PENRT=      0
 LAYER WB
  RESISTANCE=  0.0347479 : PERT=      0 : PENRT=      0
 LAYER BETONKERNAKTIVIERUNG
@@ -206,8 +206,8 @@ SCHEDULE WOHN1
  HOURS =0.000 7.000 9.000 16.000 22.000 24.0
  VALUES=0 1. 0 1. 0 0 
 SCHEDULE WORKDAY
- HOURS =0.000 7.000 8.000 17.000 18.000 24.0
- VALUES=0 1. 1. 1. 0 0 
+ HOURS =0.000 8.000 9.000 17.000 18.000 24.0
+ VALUES=0 0.5 1. 0.5 0 0 
 SCHEDULE WORKDAYHALLE
  HOURS =0.000 24.0
  VALUES=1. 1. 
@@ -218,7 +218,7 @@ SCHEDULE DAYNIGHT
  HOURS =0.000 6.000 18.000 24.0
  VALUES=0 1. 0 0 
 SCHEDULE LUFT
- HOURS =0.000 5.000 18.000 24.0
+ HOURS =0.000 6.000 20.000 24.0
  VALUES=0 1. 0 0 
 SCHEDULE ARBEIT
  HOURS =0.000 24.0
@@ -288,10 +288,10 @@ SCHEDULE WOHNWOCHE
  HOURLY=WOHN1 WOHN1 WOHN1 WOHN1 WOHN1 WEEKEND WEEKEND
 SCHEDULE WLUFT
  DAYS=1 2 3 4 5 6 7
- HOURLY=LUFT LUFT LUFT LUFT LUFT FREI FREI
+ HOURLY=LUFT LUFT LUFT LUFT LUFT LUFT LUFT
 SCHEDULE USE
  DAYS=1 2 3 4 5 6 7
- HOURLY=WORKDAY WORKDAY WORKDAY WORKDAY WORKDAY FREI FREI
+ HOURLY=WORKDAY WORKDAY WORKDAY WORKDAY WORKDAY WEEKEND WEEKEND
 SCHEDULE WOCHE
  DAYS=1 2 3 4 5 6 7
  HOURLY=ARBEIT ARBEIT ARBEIT ARBEIT ARBEIT FREI FREI
@@ -332,41 +332,41 @@ CONSTRUCTION DE1U
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 1e-005
 CONSTRUCTION DE1O_BTA
- LAYERS   = FERTIGPARKETT ESTRICH ESTRICH TDPT3 STAHLBETON BETONKERNAKTIVIERUNG STAHLBETON 
- THICKNESS= 0.015         0.04    0.01    0     0.13       0                    0.07       
+ LAYERS   = FERTIGPARKETT GIPSKARTON GIPSKARTON TDPT3 OSB   MW    GIPSKARTON FBH_TROCKEN GIPSKARTON 
+ THICKNESS= 0.015         0.015      0.015      0     0.022 0.07  0.015      0           0.015      
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = FLOOR : HBACK= CEILING
 CONSTRUCTION DE1U_BTA
- LAYERS   = STAHLBETON BETONKERNAKTIVIERUNG STAHLBETON TDPT3 ESTRICH ESTRICH FERTIGPARKETT 
- THICKNESS= 0.07       0                    0.13       0     0.01    0.04    0.015         
+ LAYERS   = GIPSKARTON FBH_TROCKEN GIPSKARTON MW    OSB   TDPT3 GIPSKARTON GIPSKARTON FERTIGPARKETT 
+ THICKNESS= 0.015      0           0.015      0.07  0.022 0     0.015      0.015      0.015         
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = CEILING : HBACK= FLOOR
 CONSTRUCTION AW1
- LAYERS   = DECKSCHICHT STAHLBETON WD_AW DECKSCHICHT 
- THICKNESS= 0.006       0.18       0     0.01        
+ LAYERS   = GIPSKARTON OSB   WD_AW WEICHFASERPLATTE DECKSCHICHT 
+ THICKNESS= 0.015      0.018 0     0.05             0.01        
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 64
 CONSTRUCTION IW1
- LAYERS   = DECKSCHICHT STAHLBETON DECKSCHICHT 
- THICKNESS= 0.01        0.18       0.01        
+ LAYERS   = GIPSKARTON MW    GIPSKARTON 
+ THICKNESS= 0.026      0.1   0.026      
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 11
 CONSTRUCTION IW2
- LAYERS   = DECKSCHICHT STAHLBETON DECKSCHICHT 
- THICKNESS= 0.01        0.18       0.01        
+ LAYERS   = GIPSKARTON MW    GIPSKARTON 
+ THICKNESS= 0.013      0.05  0.013      
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 11
 CONSTRUCTION DA1
- LAYERS   = DECKSCHICHT STAHLBETON STAHLBETON STAHLBETON STAHLBETON WD_DA KIES  
- THICKNESS= 0.015       0.05       0.05       0.05       0.05       0     0.05  
- ABS-FRONT= 0.6   : ABS-BACK= 0.6  
+ LAYERS   = GIPSKARTON MW    OSB   WD_DA OSB   
+ THICKNESS= 0.015      0.05  0.018 0     0.018 
+ ABS-FRONT= 0.6   : ABS-BACK= 0.2  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
- HFRONT   = 11 : HBACK= 64
+ HFRONT   = 11 : HBACK= 20
 CONSTRUCTION DA1_BTA
  LAYERS   = DECKSCHICHT STAHLBETON STAHLBETON STAHLBETON STAHLBETON WD_DA KIES  
  THICKNESS= 0.015       0.05       0.05       0.05       0.05       0     0.05  
@@ -374,8 +374,8 @@ CONSTRUCTION DA1_BTA
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = 11 : HBACK= 64
 CONSTRUCTION KD1
- LAYERS   = FERTIGPARKETT ESTRICH TDPT3 STAHLBETON WD_KD DECKSCHICHT 
- THICKNESS= 0.015         0.07    0     0.2        0     0.015       
+ LAYERS   = FERTIGPARKETT GIPSKARTON GIPSKARTON TDPT3 OSB   WD_KD GIPSKARTON 
+ THICKNESS= 0.015         0.015      0.015      0     0.022 0     0.015      
  ABS-FRONT= 0.6   : ABS-BACK= 0.6  
  EPS-FRONT= 0.9   : EPS-BACK= 0.9  
  HFRONT   = FLOOR : HBACK= 0.0001
@@ -395,7 +395,7 @@ CONSTRUCTION IIWSPEICHER
 *  W i n d o w s
 *--------------------------------------------------------------------------------
 WINDOW EXT_WINDOW1
-WINID=14202 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=5 : WWID=0 : WHEIG=0 : FFRAME=0.306667 : UFRAME= 9.4874022589053: ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
+WINID=14305 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=5 : WWID=0 : WHEIG=0 : FFRAME=0.306667 : UFRAME=5.35815 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
 WINDOW EXT_WINDOW2
  WINID=12003 : HINSIDE=11 : HOUTSIDE=64 : SLOPE=90 : SPACID=0 : WWID=0.77 : WHEIG=1.08 : FFRAME=0.3 : UFRAME=10.9091 : ABSFRAME=0.6 : RISHADE=0 : RESHADE=0 : REFLISHADE=0.5 : REFLOSHADE=0.5 : CCISHADE=0.5 : EPSFRAME=0.9 : EPSISHADE=0.9 : ITSHADECLOSE=648 : ITSHADEOPEN=576 : FLOWTOAIRNODE=1 : PERT=0 : PENRT=0 : RADMATERIAL=undefined : RADMATERIAL_SHD1=undefined
 WINDOW ADJ_WINDOW
@@ -555,8 +555,8 @@ WALL         =DE1O_BTA   : SURF= 20 : AREA=        20 : BOUNDARY=IDENTICAL : GEO
 WALL         =IW1        : SURF= 37 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
 WALL         =IW2        : SURF= 38 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=52 : FRONT : COUPL=200
 WALL         =IW1        : SURF= 40 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL         =AW1        : SURF= 41 : AREA=      4.26 : EXTERNAL : ORI=SUED : FSKY=0.5
-WINDOW=EXT_WINDOW1 : SURF= 42 : AREA=      8.24 : EXTERNAL : ORI=SUED : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI1 : ESHADE=INPUT 1*SCHATTS1
+WALL         =AW1        : SURF= 41 : AREA=       0.1 : EXTERNAL : ORI=SUED : FSKY=0.5
+WINDOW=EXT_WINDOW1 : SURF= 42 : AREA=      12.4 : EXTERNAL : ORI=SUED : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI1 : ESHADE=INPUT 1*SCHATTS1
 WALL         =DE1U_BTA   : SURF= 69 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA1 : MFLOW = INPUT 1*MINBTA1 : NLOOP = 2 : MFLOWMIN = 16
 WALL         =IIWSPEICHER : SURF=  1 : AREA=       100 : INTERNAL
  REGIME
@@ -616,8 +616,8 @@ DAYLIGHTMODE
 AIRNODE ZONE3
 WALL         =IW1        : SURF=  2 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
 WALL         =IW1        : SURF=  3 : AREA=      12.5 : BOUNDARY=IDENTICAL : GEOSURF=0.15
-WALL         =AW1        : SURF=  6 : AREA=      4.26 : EXTERNAL : ORI=NORD : FSKY=0.5
-WINDOW=EXT_WINDOW1 : SURF=  9 : AREA=      8.24 : EXTERNAL : ORI=NORD : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI3 : ESHADE=INPUT 1*SCHATTN3
+WALL         =AW1        : SURF=  6 : AREA=       0.1 : EXTERNAL : ORI=NORD : FSKY=0.5
+WINDOW=EXT_WINDOW1 : SURF=  9 : AREA=      12.4 : EXTERNAL : ORI=NORD : FSKY=0.5 : ISHADE=INPUT 1*SCHATTI3 : ESHADE=INPUT 1*SCHATTN3
 WALL         =DE1O_BTA   : SURF= 73 : AREA=        20 : BOUNDARY=IDENTICAL : GEOSURF=0.7 : INTEMP = INPUT 1*TINBTAO3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
 WALL         =DE1U_BTA   : SURF= 74 : AREA=        20 : BOUNDARY=IDENTICAL : INTEMP = INPUT 1*TINBTA3 : MFLOW = INPUT 1*MINBTA3 : NLOOP = 2 : MFLOWMIN = 16
 WALL         =IW2        : SURF= 31 : AREA=      12.5 : ADJACENT=ZONE2 : ADJ_SURF=29 : BACK : COUPL=200
@@ -977,56 +977,106 @@ Solar      WdSpd  hcout hrout  hin
 0        6.71  25.47  3.19  7.20  0.67 0.67  0.57 0.57  0.59 0.59  0.61 0.61
 783        0.00  12.25  3.40  7.51  0.66 0.66  0.60 0.60  0.62 0.62  0.65 0.65
 783        6.71  25.47  3.30  7.41  0.70 0.70  0.61 0.61  0.62 0.62  0.65 0.65
-WINDOW 4.1  DOE-2 Data File : Multi Band Calculation
+BERKELEY LAB WINDOW v7.4.6.0  DOE-2 Data File : Multi Band Calculation : generated with Trnsys18.std
 Unit System : SI
-Name        : TRNSYS15 WINDOW LIB
-Desc        : Interpane IPLUS Neutral R #2  4/16/4
-Window ID   : 14002
+Name        : DOE-2 WINDOW LIB
+Desc        : GT_SANCO_SILVERSTAR_ENplus_#3_KR90
+Window ID   : 14202
 Tilt        : 90.0
 Glazings    : 2
-Frame       : 11 TRNSYS WIN - 1        2.270
-Spacer      :  1 Class1                2.330  -0.010   0.138
-Total Height: 1600.0 mm
-Total Width : 1250.0 mm
-Glass Height: 1460.3 mm
-Glass Width : 1110.3 mm
+Frame       :  3 Wood                  2.270
+Spacer      :  2 Class2                0.068   1.550  -0.143
+Total Height: 1500.0 mm
+Total Width : 1200.0 mm
+Glass Height: 1360.3 mm
+Glass Width : 1060.3 mm
 Mullion     : None
-Gap        Thick   Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
-1 Argon     16.0 0.01620  5.000  2.110  6.300  1.780 -0.0060  0.680 0.00066
+Gap        Thick    Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
+1 Kr90/Air1 10.0 0.01020  3.319  2.283  7.493  3.448 -0.0122  0.725 0.00002
 2              0       0      0      0      0      0       0      0       0
 3              0       0      0      0      0      0       0      0       0
 4              0       0      0      0      0      0       0      0       0
 5              0       0      0      0      0      0       0      0       0
 Angle     0    10    20    30    40    50    60    70    80    90 Hemis
-Tsol  0.462 0.465 0.458 0.450 0.438 0.415 0.364 0.266 0.125 0.000 0.386
-Abs1  0.243 0.246 0.254 0.260 0.262 0.266 0.283 0.302 0.259 0.002 0.265
-Abs2  0.028 0.028 0.028 0.029 0.029 0.030 0.029 0.026 0.019 0.000 0.028
+Tsol  0.542 0.545 0.538 0.527 0.513 0.486 0.426 0.312 0.146 0.000 0.452
+Abs1  0.093 0.093 0.095 0.097 0.101 0.106 0.110 0.113 0.110 0.000 0.102
+Abs2  0.087 0.088 0.096 0.102 0.104 0.108 0.120 0.128 0.092 0.000 0.106
 Abs3      0     0     0     0     0     0     0     0     0     0     0
 Abs4      0     0     0     0     0     0     0     0     0     0     0
 Abs5      0     0     0     0     0     0     0     0     0     0     0
 Abs6      0     0     0     0     0     0     0     0     0     0     0
-Rfsol 0.267 0.261 0.259 0.261 0.271 0.289 0.324 0.406 0.597 0.998 0.311
-Rbsol 0.317 0.312 0.311 0.312 0.319 0.336 0.375 0.470 0.661 0.999 0.362
-Tvis  0.758 0.762 0.752 0.738 0.720 0.682 0.597 0.434 0.203 0.000 0.633
-Rfvis 0.114 0.107 0.104 0.107 0.119 0.144 0.193 0.301 0.533 0.999 0.174
-Rbvis 0.132 0.126 0.125 0.129 0.143 0.173 0.238 0.384 0.655 1.000 0.214
-SHGC  0.499 0.502 0.496 0.488 0.476 0.454 0.403 0.304 0.155 0.000 0.424
-Tvis_daylight: 0.758
-Layer ID#         3302F    3300        0        0        0        0
+Rfsol 0.278 0.273 0.272 0.273 0.281 0.300 0.344 0.447 0.652 1.000 0.329
+Rbsol 0.275 0.270 0.267 0.270 0.280 0.299 0.336 0.421 0.610 0.999 0.321
+Tvis  0.741 0.745 0.735 0.721 0.703 0.665 0.583 0.424 0.198 0.000 0.618
+Rfvis 0.152 0.146 0.145 0.149 0.162 0.190 0.251 0.388 0.647 1.000 0.228
+Rbvis 0.154 0.148 0.145 0.148 0.160 0.184 0.231 0.335 0.556 0.999 0.212
+SHGC  0.620   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A
+Tvis_daylight:  0.800
+Layer ID#        44007    44066        0        0        0        0
 Tir              0.000    0.000        0        0        0        0
-Emis F           0.840    0.840        0        0        0        0
-Emis B           0.048    0.840        0        0        0        0
+Emis F           0.837    0.037        0        0        0        0
+Emis B           0.837    0.837        0        0        0        0
 Thickness(mm)      4.0      4.0        0        0        0        0
-Cond(W/m2-C     ) 200.0    200.0        0        0        0        0
-Spectral FileIPIPLR4.INTIP_KLAR4.INT     None     None     None     None
-Overall and Center of Glass Ig U-values (W/m2-C)
+Cond(W/m2-K     ) 250.0    250.0        0        0        0        0
+Spectral File 44007_GT_EUR 44066_GT_ENp         None         None         None         None
+Overall and Center of Glass Ig U-values (W/m2-K)
 Outdoor Temperature                 -17.8 C      15.6 C      26.7 C      37.8 C
 Solar      WdSpd  hcout hrout  hin
-(W/m2)     (m/s)     (W/m2-C)
-0        0.00  12.25  3.24  7.56  1.35 1.35  1.03 1.03  1.06 1.06  1.17 1.17
-0        6.71  25.47  3.21  7.58  1.41 1.41  1.06 1.06  1.08 1.08  1.21 1.21
-783        0.00  12.25  3.45  6.96  1.26 1.26  1.08 1.08  1.15 1.15  1.33 1.33
-783        6.71  25.47  3.33  7.21  1.38 1.38  1.09 1.09  1.14 1.14  1.31 1.31
+(W/m2)     (m/s)     (W/m2-K)
+0        0.00   0.00  0.00  0.00  1.27 1.27  1.05 1.05  1.07 1.07  1.09 1.09
+0        6.71   0.00  0.00  0.00  1.27 1.27  1.05 1.05  1.07 1.07  1.09 1.09
+783        0.00   0.00  0.00  0.00  1.27 1.27  1.05 1.05  1.07 1.07  1.09 1.09
+783        6.71   0.00  0.00  0.00  1.27 1.27  1.05 1.05  1.07 1.07  1.09 1.09
+BERKELEY LAB WINDOW v7.4.6.0  DOE-2 Data File : Multi Band Calculation : generated with Trnsys18.std
+Unit System : SI
+Name        : DOE-2 WINDOW LIB
+Desc        : GU_ClimaGuard_N_#2#5_Ar90
+Window ID   : 3300
+Tilt        : 90.0
+Glazings    : 3
+Frame       :  3 Wood                  2.270
+Spacer      :  2 Class2                0.068   1.550  -0.143
+Total Height: 1500.0 mm
+Total Width : 1200.0 mm
+Glass Height: 1360.3 mm
+Glass Width : 1060.3 mm
+Mullion     : None
+Gap        Thick    Cond  dCond    Vis   dVis   Dens   dDens     Pr     dPr
+1 Ar90/Air1 16.0 0.01712  5.410  2.062  6.300  1.711 -0.0060  0.687 -0.0001
+2 Ar90/Air1 16.0 0.01712  5.410  2.062  6.300  1.711 -0.0060  0.687 -0.0001
+3              0       0      0      0      0      0       0      0       0
+4              0       0      0      0      0      0       0      0       0
+5              0       0      0      0      0      0       0      0       0
+Angle     0    10    20    30    40    50    60    70    80    90 Hemis
+Tsol  0.436 0.435 0.430 0.423 0.414 0.392 0.334 0.228 0.095 0.000 0.359
+Abs1  0.155 0.156 0.159 0.161 0.161 0.161 0.165 0.167 0.134 0.000 0.158
+Abs2  0.056 0.056 0.057 0.058 0.060 0.062 0.063 0.060 0.050 0.000 0.059
+Abs3  0.063 0.064 0.065 0.065 0.064 0.062 0.058 0.048 0.025 0.000 0.058
+Abs4      0     0     0     0     0     0     0     0     0     0     0
+Abs5      0     0     0     0     0     0     0     0     0     0     0
+Abs6      0     0     0     0     0     0     0     0     0     0     0
+Rfsol 0.290 0.289 0.289 0.292 0.301 0.323 0.379 0.497 0.695 1.000 0.356
+Rbsol 0.290 0.289 0.289 0.292 0.301 0.323 0.379 0.497 0.695 1.000 0.356
+Tvis  0.627 0.627 0.619 0.611 0.598 0.565 0.482 0.327 0.137 0.000 0.517
+Rfvis 0.159 0.157 0.159 0.163 0.174 0.206 0.282 0.433 0.668 1.000 0.248
+Rbvis 0.159 0.157 0.159 0.163 0.174 0.206 0.282 0.433 0.668 1.000 0.248
+SHGC  0.540   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A   N/A
+Tvis_daylight:  0.710
+Layer ID#        33009    33000    33009        0        0        0
+Tir              0.000    0.000    0.000        0        0        0
+Emis F           0.860    0.860    0.040        0        0        0
+Emis B           0.040    0.860    0.860        0        0        0
+Thickness(mm)      4.0      4.0      4.0        0        0        0
+Cond(W/m2-K     ) 250.0    250.0    250.0        0        0        0
+Spectral File 33009_GU_Cli 33000_GU_Flo 33009_GU_Cli         None         None         None
+Overall and Center of Glass Ig U-values (W/m2-K)
+Outdoor Temperature                 -17.8 C      15.6 C      26.7 C      37.8 C
+Solar      WdSpd  hcout hrout  hin
+(W/m2)     (m/s)     (W/m2-K)
+0        0.00   0.00  0.00  0.00  0.67 0.67  0.60 0.60  0.62 0.62  0.63 0.63
+0        6.71   0.00  0.00  0.00  0.67 0.67  0.60 0.60  0.62 0.62  0.63 0.63
+783        0.00   0.00  0.00  0.00  0.67 0.67  0.60 0.60  0.62 0.62  0.63 0.63
+783        6.71   0.00  0.00  0.00  0.67 0.67  0.60 0.60  0.62 0.62  0.63 0.63
 *** END OF LIBRARY ***
 ************************************************************************************************************
 *WinID   Description                              Design         U-Value g-value T-sol Rf-sol T-vis-daylight
@@ -1035,7 +1085,8 @@ Solar      WdSpd  hcout hrout  hin
  12006   Pilkington OPTITHERM S2 Besch.#2 4/16/4  4/16/4           0.98  0.44  0.387  0.365  0.713
  12008   Pilkington OPTITHERM S Besch.#2#5 4/16/4/16/4  4/16/4/16/4      0.59  0.451  0.358  0.361  0.658
  13005   Saint Gobain CLIMATOP FUTUR AR 4/16/4/16/4  4/16/4/16/4      0.59  0.402  0.33  0.396  0.67
- 14002   Interpane IPLUS Neutral R #2  4/16/4     4/16/4           1.08  0.499  0.462  0.267  0.758
+ 14202   GT_SANCO_SILVERSTAR_ENplus_#3_KR90       4/10/4           1.07  0.62  0.542  0.278  0.8
+  3300   GU_ClimaGuard_N_#2#5_Ar90                4/16/4/16/4      0.62  0.54  0.436  0.29  0.71
 _EXTENSION_WINPOOL_END_
 
 _EXTENSION_BuildingGeometry_START_
