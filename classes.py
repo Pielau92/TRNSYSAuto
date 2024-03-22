@@ -404,7 +404,7 @@ class SimulationSeries:
 
             for index in range(len(self.sim_list)):
 
-                if not self.sim_success[index] or not self.sim_ignore[index]:
+                if not self.sim_success[index] and not self.sim_ignore[index]:
                     sim = self.sim_list[index]  # name of simulation
                     path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)  # path of dck-file
 
