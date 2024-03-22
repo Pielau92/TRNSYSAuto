@@ -86,7 +86,7 @@ def start_sim_queue(sim_queue):
         sim_series.import_sim_variants_excel()
 
         # WORKAROUND - perform Mapping
-        sim_series.mapping_routine()
+        # sim_series.mapping_routine()
 
         # start simulation series
         sim_series.start_sim_series()
