@@ -258,6 +258,57 @@ class SimulationSeries:
         # copy simulation variants Excel file into simulation series directory
         shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
 
+    def start_sim_solo(self, path_dck_file):
+        """start_sim, but without multiprocessing. Useful for debugging."""
+
+        # start application
+        app = Application(backend='uia')
+        app.start(self.path_exe)
+
+        try:
+            app.connect(title="Öffnen", timeout=2)  # self.timeout)
+            app.Öffnen.wait('visible')
+            app.Öffnen.set_focus()
+
+            # insert .dck file path
+            app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)
+
+            # press start button
+            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
+            Button.click_input()
+
+            # wait for the simulation window to open
+            app.Öffnen.wait_not('visible', timeout=10)
+
+        except Exception:  # TimeoutError:  todo: Add specific exceptions
+            # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
+            app.kill()
+            return
+
+        # add a time buffer before releasing the lock, which delays the next simulation
+        time.sleep(self.start_time_buffer)
+
+        window_title = 'TRNSYS: ' + path_dck_file
+
+        success_message = app.window(title=window_title)  # .window(control_type="Text")
+        success_message.wait('visible', timeout=60 * 10)
+
+        app.kill()  # close window
+        time.sleep(5)
+
+        # region DELETE REDUNDANT FILES
+
+        path_sim = os.path.dirname(path_dck_file)
+        # os.remove(path_dck_file[:-3] + 'lst')
+        redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
+        for redundant_file in redundant_file_list:
+            try:
+                os.remove(os.path.join(path_sim, redundant_file))
+            except FileNotFoundError:
+                pass
+
+        # endregion
+
     def start_sim(self, path_dck_file, lock):
         """Start simulation.
 
@@ -339,6 +390,7 @@ class SimulationSeries:
         # initialize lock
         lock = multiprocessing.Lock()
 
+        # self.multiprocessing_max = 1
         while not all(np.logical_or(self.sim_success, self.sim_ignore)):  # check for remaining simulations
 
             # initialize progress bar
@@ -346,28 +398,44 @@ class SimulationSeries:
             total = len(self.sim_list) - sum(np.logical_or(self.sim_success, self.sim_ignore))
             functions.progress_bar(progress, total)
 
-            self.logger.info('Starting simulation series from "{}"'.format(self.filename_sim_variants_excel))
+            message = 'Starting simulation series from "{}"'.format(self.filename_sim_variants_excel)
+            self.logger.info(message)
+            print(message)
 
             for index in range(len(self.sim_list)):
 
-                if not self.sim_success[index] or not self.sim_ignore[index]:
+                if not self.sim_success[index] and not self.sim_ignore[index]:
                     sim = self.sim_list[index]  # name of simulation
                     path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)  # path of dck-file
 
-                    # create a new process instance
-                    process = multiprocessing.Process(target=self.start_sim,
-                                                      args=(path_dck, lock))
-                    with lock:
-                        start_time = time.time()
-                        while len(multiprocessing.active_children()) >= self.multiprocessing_max:
-                            time.sleep(5)  # pause until number of active simulations drops below maximum
-                            if time.time() - start_time > self.timeout:
-                                sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-                        time.sleep(5)
-                        process.start()  # start process
-                    lock.acquire()
-                    progress += 1
-                    functions.progress_bar(progress, total)
+                    try:
+
+                        if self.multiprocessing_max > 1:
+
+                            # create a new process instance
+                            process = multiprocessing.Process(target=self.start_sim,
+                                                              args=(path_dck, lock))
+                            with lock:
+                                start_time = time.time()
+                                while len(multiprocessing.active_children()) >= self.multiprocessing_max:
+                                    time.sleep(5)  # pause until number of active simulations drops below maximum
+                                    if time.time() - start_time > self.timeout:
+                                        sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
+                                time.sleep(5)
+                                process.start()  # start process
+                            lock.acquire()
+
+                        elif self.multiprocessing_max == 1:
+                            self.start_sim_solo(path_dck)
+
+                    except:
+
+                        message = 'Error occurred during simulation of {}.'.format(sim)
+                        self.logger.error(message)
+                        print(message)
+
+                progress += 1
+                functions.progress_bar(progress, total)
 
             # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:
@@ -411,7 +479,9 @@ class SimulationSeries:
     def evaluation(self):
         """Perform evaluation routine."""
 
-        self.logger.info('Starting evaluation for {}'.format(self.filename_sim_variants_excel))
+        message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
+        self.logger.info(message)
+        print(message)
 
         variant_result_columns = pd.DataFrame()
         zone_1_with_df = pd.DataFrame()
@@ -477,6 +547,11 @@ class SimulationSeries:
         list_variant_directories = next(os.walk(self.dir_sim_series))[1]
         list_variant_directories.remove('evaluation')
         list_variant_directories = natsorted(list_variant_directories)
+
+        # initialize progress bar
+        progress = 0
+        total = len(list_variant_directories)
+        functions.progress_bar(progress, total)
 
         # read TRNSYS output and save data
         count_variant = 0
@@ -603,6 +678,9 @@ class SimulationSeries:
             variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
 
             # endregion
+
+            progress += 1
+            functions.progress_bar(progress, total)
 
         # copy into cumulative evaluation file
         self.excel_export_cumulative_evaluation(variant_result_columns, variant_parameter_df, zone_1_with_df,
@@ -1029,6 +1107,3 @@ class SchweikerDataFrame:
     #             ws.column_dimensions[col].width = value + 2
 
     # endregion
-
-
-

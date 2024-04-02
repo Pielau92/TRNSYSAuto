@@ -1,8 +1,8 @@
 *********************************************************************************
-*  TRNBuild   3.0.294
+*  TRNBuild   3.0.302
 *********************************************************************************
 *   BUILDING DESCRIPTIONS FILE TRNSYS
-*   FOR BUILDING:   D:\aufraumen\Dissertation\Trnsys\Diss_3Zonen\b18\Bruckverdichtet_3Zonen34cc_PHbetstatTabs.inf
+*   FOR BUILDING:   C:\Users\pierre\PycharmProjects\TimberBioC\Basisordner\b18\Bruckverdichtet_3Zonen34cc_PHbetstatTabs.inf
 *   GET BY WORKING WITH TRNBuild 1.0 for Windows
 *********************************************************************************
 *
@@ -35,8 +35,8 @@ PROPERTIES
  LR=6 : ST=0.15 : SJ=1 : LW=0.004 : DJ=0 : DS=0.2 : DR=2 : DP=512
 *--- comfort parameters -------------------
  DIAM-SENSOR=0.07 : EPS-SENSOR=0.82 : REFL-SENSOR=0.47 : ELV_AIRSPEED1=0.3 : ELV_AIRSPEED2=0.7 : ELV_AIRSPEED3=1.2
-*--- other -------------------
- FSCAL_TREGENZA=MEDIUM : SHM_MODE=0 : SURFGRID=0.2
+*--- solar matrix parameters -------------------
+ FSCAL_TREGENZA=MEDIUM : SHM_MODE=0 : SURFGRID=0.2 : GRIDDISTANCE=0.03
 *--- daylight  -------------------
  UDIMIN=100 : UDIMAX=2000 : DAMIN=300
 *
@@ -571,81 +571,6 @@ OUTPUTS
  AIRNODES = ZONE1 ZONE2 ZONE3 
  NTYPES =  23 : TSTAR - star node temperature of airnode
         =  24 : TMSURF - weighted mean surface temperature of airnode
-*
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  T R N S F L O W Multizone Airflow Network (Model COMIS 3.1)
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-MULTIZONE_AIRFLOW_NETWORK
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-CALCFLOWS=0
-*--------------------------------------------------------------------------------
-*  A d d  T R N S F L O W  C o m m a n d s
-*--------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-POLLUTANTS
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-LINKTYPES
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*--------------------------------------------------------------------------------
-*  C r a c k s
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  F a n s
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  S t r a i g h t   D u c t s
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  F l o w   C o n t r o l l e r s
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  L a r g e    V e r t i c a l   Openings (Windows+Doors)
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  T e s t   D a t a   C o m p o n e n t s
-*--------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-NODETYPES
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*--------------------------------------------------------------------------------
-*  E x t e r n a l   N o d e s  (CP VALUES)
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  A u x i l i a r y   N o d e s
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  T h e r m a l  Z o n e   N o d e s
-*--------------------------------------------------------------------------------
-*--------------------------------------------------------------------------------
-*  W i n d   v e  l o c i t y   p r o f i l e
-*--------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-WIND_VELOPROF
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
-*--------------------------------------------------------------------------------
-*  A i r l i n k   N e t w o r k
-*--------------------------------------------------------------------------------
-*
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-AIRLINK_NETWORK
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*
 *--------------------------------------------------------------------------------
 *  E n d
 *--------------------------------------------------------------------------------
@@ -1352,123 +1277,123 @@ _EXTENSION_VAMPARAMS_END_
 *:InpNR   | Label                                                       | Unit       | INPUT DESCRIPTION                                                      | Old label
 
 * |    1 | TAMB                                                         | C          | ambient temperature                                                    | TAMB
-* |    2 | RELHUMAMB                                                    | %          | relative ambient humidity                                               | ARELHUM
+* |    2 | RELHUMAMB                                                    | %          | relative ambient humidity                                              | ARELHUM
 * |    3 | TSKY                                                         | C          | effective sky temperature for longwave radiation exchange (FSKY)       | TSKY
 * |    4 | TSGRD                                                        | C          | effective ground temperature for longwave radiation exchange (1-FSKY)  | TSGRD
-* |    5 | AZEN                                                         | degrees    | solar zenith angle                                                        | AZEN 
+* |    5 | AZEN                                                         | degrees    | solar zenith angle                                                     | AZEN 
 * |    6 | AAZM                                                         | degrees    | solar azimuth angle (0=facing equator, 90=facing west, -90=270=facing east)  | AAZM 
-* |    7 | IT_HORI                                                      | kJ/hr.m^2  | Incident radiaiton for Orientation HORI                                | ITHORI    
-* |    8 | IT_SUED                                                      | kJ/hr.m^2  | Incident radiaiton for Orientation SUED                                | ITSUED    
-* |    9 | IT_WEST                                                      | kJ/hr.m^2  | Incident radiaiton for Orientation WEST                                | ITWEST    
-* |   10 | IT_NORD                                                      | kJ/hr.m^2  | Incident radiaiton for Orientation NORD                                | ITNORD    
-* |   11 | IT_OST                                                       | kJ/hr.m^2  | Incident radiaiton for Orientation OST                                 | ITOST     
-* |   12 | IT_ORI21                                                     | kJ/hr.m^2  | Incident radiaiton for Orientation ORI21                               | ITORI21   
-* |   13 | IT_ORI22                                                     | kJ/hr.m^2  | Incident radiaiton for Orientation ORI22                               | ITORI22   
-* |   14 | IT_ORI23                                                     | kJ/hr.m^2  | Incident radiaiton for Orientation ORI23                               | ITORI23   
-* |   15 | IT_ORI24                                                     | kJ/hr.m^2  | Incident radiaiton for Orientation ORI24                               | ITORI24   
-* |   16 | IB_HORI                                                      | kJ/hr.m^2  | Incident beam radiaiton for Orientation HORI                           | IBHORI    
-* |   17 | IB_SUED                                                      | kJ/hr.m^2  | Incident beam radiaiton for Orientation SUED                           | IBSUED    
-* |   18 | IB_WEST                                                      | kJ/hr.m^2  | Incident beam radiaiton for Orientation WEST                           | IBWEST    
-* |   19 | IB_NORD                                                      | kJ/hr.m^2  | Incident beam radiaiton for Orientation NORD                           | IBNORD    
-* |   20 | IB_OST                                                       | kJ/hr.m^2  | Incident beam radiaiton for Orientation OST                            | IBOST     
-* |   21 | IB_ORI21                                                     | kJ/hr.m^2  | Incident beam radiaiton for Orientation ORI21                          | IBORI21   
-* |   22 | IB_ORI22                                                     | kJ/hr.m^2  | Incident beam radiaiton for Orientation ORI22                          | IBORI22   
-* |   23 | IB_ORI23                                                     | kJ/hr.m^2  | Incident beam radiaiton for Orientation ORI23                          | IBORI23   
-* |   24 | IB_ORI24                                                     | kJ/hr.m^2  | Incident beam radiaiton for Orientation ORI24                          | IBORI24   
-* |   25 | AI_HORI                                                      | degrees    | angle of incidence for radiation HORI                                | AIHORI    
-* |   26 | AI_SUED                                                      | degrees    | angle of incidence for radiation SUED                                | AISUED    
-* |   27 | AI_WEST                                                      | degrees    | angle of incidence for radiation WEST                                | AIWEST    
-* |   28 | AI_NORD                                                      | degrees    | angle of incidence for radiation NORD                                | AINORD    
-* |   29 | AI_OST                                                       | degrees    | angle of incidence for radiation OST                                 | AIOST     
-* |   30 | AI_ORI21                                                     | degrees    | angle of incidence for radiation ORI21                               | AIORI21   
-* |   31 | AI_ORI22                                                     | degrees    | angle of incidence for radiation ORI22                               | AIORI22   
-* |   32 | AI_ORI23                                                     | degrees    | angle of incidence for radiation ORI23                               | AIORI23   
-* |   33 | AI_ORI24                                                     | degrees    | angle of incidence for radiation ORI24                               | AIORI24   
-* |   34 | GRDREF                                                       | any        | ground reflectance (range 0...1)                     | GRDREF 
-* |   35 | INT01                                                        | any        | Input                                                                  | INT01     
-* |   36 | INT02                                                        | any        | Input                                                                  | INT02     
-* |   37 | INT03                                                        | any        | Input                                                                  | INT03     
-* |   38 | TERD1                                                        | any        | Input                                                                  | TERD1     
-* |   39 | TERD2                                                        | any        | Input                                                                  | TERD2     
-* |   40 | TERD3                                                        | any        | Input                                                                  | TERD3     
-* |   41 | PERS1                                                        | any        | Input                                                                  | PERS1     
-* |   42 | PERS2                                                        | any        | Input                                                                  | PERS2     
-* |   43 | PERS3                                                        | any        | Input                                                                  | PERS3     
-* |   44 | COMP1                                                        | any        | Input                                                                  | COMP1     
-* |   45 | COMP2                                                        | any        | Input                                                                  | COMP2     
-* |   46 | COMP3                                                        | any        | Input                                                                  | COMP3     
-* |   47 | LICHT1                                                       | any        | Input                                                                  | LICHT1    
-* |   48 | LICHT2                                                       | any        | Input                                                                  | LICHT2    
-* |   49 | LICHT3                                                       | any        | Input                                                                  | LICHT3    
-* |   50 | ILF1                                                         | any        | Input                                                                  | ILF1      
-* |   51 | ILF2                                                         | any        | Input                                                                  | ILF2      
-* |   52 | ILF3                                                         | any        | Input                                                                  | ILF3      
-* |   53 | INF1                                                         | any        | Input                                                                  | INF1      
-* |   54 | INF2                                                         | any        | Input                                                                  | INF2      
-* |   55 | INF3                                                         | any        | Input                                                                  | INF3      
-* |   56 | VENT1                                                        | any        | Input                                                                  | VENT1     
-* |   57 | VENT2                                                        | any        | Input                                                                  | VENT2     
-* |   58 | VENT3                                                        | any        | Input                                                                  | VENT3     
-* |   59 | TZU1                                                         | any        | Input                                                                  | TZU1      
-* |   60 | TZU2                                                         | any        | Input                                                                  | TZU2      
-* |   61 | TZU3                                                         | any        | Input                                                                  | TZU3      
-* |   62 | ABSZU1                                                       | any        | Input                                                                  | ABSZU1    
-* |   63 | ABSZU2                                                       | any        | Input                                                                  | ABSZU2    
-* |   64 | ABSZU3                                                       | any        | Input                                                                  | ABSZU3    
-* |   65 | SCHATTS1                                                     | any        | Input                                                                  | SCHATTS1  
-* |   66 | SCHATTS2                                                     | any        | Input                                                                  | SCHATTS2  
-* |   67 | SCHATTS3                                                     | any        | Input                                                                  | SCHATTS3  
-* |   68 | SCHATTW1                                                     | any        | Input                                                                  | SCHATTW1  
-* |   69 | SCHATTW2                                                     | any        | Input                                                                  | SCHATTW2  
-* |   70 | SCHATTW3                                                     | any        | Input                                                                  | SCHATTW3  
-* |   71 | SCHATTO1                                                     | any        | Input                                                                  | SCHATTO1  
-* |   72 | SCHATTO2                                                     | any        | Input                                                                  | SCHATTO2  
-* |   73 | SCHATTO3                                                     | any        | Input                                                                  | SCHATTO3  
-* |   74 | SCHATTN1                                                     | any        | Input                                                                  | SCHATTN1  
-* |   75 | SCHATTN2                                                     | any        | Input                                                                  | SCHATTN2  
-* |   76 | SCHATTN3                                                     | any        | Input                                                                  | SCHATTN3  
-* |   77 | SCHATTI1                                                     | any        | Input                                                                  | SCHATTI1  
-* |   78 | SCHATTI2                                                     | any        | Input                                                                  | SCHATTI2  
-* |   79 | SCHATTI3                                                     | any        | Input                                                                  | SCHATTI3  
-* |   80 | CLO1                                                         | any        | Input                                                                  | CLO1      
-* |   81 | CLO2                                                         | any        | Input                                                                  | CLO2      
-* |   82 | CLO3                                                         | any        | Input                                                                  | CLO3      
-* |   83 | MET1                                                         | any        | Input                                                                  | MET1      
-* |   84 | MET2                                                         | any        | Input                                                                  | MET2      
-* |   85 | MET3                                                         | any        | Input                                                                  | MET3      
-* |   86 | VEL1                                                         | any        | Input                                                                  | VEL1      
-* |   87 | VEL2                                                         | any        | Input                                                                  | VEL2      
-* |   88 | VEL3                                                         | any        | Input                                                                  | VEL3      
-* |   89 | HEIZ1                                                        | any        | Input                                                                  | HEIZ1     
-* |   90 | HEIZ2                                                        | any        | Input                                                                  | HEIZ2     
-* |   91 | HEIZ3                                                        | any        | Input                                                                  | HEIZ3     
-* |   92 | HEIZMAX1                                                     | any        | Input                                                                  | HEIZMAX1  
-* |   93 | HEIZMAX2                                                     | any        | Input                                                                  | HEIZMAX2  
-* |   94 | HEIZMAX3                                                     | any        | Input                                                                  | HEIZMAX3  
-* |   95 | TKUEHL1                                                      | any        | Input                                                                  | TKUEHL1   
-* |   96 | TKUEHL2                                                      | any        | Input                                                                  | TKUEHL2   
-* |   97 | TKUEHL3                                                      | any        | Input                                                                  | TKUEHL3   
-* |   98 | KUEHLMAX1                                                    | any        | Input                                                                  | KUEHLMAX1 
-* |   99 | KUEHLMAX2                                                    | any        | Input                                                                  | KUEHLMAX2 
-* |  100 | KUEHLMAX3                                                    | any        | Input                                                                  | KUEHLMAX3 
-* |  101 | RELMIN1                                                      | any        | Input                                                                  | RELMIN1   
-* |  102 | RELMIN2                                                      | any        | Input                                                                  | RELMIN2   
-* |  103 | RELMIN3                                                      | any        | Input                                                                  | RELMIN3   
-* |  104 | ABSMAX1                                                      | any        | Input                                                                  | ABSMAX1   
-* |  105 | ABSMAX2                                                      | any        | Input                                                                  | ABSMAX2   
-* |  106 | ABSMAX3                                                      | any        | Input                                                                  | ABSMAX3   
-* |  107 | TINBTA1                                                      | any        | Input                                                                  | TINBTA1   
-* |  108 | TINBTA2                                                      | any        | Input                                                                  | TINBTA2   
-* |  109 | TINBTA3                                                      | any        | Input                                                                  | TINBTA3   
-* |  110 | MINBTA1                                                      | any        | Input                                                                  | MINBTA1   
-* |  111 | MINBTA2                                                      | any        | Input                                                                  | MINBTA2   
-* |  112 | MINBTA3                                                      | any        | Input                                                                  | MINBTA3   
-* |  113 | WIND                                                         | any        | Input                                                                  | WIND      
-* |  114 | DRUCK                                                        | any        | Input                                                                  | DRUCK     
-* |  115 | QDAMPF                                                       | any        | Input                                                                  | QDAMPF    
-* |  116 | TINBTAO1                                                     | any        | Input                                                                  | TINBTAO1  
-* |  117 | TINBTAO2                                                     | any        | Input                                                                  | TINBTAO2  
-* |  118 | TINBTAO3                                                     | any        | Input                                                                  | TINBTAO3  
+* |    7 | IT_HORI                                                      | kJ/hr.m^2  | Incident radiaiton for Orientation HORI                                | ITHORI                                    
+* |    8 | IT_SUED                                                      | kJ/hr.m^2  | Incident radiaiton for Orientation SUED                                | ITSUED                                    
+* |    9 | IT_WEST                                                      | kJ/hr.m^2  | Incident radiaiton for Orientation WEST                                | ITWEST                                    
+* |   10 | IT_NORD                                                      | kJ/hr.m^2  | Incident radiaiton for Orientation NORD                                | ITNORD                                    
+* |   11 | IT_OST                                                       | kJ/hr.m^2  | Incident radiaiton for Orientation OST                                 | ITOST                                     
+* |   12 | IT_ORI21                                                     | kJ/hr.m^2  | Incident radiaiton for Orientation ORI21                               | ITORI21                                   
+* |   13 | IT_ORI22                                                     | kJ/hr.m^2  | Incident radiaiton for Orientation ORI22                               | ITORI22                                   
+* |   14 | IT_ORI23                                                     | kJ/hr.m^2  | Incident radiaiton for Orientation ORI23                               | ITORI23                                   
+* |   15 | IT_ORI24                                                     | kJ/hr.m^2  | Incident radiaiton for Orientation ORI24                               | ITORI24                                   
+* |   16 | IB_HORI                                                      | kJ/hr.m^2  | Incident beam radiaiton for Orientation HORI                           | IBHORI                                    
+* |   17 | IB_SUED                                                      | kJ/hr.m^2  | Incident beam radiaiton for Orientation SUED                           | IBSUED                                    
+* |   18 | IB_WEST                                                      | kJ/hr.m^2  | Incident beam radiaiton for Orientation WEST                           | IBWEST                                    
+* |   19 | IB_NORD                                                      | kJ/hr.m^2  | Incident beam radiaiton for Orientation NORD                           | IBNORD                                    
+* |   20 | IB_OST                                                       | kJ/hr.m^2  | Incident beam radiaiton for Orientation OST                            | IBOST                                     
+* |   21 | IB_ORI21                                                     | kJ/hr.m^2  | Incident beam radiaiton for Orientation ORI21                          | IBORI21                                   
+* |   22 | IB_ORI22                                                     | kJ/hr.m^2  | Incident beam radiaiton for Orientation ORI22                          | IBORI22                                   
+* |   23 | IB_ORI23                                                     | kJ/hr.m^2  | Incident beam radiaiton for Orientation ORI23                          | IBORI23                                   
+* |   24 | IB_ORI24                                                     | kJ/hr.m^2  | Incident beam radiaiton for Orientation ORI24                          | IBORI24                                   
+* |   25 | AI_HORI                                                      | degrees    | angle of incidence for radiation HORI                                | AIHORI                                    
+* |   26 | AI_SUED                                                      | degrees    | angle of incidence for radiation SUED                                | AISUED                                    
+* |   27 | AI_WEST                                                      | degrees    | angle of incidence for radiation WEST                                | AIWEST                                    
+* |   28 | AI_NORD                                                      | degrees    | angle of incidence for radiation NORD                                | AINORD                                    
+* |   29 | AI_OST                                                       | degrees    | angle of incidence for radiation OST                                 | AIOST                                     
+* |   30 | AI_ORI21                                                     | degrees    | angle of incidence for radiation ORI21                               | AIORI21                                   
+* |   31 | AI_ORI22                                                     | degrees    | angle of incidence for radiation ORI22                               | AIORI22                                   
+* |   32 | AI_ORI23                                                     | degrees    | angle of incidence for radiation ORI23                               | AIORI23                                   
+* |   33 | AI_ORI24                                                     | degrees    | angle of incidence for radiation ORI24                               | AIORI24                                   
+* |   34 | GRDREF                                                       | any        | ground reflectance (range 0...1)                                       | GRDREF 
+* |   35 | INT01                                                        | any        | Input                                                                                                                                                                      | INT01                                   
+* |   36 | INT02                                                        | any        | Input                                                                                                                                                                      | INT02                                   
+* |   37 | INT03                                                        | any        | Input                                                                                                                                                                      | INT03                                   
+* |   38 | TERD1                                                        | any        | Input                                                                                                                                                                      | TERD1                                   
+* |   39 | TERD2                                                        | any        | Input                                                                                                                                                                      | TERD2                                   
+* |   40 | TERD3                                                        | any        | Input                                                                                                                                                                      | TERD3                                   
+* |   41 | PERS1                                                        | any        | Input                                                                                                                                                                      | PERS1                                   
+* |   42 | PERS2                                                        | any        | Input                                                                                                                                                                      | PERS2                                   
+* |   43 | PERS3                                                        | any        | Input                                                                                                                                                                      | PERS3                                   
+* |   44 | COMP1                                                        | any        | Input                                                                                                                                                                      | COMP1                                   
+* |   45 | COMP2                                                        | any        | Input                                                                                                                                                                      | COMP2                                   
+* |   46 | COMP3                                                        | any        | Input                                                                                                                                                                      | COMP3                                   
+* |   47 | LICHT1                                                       | any        | Input                                                                                                                                                                      | LICHT1                                  
+* |   48 | LICHT2                                                       | any        | Input                                                                                                                                                                      | LICHT2                                  
+* |   49 | LICHT3                                                       | any        | Input                                                                                                                                                                      | LICHT3                                  
+* |   50 | ILF1                                                         | any        | Input                                                                                                                                                                      | ILF1                                    
+* |   51 | ILF2                                                         | any        | Input                                                                                                                                                                      | ILF2                                    
+* |   52 | ILF3                                                         | any        | Input                                                                                                                                                                      | ILF3                                    
+* |   53 | INF1                                                         | any        | Input                                                                                                                                                                      | INF1                                    
+* |   54 | INF2                                                         | any        | Input                                                                                                                                                                      | INF2                                    
+* |   55 | INF3                                                         | any        | Input                                                                                                                                                                      | INF3                                    
+* |   56 | VENT1                                                        | any        | Input                                                                                                                                                                      | VENT1                                   
+* |   57 | VENT2                                                        | any        | Input                                                                                                                                                                      | VENT2                                   
+* |   58 | VENT3                                                        | any        | Input                                                                                                                                                                      | VENT3                                   
+* |   59 | TZU1                                                         | any        | Input                                                                                                                                                                      | TZU1                                    
+* |   60 | TZU2                                                         | any        | Input                                                                                                                                                                      | TZU2                                    
+* |   61 | TZU3                                                         | any        | Input                                                                                                                                                                      | TZU3                                    
+* |   62 | ABSZU1                                                       | any        | Input                                                                                                                                                                      | ABSZU1                                  
+* |   63 | ABSZU2                                                       | any        | Input                                                                                                                                                                      | ABSZU2                                  
+* |   64 | ABSZU3                                                       | any        | Input                                                                                                                                                                      | ABSZU3                                  
+* |   65 | SCHATTS1                                                     | any        | Input                                                                                                                                                                      | SCHATTS1                                
+* |   66 | SCHATTS2                                                     | any        | Input                                                                                                                                                                      | SCHATTS2                                
+* |   67 | SCHATTS3                                                     | any        | Input                                                                                                                                                                      | SCHATTS3                                
+* |   68 | SCHATTW1                                                     | any        | Input                                                                                                                                                                      | SCHATTW1                                
+* |   69 | SCHATTW2                                                     | any        | Input                                                                                                                                                                      | SCHATTW2                                
+* |   70 | SCHATTW3                                                     | any        | Input                                                                                                                                                                      | SCHATTW3                                
+* |   71 | SCHATTO1                                                     | any        | Input                                                                                                                                                                      | SCHATTO1                                
+* |   72 | SCHATTO2                                                     | any        | Input                                                                                                                                                                      | SCHATTO2                                
+* |   73 | SCHATTO3                                                     | any        | Input                                                                                                                                                                      | SCHATTO3                                
+* |   74 | SCHATTN1                                                     | any        | Input                                                                                                                                                                      | SCHATTN1                                
+* |   75 | SCHATTN2                                                     | any        | Input                                                                                                                                                                      | SCHATTN2                                
+* |   76 | SCHATTN3                                                     | any        | Input                                                                                                                                                                      | SCHATTN3                                
+* |   77 | SCHATTI1                                                     | any        | Input                                                                                                                                                                      | SCHATTI1                                
+* |   78 | SCHATTI2                                                     | any        | Input                                                                                                                                                                      | SCHATTI2                                
+* |   79 | SCHATTI3                                                     | any        | Input                                                                                                                                                                      | SCHATTI3                                
+* |   80 | CLO1                                                         | any        | Input                                                                                                                                                                      | CLO1                                    
+* |   81 | CLO2                                                         | any        | Input                                                                                                                                                                      | CLO2                                    
+* |   82 | CLO3                                                         | any        | Input                                                                                                                                                                      | CLO3                                    
+* |   83 | MET1                                                         | any        | Input                                                                                                                                                                      | MET1                                    
+* |   84 | MET2                                                         | any        | Input                                                                                                                                                                      | MET2                                    
+* |   85 | MET3                                                         | any        | Input                                                                                                                                                                      | MET3                                    
+* |   86 | VEL1                                                         | any        | Input                                                                                                                                                                      | VEL1                                    
+* |   87 | VEL2                                                         | any        | Input                                                                                                                                                                      | VEL2                                    
+* |   88 | VEL3                                                         | any        | Input                                                                                                                                                                      | VEL3                                    
+* |   89 | HEIZ1                                                        | any        | Input                                                                                                                                                                      | HEIZ1                                   
+* |   90 | HEIZ2                                                        | any        | Input                                                                                                                                                                      | HEIZ2                                   
+* |   91 | HEIZ3                                                        | any        | Input                                                                                                                                                                      | HEIZ3                                   
+* |   92 | HEIZMAX1                                                     | any        | Input                                                                                                                                                                      | HEIZMAX1                                
+* |   93 | HEIZMAX2                                                     | any        | Input                                                                                                                                                                      | HEIZMAX2                                
+* |   94 | HEIZMAX3                                                     | any        | Input                                                                                                                                                                      | HEIZMAX3                                
+* |   95 | TKUEHL1                                                      | any        | Input                                                                                                                                                                      | TKUEHL1                                 
+* |   96 | TKUEHL2                                                      | any        | Input                                                                                                                                                                      | TKUEHL2                                 
+* |   97 | TKUEHL3                                                      | any        | Input                                                                                                                                                                      | TKUEHL3                                 
+* |   98 | KUEHLMAX1                                                    | any        | Input                                                                                                                                                                      | KUEHLMAX1                               
+* |   99 | KUEHLMAX2                                                    | any        | Input                                                                                                                                                                      | KUEHLMAX2                               
+* |  100 | KUEHLMAX3                                                    | any        | Input                                                                                                                                                                      | KUEHLMAX3                               
+* |  101 | RELMIN1                                                      | any        | Input                                                                                                                                                                      | RELMIN1                                 
+* |  102 | RELMIN2                                                      | any        | Input                                                                                                                                                                      | RELMIN2                                 
+* |  103 | RELMIN3                                                      | any        | Input                                                                                                                                                                      | RELMIN3                                 
+* |  104 | ABSMAX1                                                      | any        | Input                                                                                                                                                                      | ABSMAX1                                 
+* |  105 | ABSMAX2                                                      | any        | Input                                                                                                                                                                      | ABSMAX2                                 
+* |  106 | ABSMAX3                                                      | any        | Input                                                                                                                                                                      | ABSMAX3                                 
+* |  107 | TINBTA1                                                      | any        | Input                                                                                                                                                                      | TINBTA1                                 
+* |  108 | TINBTA2                                                      | any        | Input                                                                                                                                                                      | TINBTA2                                 
+* |  109 | TINBTA3                                                      | any        | Input                                                                                                                                                                      | TINBTA3                                 
+* |  110 | MINBTA1                                                      | any        | Input                                                                                                                                                                      | MINBTA1                                 
+* |  111 | MINBTA2                                                      | any        | Input                                                                                                                                                                      | MINBTA2                                 
+* |  112 | MINBTA3                                                      | any        | Input                                                                                                                                                                      | MINBTA3                                 
+* |  113 | WIND                                                         | any        | Input                                                                                                                                                                      | WIND                                    
+* |  114 | DRUCK                                                        | any        | Input                                                                                                                                                                      | DRUCK                                   
+* |  115 | QDAMPF                                                       | any        | Input                                                                                                                                                                      | QDAMPF                                  
+* |  116 | TINBTAO1                                                     | any        | Input                                                                                                                                                                      | TINBTAO1                                
+* |  117 | TINBTAO2                                                     | any        | Input                                                                                                                                                                      | TINBTAO2                                
+* |  118 | TINBTAO3                                                     | any        | Input                                                                                                                                                                      | TINBTAO3                                
 
 
 
