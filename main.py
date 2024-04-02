@@ -9,9 +9,9 @@ from tkinter import filedialog  # explicit import required, as calling from tk.f
 """In case the askdirectory/askfile window does not open, try this (fixes compatibility issues between tkinter and
  pywinauto)."""
 
+
 # import sys
 # sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
-
 # endregion
 
 
@@ -21,9 +21,7 @@ def main():
     # region FIX directory/file asked multiple times
     """for some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
     directory/file is asked multiple times), therefore the function "freeze_support" is necessary."""
-
     multiprocessing.freeze_support()
-
     # endregion
 
     sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
@@ -84,9 +82,6 @@ def start_sim_queue(sim_queue):
 
         # import simulation variants Excel file
         sim_series.import_sim_variants_excel()
-
-        # WORKAROUND - perform Mapping
-        # sim_series.mapping_routine()
 
         # start simulation series
         sim_series.start_sim_series()

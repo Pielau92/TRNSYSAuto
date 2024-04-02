@@ -93,12 +93,6 @@ class SimulationSeries:
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
 
-        # TEMPORARY WORKAROUND
-        """At the moment, simulation variants exist that point to non-existent .b17 files. As a temporary solution to solve
-        this problem (without changing the simulation variants), this method performs a mapping process. Thereby, the
-        file names of the non-existent files is changed to the next similar .b17 file that actually exists."""
-        self.b17mapping = {}
-
     def initialize_logging(self):
         """Initialize logging file."""
 
@@ -121,6 +115,7 @@ class SimulationSeries:
         name_excelsheet_settings : str
             Name of the Excel sheet within the settings Excel file, where the settings are stored.
         """
+
         # read Excel data
         excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, filename_settings_excel))
 
@@ -428,7 +423,7 @@ class SimulationSeries:
                         elif self.multiprocessing_max == 1:
                             self.start_sim_solo(path_dck)
 
-                    except:
+                    except Exception:
 
                         message = 'Error occurred during simulation of {}.'.format(sim)
                         self.logger.error(message)
@@ -491,9 +486,6 @@ class SimulationSeries:
 
         # region COLUMN NAMES
 
-        trnsys_outdoor_temperature = 'ta'
-
-        # zones 1-3
         var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1', 'met1',
                           'work1']
         var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2',
@@ -716,79 +708,6 @@ class SimulationSeries:
                                        startcol=7, index=False, header=False)
             result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
                                    startcol=2, index=False, header=False)
-
-    def mapping_routine(self):
-        """TEMPORARY WORKAROUND.
-
-        At the moment, simulation variants exist that point to non-existent .b17 files. As a temporary solution to solve
-        this problem (without changing the simulation variants), this method performs a mapping process. Thereby, the
-        file names of the non-existent files is changed to the next similar .b17 file that actually exists."""
-
-        file_name = 'Mapping.xlsx'  # file name of Excel file containing the mapping instructions
-        sheet_name = 'Mapping'  # name of sheet within the Excel file
-
-        # read input Excel file
-        excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, file_name))
-
-        # convert Excel data into pandas DataFrame
-        b17mapping = excel_data.parse(sheet_name)
-
-        # Save original values for comparison
-        original_values = self.b18_series.copy()
-
-        # mapping
-        self.b18_series.replace(b17mapping.set_index('Original')['Mapping'], inplace=True)
-
-        # check which values were actually replaced
-        replaced_indices = original_values != self.b18_series
-        replaced_values = self.b18_series[replaced_indices]
-
-        # Write replaced values into logging file
-        self.logger.warning("Im Rahmen des Mappings Ersetzte Werte:")
-        self.logger.warning(replaced_values)
-
-    # region BIN
-
-    # def interface_TimberBioC(self):
-    #     # remove index from column headers
-    #     for col in self._df.iloc[:, 1:].columns:
-    #         # print(col)
-    #         self._df.columns = self._df.columns.str.replace(col, col[:-1])
-    #
-    #     # create table with temporal information
-    #     date_info = pd.to_datetime(self.df[self.df.columns[0]])
-    #     date_df = pd.concat(
-    #         [date_info.dt.year, date_info.dt.month, date_info.dt.day, date_info.dt.hour, date_info.dt.minute], axis=1)
-    #     date_df.columns = ['Jahr', 'Monat', 'Tag', 'Stunde', 'Minute']
-    #
-    #     # split zones and concatenate temporal information
-    #     dummy = pd.DataFrame(np.random.randint(0, 100, size=(8760, 1)), columns=['Aussentemp'])
-    #     df_z1 = pd.concat([date_df, self._df.iloc[:, 2:8], dummy], axis=1)
-    #     df_z2 = pd.concat([date_df, self._df.iloc[:, 9:15], dummy], axis=1)
-    #     df_z3 = pd.concat([date_df, self._df.iloc[:, 16:22], dummy], axis=1)
-    #
-    #     return df_z1, df_z2, df_z3
-    # region SAVE DATA (ALTERNATIVE)
-    """Alternative, takes up to 10x more time though, therefore not in use at the moment."""
-    # variant_output = pd.concat([
-    #     variant_parameter_df[['File', 'Parameter', dir_variant]],           # variant parameters
-    #     pd.DataFrame(index=range(59 - 2 - len(variant_parameter_df)))],     # empty until row 60
-    #     ignore_index=True)
-    # variant_output.columns = range(len(variant_output.columns))
-    #
-    # # Add row with column names as first row
-    # result.loc[-1] = result.columns.tolist()
-    # result.index = result.index + 1
-    # result.sort_index(inplace=True)
-    # result.columns = range(1, len(result.columns)+1)
-    #
-    # variant_output = pd.concat([variant_output, result], ignore_index=True)     # results
-    #
-    # self.excel_export_variant_evaluation(save_path_variant_output, variant_output)
-
-    # endregion
-
-    # endregion
 
 
 class SchweikerDataFrame:
@@ -1066,44 +985,3 @@ class SchweikerDataFrame:
             ppdColumn[i] = ppd
 
         return pmvColumn, ppdColumn
-
-    # region BIN
-
-    # def read_input_excel(self, sheet_name='Sheet1', skiprows=0):
-    #     # ask simulation variants Excel file path(s)
-    #     root = tk.Tk()
-    #     root.withdraw()
-    #     path_input_file = filedialog.askopenfilename(filetypes=[("Excel files", ".xlsx .xls")],
-    #                                                  title='Select input Excel file')
-    #     # read Excel data
-    #     excel_data = pd.ExcelFile(path_input_file)
-    #     # convert Excel data into pandas DataFrame
-    #     self._df = pd.DataFrame(excel_data.parse(sheet_name))  # , index_col=0)
-    #
-    #     if skiprows > 0:
-    #         self._df.columns = self._df.iloc[skiprows]  # set column headers
-    #         self._df = self._df.drop(range(0, skiprows + 1))  # remove unwanted rows
-    #         self._df = self._df.reset_index(drop=True)
-    #
-    # def write_output_excel(self):
-    #     # ask output Excel file path
-    #     root = tk.Tk()
-    #     root.withdraw()
-    #     output_path = filedialog.askopenfilename(filetypes=[("Excel files", ".xlsx .xls")],
-    #                                              title='Select output Excel file')
-    #
-    #     # write into Excel file
-    #     with pd.ExcelWriter(output_path, engine="openpyxl", mode="a", datetime_format="DD.MM.YYYY HH:MM") as writer:
-    #
-    #         key = 'output'
-    #         self._df.to_excel(writer, sheet_name=key)
-    #         ws = writer.sheets[key]
-    #         dims = {}
-    #         for row in ws.rows:
-    #             for cell in row:
-    #                 if cell.value:
-    #                     dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
-    #         for col, value in dims.items():
-    #             ws.column_dimensions[col].width = value + 2
-
-    # endregion
