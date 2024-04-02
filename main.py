@@ -24,8 +24,55 @@ def main():
     multiprocessing.freeze_support()
     # endregion
 
+    # start_gui()
     sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
     start_sim_queue(sim_queue)  # start calculation, evaluation included
+
+
+def start_gui():
+    """Start GUI"""
+
+    def simulate_and_evaluate():
+        window.destroy()
+
+    def simulate():
+        window.destroy()
+
+    def evaluate():
+        window.destroy()
+
+    window = tk.Tk()
+    label = tk.Label(text="Aktion auswählen")
+    label.pack()
+
+    btn_sim_and_eval = tk.Button(
+        window,
+        text="Simulate and evaluate",
+        width=25,
+        height=5,
+        command=simulate_and_evaluate,
+    )
+    btn_sim_and_eval.pack()
+
+    btn_sim = tk.Button(
+        window,
+        text="Simulate only",
+        width=25,
+        height=5,
+        command=simulate,
+    )
+    btn_sim.pack()
+
+    btn_eval = tk.Button(
+        window,
+        text="Evaluate only",
+        width=25,
+        height=5,
+        command=evaluate,
+    )
+    btn_eval.pack()
+
+    window.mainloop()
 
 
 def create_sim_queue():
