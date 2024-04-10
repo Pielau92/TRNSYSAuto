@@ -159,9 +159,9 @@ def progress_bar(progress, total):
     print(f"\r|{bar}| {percent:.2f}%", end="\r")
 
 
-def load(self, load_path):
+def load(savefile_path):
 
-    with open(load_path, 'rb') as file:
+    with open(savefile_path, 'rb') as file:
         return pickle.load(file)
 
 
