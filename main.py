@@ -39,6 +39,8 @@ def start_gui():
             sim_series.start()  # start calculation
             sim_series.evaluation()     # start evaluation
 
+        window.quit()
+
     def simulate():
         window.destroy()    # close GUI window
 
@@ -47,11 +49,15 @@ def start_gui():
         for sim_series in sim_queue:
             sim_series.start()  # start calculation
 
+        window.quit()
+
     def evaluate():
         window.destroy()    # close GUI window
 
         # ask simulation series directory
         sim_series_dir = functions.ask_dir()
+
+        # todo: load SimulationSeries object here
 
         # find path to simulation variants excel file
         path_sim_variants_excel = os.path.join(
@@ -84,7 +90,8 @@ def start_gui():
         sim_series_path = functions.ask_dir()
         savefile_path = os.path.join(sim_series_path, filename)
         sim_series = functions.load(savefile_path)
-        pass # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
+
+        window.quit() # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
 
     # region GUI
 
