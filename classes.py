@@ -111,7 +111,7 @@ class SimulationSeries:
         self.import_sim_variants_excel()
 
         # save SimulationSeries object
-
+        self.save(self.dir_sim_series)
 
         # start simulation series
         self.start_sim_series()
