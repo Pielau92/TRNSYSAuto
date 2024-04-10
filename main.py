@@ -1,19 +1,15 @@
+# region FIX askdirectory/askfilename window does not open
+"""In case the askdirectory/askfile window does not open, try this (fixes compatibility issues between tkinter and
+ pywinauto). This must happen before importing pywinauto and tkinter."""
+import sys
+sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
+# endregion
+
 import multiprocessing
 import classes
 import functions
 import os
 import tkinter as tk
-
-from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
-
-# region FIX askdirectory/askfilename window does not open
-"""In case the askdirectory/askfile window does not open, try this (fixes compatibility issues between tkinter and
- pywinauto)."""
-
-
-# import sys
-# sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
-# endregion
 
 
 def main():
@@ -54,15 +50,19 @@ def start_gui():
     def evaluate():
         window.destroy()    # close GUI window
 
+        # ask simulation series directory
+        sim_series_path = functions.ask_dir()
+
     def continue_simulation():
         window.destroy()  # close GUI window
 
-        # ask simulation series savefile
-        sim_series_path = functions.ask_filename()
+        filename = 'SimulationSeries.pickle'
 
-        sim_series = functions.load(sim_series_path)
-
-        # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
+        # ask simulation series directory
+        sim_series_path = functions.ask_dir()
+        savefile_path = os.path.join(sim_series_path, filename)
+        sim_series = functions.load(savefile_path)
+        pass # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
 
     # region GUI
 
