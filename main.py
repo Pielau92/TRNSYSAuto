@@ -104,9 +104,7 @@ def create_sim_queue():
     """
 
     # ask simulation variants Excel file path(s)
-    root = tk.Tk()
-    root.withdraw()
-    path_sim_variants_excel = filedialog.askopenfilenames()
+    path_sim_variants_excel = functions.ask_filenames()
 
     # create SimulationSeries object for each simulation variants Excel file selected
     sim_queue = list()
@@ -117,7 +115,6 @@ def create_sim_queue():
         sim_queue.append(classes.SimulationSeries(path))
 
     return sim_queue
-
 
 if __name__ == '__main__':
     main()
