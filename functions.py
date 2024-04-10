@@ -2,6 +2,7 @@ import win32com.client
 import pandas as pd
 import xlwings as xw
 import re
+import pickle
 
 
 def replace_parameter_value(match, parameters):
@@ -153,6 +154,12 @@ def progress_bar(progress, total):
     percent = 100 * (progress / float(total))
     bar = '█' * int(percent) + '-' * (100 - int(percent))
     print(f"\r|{bar}| {percent:.2f}%", end="\r")
+
+
+def load(self, load_path):
+
+    with open(load_path, 'rb') as file:
+        return pickle.load(file)
 
 # region BIN
 

@@ -8,6 +8,7 @@ import logging
 import glob
 import math
 import functions
+import pickle
 import openpyxl
 
 import numpy as np
@@ -109,6 +110,9 @@ class SimulationSeries:
         # import simulation variants Excel file
         self.import_sim_variants_excel()
 
+        # save SimulationSeries object
+
+
         # start simulation series
         self.start_sim_series()
 
@@ -206,6 +210,15 @@ class SimulationSeries:
         self.weather_series.index = self.weather_series.index.map(str)
         self.b18_series.index = self.b18_series.index.map(str)
         self.df_dck.index = self.df_dck.index.map(str)
+
+    def save(self, save_dir):
+        """Save SimulationSeries object in simulation series directory."""
+
+        filename = 'SimulationSeries.pickle'
+        save_path = os.path.join(save_dir, filename)
+
+        with open(save_path, 'wb') as file:
+            pickle.dump(self, file)
 
     # todo: Methode aufteilen (Textmanipulation in eigene Methode geben)
     def create_dir_sim_series(self):
