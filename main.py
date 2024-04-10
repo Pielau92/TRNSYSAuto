@@ -24,22 +24,36 @@ def main():
     multiprocessing.freeze_support()
     # endregion
 
-    # start_gui()
-    sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
-    start_sim_queue(sim_queue)  # start calculation, evaluation included
+    start_gui()
 
 
 def start_gui():
-    """Start GUI"""
+    """Start GUI
+
+    https://realpython.com/python-gui-tkinter/
+    """
 
     def simulate_and_evaluate():
-        window.destroy()
+        window.destroy()    # close GUI window
+
+        sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
+
+        for sim_series in sim_queue:
+            sim_series.start()  # start calculation
+            sim_series.evaluation()     # start evaluation
 
     def simulate():
-        window.destroy()
+        window.destroy()    # close GUI window
+
+        sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
+
+        for sim_series in sim_queue:
+            sim_series.start()  # start calculation
 
     def evaluate():
-        window.destroy()
+        window.destroy()    # close GUI window
+
+    # region GUI
 
     window = tk.Tk()
     label = tk.Label(text="Aktion auswählen")
@@ -73,6 +87,8 @@ def start_gui():
     btn_eval.pack()
 
     window.mainloop()
+
+    # endregion
 
 
 def create_sim_queue():
