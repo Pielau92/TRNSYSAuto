@@ -1,9 +1,9 @@
 import multiprocessing
 import classes
+import functions
 import os
 import tkinter as tk
 
-from functions import load
 from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
 
 # region FIX askdirectory/askfilename window does not open
@@ -60,7 +60,7 @@ def start_gui():
         # ask simulation series savefile
         sim_series_path = functions.ask_filename()
 
-        sim_series = load(sim_series_path)
+        sim_series = functions.load(sim_series_path)
 
         # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
 
