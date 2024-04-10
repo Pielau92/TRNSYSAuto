@@ -1,8 +1,11 @@
 import win32com.client
 import pandas as pd
 import xlwings as xw
+import tkinter as tk
 import re
 import pickle
+
+from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
 
 
 def replace_parameter_value(match, parameters):
@@ -160,6 +163,18 @@ def load(self, load_path):
 
     with open(load_path, 'rb') as file:
         return pickle.load(file)
+
+
+def ask_filenames():
+    root = tk.Tk()
+    root.withdraw()
+    return filedialog.askopenfilenames()
+
+
+def ask_filename():
+    root = tk.Tk()
+    root.withdraw()
+    return filedialog.askopenfilename()
 
 # region BIN
 
