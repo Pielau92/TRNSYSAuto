@@ -93,6 +93,25 @@ class SimulationSeries:
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
 
+    def start(self):
+        """Start simulation series."""
+
+        # create new directory for the simulation series
+        os.makedirs(self.dir_sim_series)
+
+        # initialize logging file
+        self.initialize_logging()
+
+        # import and apply settings Excel file
+        self.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
+                                         name_excelsheet_settings='Einstellungen')
+
+        # import simulation variants Excel file
+        self.import_sim_variants_excel()
+
+        # start simulation series
+        self.start_sim_series()
+
     def initialize_logging(self):
         """Initialize logging file."""
 
@@ -100,6 +119,8 @@ class SimulationSeries:
         logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.logger_filename)
         handler = logging.FileHandler(self.dir_logfile)
         self.logger.addHandler(handler)
+
+        self.logger.info(('Log file created successfully in {}.'.format(self.dir_logfile)))
 
     def import_settings_excel(self, filename_settings_excel, name_excelsheet_settings):
         """Import simulation series settings from settings Excel file.

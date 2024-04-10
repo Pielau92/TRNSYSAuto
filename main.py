@@ -103,40 +103,5 @@ def create_sim_queue():
     return sim_queue
 
 
-def start_sim_queue(sim_queue):
-    """Start simulation series queue.
-
-    Starts each SimulationSeries object stored in sim_queue successively. Additionally, after each simulation series an
-    evaluation routine starts, provided the parameter "autostart_evaluation" is set to True in the settings Excel file.
-
-    Parameters
-    ----------
-    sim_queue : list of SimulationSeries
-        list with SimulationSeries objects.
-    """
-
-    for sim_series in sim_queue:
-
-        # import and apply settings Excel file
-        sim_series.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
-                                         name_excelsheet_settings='Einstellungen')
-
-        # create new directory for the simulation series
-        os.makedirs(sim_series.dir_sim_series)
-
-        # initialize logging file
-        sim_series.initialize_logging()
-
-        # import simulation variants Excel file
-        sim_series.import_sim_variants_excel()
-
-        # start simulation series
-        sim_series.start_sim_series()
-
-        # start evaluation routine, if enabled
-        if sim_series.autostart_evaluation:
-            sim_series.evaluation()
-
-
 if __name__ == '__main__':
     main()
