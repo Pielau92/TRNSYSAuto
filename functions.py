@@ -1,7 +1,11 @@
 import win32com.client
 import pandas as pd
 import xlwings as xw
+import tkinter as tk
 import re
+import pickle
+
+from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
 
 
 def replace_parameter_value(match, parameters):
@@ -153,6 +157,30 @@ def progress_bar(progress, total):
     percent = 100 * (progress / float(total))
     bar = '█' * int(percent) + '-' * (100 - int(percent))
     print(f"\r|{bar}| {percent:.2f}%", end="\r")
+
+
+def load(savefile_path):
+
+    with open(savefile_path, 'rb') as file:
+        return pickle.load(file)
+
+
+def ask_filenames():
+    root = tk.Tk()
+    root.withdraw()
+    return filedialog.askopenfilenames()
+
+
+def ask_filename():
+    root = tk.Tk()
+    root.withdraw()
+    return filedialog.askopenfilename()
+
+
+def ask_dir():
+    root = tk.Tk()
+    root.withdraw()
+    return filedialog.askdirectory()
 
 # region BIN
 

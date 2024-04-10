@@ -7,3 +7,4 @@ __pycache__/
 !functions.py
 !classes.py
 !auswertung.py
+/__pycache__

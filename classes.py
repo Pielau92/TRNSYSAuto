@@ -8,6 +8,7 @@ import logging
 import glob
 import math
 import functions
+import pickle
 import openpyxl
 
 import numpy as np
@@ -93,6 +94,28 @@ class SimulationSeries:
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
 
+    def start(self):
+        """Start simulation series."""
+
+        # create new directory for the simulation series
+        os.makedirs(self.dir_sim_series)
+
+        # initialize logging file
+        self.initialize_logging()
+
+        # import and apply settings Excel file
+        self.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
+                                         name_excelsheet_settings='Einstellungen')
+
+        # import simulation variants Excel file
+        self.import_sim_variants_excel()
+
+        # save SimulationSeries object
+        self.save(self.dir_sim_series)
+
+        # start simulation series
+        self.start_sim_series()
+
     def initialize_logging(self):
         """Initialize logging file."""
 
@@ -100,6 +123,8 @@ class SimulationSeries:
         logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.logger_filename)
         handler = logging.FileHandler(self.dir_logfile)
         self.logger.addHandler(handler)
+
+        self.logger.info(('Log file created successfully in {}.'.format(self.dir_logfile)))
 
     def import_settings_excel(self, filename_settings_excel, name_excelsheet_settings):
         """Import simulation series settings from settings Excel file.
@@ -185,6 +210,15 @@ class SimulationSeries:
         self.weather_series.index = self.weather_series.index.map(str)
         self.b18_series.index = self.b18_series.index.map(str)
         self.df_dck.index = self.df_dck.index.map(str)
+
+    def save(self, save_dir):
+        """Save SimulationSeries object in simulation series directory."""
+
+        filename = 'SimulationSeries.pickle'
+        save_path = os.path.join(save_dir, filename)
+
+        with open(save_path, 'wb') as file:
+            pickle.dump(self, file)
 
     # todo: Methode aufteilen (Textmanipulation in eigene Methode geben)
     def create_dir_sim_series(self):

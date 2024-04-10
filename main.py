@@ -1,18 +1,15 @@
-import multiprocessing
-import classes
-import os
-import tkinter as tk
-
-from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
-
 # region FIX askdirectory/askfilename window does not open
 """In case the askdirectory/askfile window does not open, try this (fixes compatibility issues between tkinter and
- pywinauto)."""
-
-
-# import sys
-# sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
+ pywinauto). This must happen before importing pywinauto and tkinter."""
+import sys
+sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
 # endregion
+
+import multiprocessing
+import classes
+import functions
+import os
+import tkinter as tk
 
 
 def main():
@@ -24,8 +21,123 @@ def main():
     multiprocessing.freeze_support()
     # endregion
 
-    sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
-    start_sim_queue(sim_queue)  # start calculation, evaluation included
+    start_gui()
+
+
+def start_gui():
+    """Start GUI
+
+    https://realpython.com/python-gui-tkinter/
+    """
+
+    def simulate_and_evaluate():
+        window.destroy()    # close GUI window
+
+        sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
+
+        for sim_series in sim_queue:
+            sim_series.start()  # start calculation
+            sim_series.evaluation()     # start evaluation
+
+        window.quit()
+
+    def simulate():
+        window.destroy()    # close GUI window
+
+        sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
+
+        for sim_series in sim_queue:
+            sim_series.start()  # start calculation
+
+        window.quit()
+
+    def evaluate():
+        window.destroy()    # close GUI window
+
+        # ask simulation series directory
+        sim_series_dir = functions.ask_dir()
+
+        # todo: load SimulationSeries object here
+
+        # find path to simulation variants excel file
+        path_sim_variants_excel = os.path.join(
+            sim_series_dir,[filename for filename in os.listdir(sim_series_dir) if ".xlsx" in filename][0])
+
+        # create SimulationSeries object
+        sim_series = classes.SimulationSeries(path_sim_variants_excel)
+
+        # replace object attributes  with those of the selected simulation series to be evaluated
+        sim_series.dir_sim_series = sim_series_dir
+        sim_series.dir_save_path_evaluation = os.path.join(sim_series.dir_sim_series, 'evaluation')
+        sim_series.file_save_path_cumulative_evaluation = os.path.join(sim_series.dir_save_path_evaluation, 'gesamt.xlsx')
+        sim_series.filename_sim_variants_excel = os.path.basename(sim_series.path_sim_variants_excel).split('.')[0]
+        sim_series.dir_logfile = os.path.join(sim_series.dir_sim_series, sim_series.logger_filename)
+
+        # initialize logging file
+        sim_series.initialize_logging()
+
+        # start evaluation
+        sim_series.evaluation()  # start evaluation
+
+        window.quit()
+
+    def continue_simulation():
+        window.destroy()  # close GUI window
+
+        filename = 'SimulationSeries.pickle'
+
+        # ask simulation series directory
+        sim_series_path = functions.ask_dir()
+        savefile_path = os.path.join(sim_series_path, filename)
+        sim_series = functions.load(savefile_path)
+
+        window.quit() # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
+
+    # region GUI
+
+    window = tk.Tk()
+    label = tk.Label(text="Aktion auswählen")
+    label.pack()
+
+    btn_sim_and_eval = tk.Button(
+        window,
+        text="Simulate and evaluate",
+        width=25,
+        height=5,
+        command=simulate_and_evaluate,
+    )
+    btn_sim_and_eval.pack()
+
+    btn_sim = tk.Button(
+        window,
+        text="Simulate only",
+        width=25,
+        height=5,
+        command=simulate,
+    )
+    btn_sim.pack()
+
+    btn_eval = tk.Button(
+        window,
+        text="Evaluate only",
+        width=25,
+        height=5,
+        command=evaluate,
+    )
+    btn_eval.pack()
+
+    btn_continue_sim = tk.Button(
+        window,
+        text="Continue interrupted Simulation",
+        width=25,
+        height=5,
+        command=continue_simulation,
+    )
+    btn_continue_sim.pack()
+
+    window.mainloop()
+
+    # endregion
 
 
 def create_sim_queue():
@@ -41,9 +153,7 @@ def create_sim_queue():
     """
 
     # ask simulation variants Excel file path(s)
-    root = tk.Tk()
-    root.withdraw()
-    path_sim_variants_excel = filedialog.askopenfilenames()
+    path_sim_variants_excel = functions.ask_filenames()
 
     # create SimulationSeries object for each simulation variants Excel file selected
     sim_queue = list()
@@ -54,42 +164,6 @@ def create_sim_queue():
         sim_queue.append(classes.SimulationSeries(path))
 
     return sim_queue
-
-
-def start_sim_queue(sim_queue):
-    """Start simulation series queue.
-
-    Starts each SimulationSeries object stored in sim_queue successively. Additionally, after each simulation series an
-    evaluation routine starts, provided the parameter "autostart_evaluation" is set to True in the settings Excel file.
-
-    Parameters
-    ----------
-    sim_queue : list of SimulationSeries
-        list with SimulationSeries objects.
-    """
-
-    for sim_series in sim_queue:
-
-        # import and apply settings Excel file
-        sim_series.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
-                                         name_excelsheet_settings='Einstellungen')
-
-        # create new directory for the simulation series
-        os.makedirs(sim_series.dir_sim_series)
-
-        # initialize logging file
-        sim_series.initialize_logging()
-
-        # import simulation variants Excel file
-        sim_series.import_sim_variants_excel()
-
-        # start simulation series
-        sim_series.start_sim_series()
-
-        # start evaluation routine, if enabled
-        if sim_series.autostart_evaluation:
-            sim_series.evaluation()
-
 
 if __name__ == '__main__':
     main()
