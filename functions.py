@@ -176,6 +176,12 @@ def ask_filename():
     root.withdraw()
     return filedialog.askopenfilename()
 
+
+def ask_dir():
+    root = tk.Tk()
+    root.withdraw()
+    return filedialog.askdirectory()
+
 # region BIN
 
 
