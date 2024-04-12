@@ -2,6 +2,10 @@
 """In case the askdirectory/askfile window does not open, try this (fixes compatibility issues between tkinter and
  pywinauto). This must happen before importing pywinauto and tkinter."""
 import sys
+import warnings
+
+# todo: deactivate warnings as workaround for higher stability, but it is not optimal
+warnings.simplefilter("ignore", UserWarning)    # deactivate warnings
 sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
 # endregion
 
@@ -10,6 +14,8 @@ import classes
 import functions
 import os
 import tkinter as tk
+
+# warnings.resetwarnings()  # reactivate warnings
 
 
 def main():
