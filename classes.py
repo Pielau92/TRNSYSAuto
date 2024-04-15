@@ -113,6 +113,9 @@ class SimulationSeries:
         # save SimulationSeries object
         self.save(self.dir_sim_series)
 
+        # create simulation series directory
+        self.create_dir_sim_series()
+
         # start simulation series
         self.start_sim_series()
 
@@ -412,9 +415,6 @@ class SimulationSeries:
         successfully. If needed, unsuccessful simulations are calculated and checked again (this process is repeated
         until all simulations were calculated successfully, unless some simulations are on the "ignore" list anyway).
         """
-
-        # create simulation series directory
-        self.create_dir_sim_series()
 
         # initialize lock
         lock = multiprocessing.Lock()
