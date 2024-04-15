@@ -90,12 +90,19 @@ def start_gui():
     def continue_simulation():
         window.destroy()  # close GUI window
 
-        filename = 'SimulationSeries.pickle'
+        # ask for pickle savefile
+        path_savefile = functions.ask_filename()
+        sim_series = functions.load(path_savefile)
+
+        # filename = 'SimulationSeries.pickle'
 
         # ask simulation series directory
-        sim_series_path = functions.ask_dir()
-        savefile_path = os.path.join(sim_series_path, filename)
-        sim_series = functions.load(savefile_path)
+        # sim_series_path = functions.ask_dir()
+        # savefile_path = os.path.join(sim_series_path, filename)
+        sim_series = functions.load(path_savefile)
+
+        sim_series.check_sim_success()
+        sim_series.start_sim_series()
 
         window.quit() # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
 
@@ -134,7 +141,7 @@ def start_gui():
 
     btn_continue_sim = tk.Button(
         window,
-        text="Continue interrupted Simulation",
+        text="Continue incomplete simulation",
         width=25,
         height=5,
         command=continue_simulation,
