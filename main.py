@@ -64,21 +64,9 @@ def start_gui():
         path_savefile = functions.ask_filename()
         sim_series = functions.load(path_savefile)
 
+        # adapt simulation series directory path, in case the simulation was done in another directory/another machine
+        sim_series.dir_sim_series = os.path.dirname(path_savefile)
 
-        # # find path to simulation variants excel file
-        # path_sim_variants_excel = os.path.join(
-        #     sim_series_dir,[filename for filename in os.listdir(sim_series_dir) if ".xlsx" in filename][0])
-        #
-        # # create SimulationSeries object
-        # sim_series = classes.SimulationSeries(path_sim_variants_excel)
-        #
-        # # replace object attributes  with those of the selected simulation series to be evaluated
-        # sim_series.dir_sim_series = sim_series_dir
-        # sim_series.dir_save_path_evaluation = os.path.join(sim_series.dir_sim_series, 'evaluation')
-        # sim_series.file_save_path_cumulative_evaluation = os.path.join(sim_series.dir_save_path_evaluation, 'gesamt.xlsx')
-        # sim_series.filename_sim_variants_excel = os.path.basename(sim_series.path_sim_variants_excel).split('.')[0]
-        # sim_series.dir_logfile = os.path.join(sim_series.dir_sim_series, sim_series.logger_filename)
-        #
         # initialize logging file
         # sim_series.initialize_logging()
 
