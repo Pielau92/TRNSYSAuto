@@ -388,7 +388,10 @@ class SimulationSeries:
         window_title = 'TRNSYS: ' + path_dck_file
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
-        success_message.wait('visible', timeout=60 * 10)
+        try:
+            success_message.wait('visible', timeout=60 * 10)
+        except TimeoutError:
+            pass    # goes ahead and closes window after time out
 
         app.kill()  # close window
         time.sleep(5)
