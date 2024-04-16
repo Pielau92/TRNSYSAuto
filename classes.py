@@ -290,58 +290,7 @@ class SimulationSeries:
         # copy simulation variants Excel file into simulation series directory
         shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
 
-    def start_sim_solo(self, path_dck_file):
-        """start_sim, but without multiprocessing. Useful for debugging."""
-
-        # start application
-        app = Application(backend='uia')
-        app.start(self.path_exe)
-
-        try:
-            app.connect(title="Öffnen", timeout=2)  # self.timeout)
-            app.Öffnen.wait('visible')
-            app.Öffnen.set_focus()
-
-            # insert .dck file path
-            app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)
-
-            # press start button
-            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
-            Button.click_input()
-
-            # wait for the simulation window to open
-            app.Öffnen.wait_not('visible', timeout=10)
-
-        except Exception:  # TimeoutError:  todo: Add specific exceptions
-            # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
-            app.kill()
-            return
-
-        # add a time buffer before releasing the lock, which delays the next simulation
-        time.sleep(self.start_time_buffer)
-
-        window_title = 'TRNSYS: ' + path_dck_file
-
-        success_message = app.window(title=window_title)  # .window(control_type="Text")
-        success_message.wait('visible', timeout=60 * 10)
-
-        app.kill()  # close window
-        time.sleep(5)
-
-        # region DELETE REDUNDANT FILES
-
-        path_sim = os.path.dirname(path_dck_file)
-        # os.remove(path_dck_file[:-3] + 'lst')
-        redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
-        for redundant_file in redundant_file_list:
-            try:
-                os.remove(os.path.join(path_sim, redundant_file))
-            except FileNotFoundError:
-                pass
-
-        # endregion
-
-    def start_sim(self, path_dck_file, lock):
+    def start_sim(self, path_dck_file, lock=None):
         """Start simulation.
 
         Starts a TRNSYS simulation using a specified dck-file. Also, a lock is passed which ensures no other simulation
@@ -356,6 +305,16 @@ class SimulationSeries:
             Lock object from the multiprocessing module.
         """
 
+        def delete_redundant_files():
+            path_sim = os.path.dirname(path_dck_file)
+            # os.remove(path_dck_file[:-3] + 'lst')
+            redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
+            for redundant_file in redundant_file_list:
+                try:
+                    os.remove(os.path.join(path_sim, redundant_file))
+                except FileNotFoundError:
+                    pass
+
         # start application
         app = Application(backend='uia')
         app.start(self.path_exe)
@@ -378,12 +337,14 @@ class SimulationSeries:
         except Exception:  # TimeoutError:  todo: Add specific exceptions
             # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
             app.kill()
-            lock.release()
+            if lock is not None:
+                lock.release()
             return
 
         # add a time buffer before releasing the lock, which delays the next simulation
         time.sleep(self.start_time_buffer)
-        lock.release()
+        if lock is not None:
+            lock.release()
 
         window_title = 'TRNSYS: ' + path_dck_file
 
@@ -396,18 +357,7 @@ class SimulationSeries:
         app.kill()  # close window
         time.sleep(5)
 
-        # region DELETE REDUNDANT FILES
-
-        path_sim = os.path.dirname(path_dck_file)
-        # os.remove(path_dck_file[:-3] + 'lst')
-        redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
-        for redundant_file in redundant_file_list:
-            try:
-                os.remove(os.path.join(path_sim, redundant_file))
-            except FileNotFoundError:
-                pass
-
-        # endregion
+        delete_redundant_files()
 
     def start_sim_series(self):
         """Start simulation series.
@@ -419,8 +369,9 @@ class SimulationSeries:
         until all simulations were calculated successfully, unless some simulations are on the "ignore" list anyway).
         """
 
-        # initialize lock
-        lock = multiprocessing.Lock()
+        # initialize lock, if multiprocessing is enabled
+        if self.multiprocessing_max > 1:
+            lock = multiprocessing.Lock()
 
         # self.multiprocessing_max = 1
         while not all(np.logical_or(self.sim_success, self.sim_ignore)):  # check for remaining simulations
@@ -458,7 +409,7 @@ class SimulationSeries:
                             lock.acquire()
 
                         elif self.multiprocessing_max == 1:
-                            self.start_sim_solo(path_dck)
+                            self.start_sim(path_dck)
 
                     except Exception:
 
