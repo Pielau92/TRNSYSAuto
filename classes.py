@@ -52,18 +52,20 @@ class SimulationSeries:
         self.logger_filename = 'log.log'
 
         # filenames and directories
-        self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
-        self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
-        self.filename_sim_variants_excel = os.path.basename(self.path_sim_variants_excel).split('.')[0]
-        # simulation series directory in same directory as base folder
+        # self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
+        # self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
+        # self.filename_sim_variants_excel = os.path.basename(self.path_sim_variants_excel).split('.')[0]
+        # # simulation series directory in same directory as base folder
+        # self.dir_logfile = os.path.join(self.dir_sim_series, self.logger_filename)
+        # self.filename_trnsys_output = 'out5.txt'
+        # self.dir_save_path_evaluation = os.path.join(self.dir_sim_series, 'evaluation')
+        # self.file_save_path_cumulative_evaluation = os.path.join(self.dir_save_path_evaluation, 'gesamt.xlsx')
+        # self.path_cumulative_evaluation_template = os.path.abspath('./Basisordner/Auswertung_Gesamt.xlsx')
+        # self.path_variant_evaluation_template = './Basisordner/Auswertung_Variante.xlsx'
+
         self.dir_sim_series = \
             os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
-        self.dir_logfile = os.path.join(self.dir_sim_series, self.logger_filename)
         self.filename_trnsys_output = 'out5.txt'
-        self.dir_save_path_evaluation = os.path.join(self.dir_sim_series, 'evaluation')
-        self.file_save_path_cumulative_evaluation = os.path.join(self.dir_save_path_evaluation, 'gesamt.xlsx')
-        self.path_cumulative_evaluation_template = os.path.abspath('./Basisordner/Auswertung_Gesamt.xlsx')
-        self.path_variant_evaluation_template = './Basisordner/Auswertung_Variante.xlsx'
 
         # excel sheet names
         self.sheet_name_variant_input = 'Rohdaten'
@@ -93,6 +95,46 @@ class SimulationSeries:
         self.start_time_buffer = None  # time buffer (sec) between two simulations, for increased stability (optional)
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
+
+    # region PROPERTIES
+
+    @property
+    def dir_sim_variants_excel(self):
+        return os.path.dirname(self.path_sim_variants_excel)
+
+    @property
+    def dir_base_folder(self):
+        return os.path.dirname(self.dir_sim_variants_excel)
+
+    @property
+    def filename_sim_variants_excel(self):
+        return os.path.basename(self.path_sim_variants_excel).split('.')[0]
+
+    # @property  # simulation series directory in same directory as base folder
+    # def dir_sim_series(self):
+    #     return os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
+
+    @property
+    def dir_logfile(self):
+        return os.path.join(self.dir_sim_series, self.logger_filename)
+
+    @property
+    def dir_save_path_evaluation(self):
+        return os.path.join(self.dir_sim_series, 'evaluation')
+
+    @property
+    def file_save_path_cumulative_evaluation(self):
+        return os.path.join(self.dir_save_path_evaluation, 'gesamt.xlsx')
+
+    @property
+    def path_cumulative_evaluation_template(self):
+        return os.path.abspath('./Basisordner/Auswertung_Gesamt.xlsx')
+
+    @property
+    def path_variant_evaluation_template(self):
+        return os.path.abspath('./Basisordner/Auswertung_Variante.xlsx')
+
+    # endregion
 
     def start(self):
         """Start simulation series."""
