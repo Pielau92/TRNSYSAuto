@@ -544,6 +544,7 @@ class Evaluation:
         self.variant_parameter_df = None
         self.list_variants = None
         self.list_variant_directories = None
+        self.success_list = list()
 
         self.variant_result_columns = pd.DataFrame()
         self.zone_1_with_df = pd.DataFrame()
@@ -632,6 +633,9 @@ class Evaluation:
 
         # get variant names list
         self.list_variants = self.variant_parameter_df.columns.to_list()
+
+        # initialize evaluation success list
+        self.success_list = [False] * len(self.list_variants)
 
         # get top level directory list
         self.list_variant_directories = next(os.walk(self.dir_sim_series))[1]
@@ -766,6 +770,8 @@ class Evaluation:
             self.variant_result_columns = pd.concat([self.variant_result_columns, result_column], axis=1)
 
             # endregion
+
+            self.success_list[count_variant] = True
 
             progress += 1
             functions.progress_bar(progress, total)
