@@ -67,17 +67,6 @@ class SimulationSeries:
             os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
         self.filename_trnsys_output = 'out5.txt'
 
-        # excel sheet names
-        self.sheet_name_variant_input = 'Rohdaten'
-        self.sheet_name_calculation = 'Berechn1'
-        self.sheet_name_cumulative_input = 'Rohinputs'
-        self.sheet_name_zone_1_input = 'Zusamm1'
-        self.sheet_name_zone_3_input = 'Zusamm3'
-        self.sheet_name_zone_1_with_operating_time = 'Zone1_Betrieb'
-        self.sheet_name_zone_1_without_operating_time = 'Zone1ges'
-        self.sheet_name_zone_3_with_operating_time = 'Zone3_Betrieb'
-        self.sheet_name_zone_3_without_operating_time = 'Zone3ges'
-
         # simulation series data
         self.sim_list = None  # list of simulation variant names
         self.sim_success = None  # boolean list, documenting the successful simulation of each simulation variant
@@ -96,6 +85,8 @@ class SimulationSeries:
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
 
+        self.evaluation = None
+
     # region PROPERTIES
 
     @property
@@ -109,10 +100,6 @@ class SimulationSeries:
     @property
     def filename_sim_variants_excel(self):
         return os.path.basename(self.path_sim_variants_excel).split('.')[0]
-
-    # @property  # simulation series directory in same directory as base folder
-    # def dir_sim_series(self):
-    #     return os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
 
     @property
     def dir_logfile(self):
@@ -500,34 +487,114 @@ class SimulationSeries:
             self.logger.info('{} out of {} simulations completed successfully'.format(
                 sum(self.sim_success), len(self.sim_success)))
 
-    def evaluation(self):
-        """Perform evaluation routine."""
+    def evaluate(self):
 
         message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
         self.logger.info(message)
         print(message)
 
-        variant_result_columns = pd.DataFrame()
-        zone_1_with_df = pd.DataFrame()
-        zone_1_without_df = pd.DataFrame()
-        zone_3_with_df = pd.DataFrame()
-        zone_3_without_df = pd.DataFrame()
+        self.evaluation = Evaluation(
+            self.dir_save_path_evaluation,
+            self.dir_sim_series,
+            self.excel_export_cumulative_evaluation,
+            self.filename_trnsys_output,
+            self.file_save_path_cumulative_evaluation,
+            self.path_cumulative_evaluation_template,
+            self.path_sim_variants_excel,
+            self.path_variant_evaluation_template,
+            self.logger)
+
+        self.evaluation.start()
+
+    def excel_export_variant_evaluation(self, save_path_variant_output, result):
+        """Write data into variant evaluation file."""
+
+        with pd.ExcelWriter(save_path_variant_output, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
+            result.to_excel(writer, sheet_name=self.sheet_name_variant_input, startrow=2, index=False, header=False)
+
+    def excel_export_cumulative_evaluation(self, result_column, variant_parameter_df, zone_1_with_df,
+                                           zone_1_without_df, zone_3_with_df, zone_3_without_df):
+        """Write data into cumulative evaluation file."""
+
+        with pd.ExcelWriter(self.file_save_path_cumulative_evaluation, mode="a", engine="openpyxl",
+                            if_sheet_exists='overlay') as writer:
+            variant_parameter_df.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=1,
+                                          startcol=0, index=False)
+
+            zone_1_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_with_operating_time, startrow=1,
+                                    startcol=7, index=False, header=False)
+            zone_1_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_without_operating_time, startrow=1,
+                                       startcol=7, index=False, header=False)
+            zone_3_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_with_operating_time, startrow=1,
+                                    startcol=7, index=False, header=False)
+            zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time, startrow=1,
+                                       startcol=7, index=False, header=False)
+            result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
+                                   startcol=2, index=False, header=False)
+
+
+class Evaluation:
+    """Evaluation class"""
+
+    def __init__(self, dir_save_path_evaluation, dir_sim_series, excel_export_cumulative_evaluation,
+                 filename_trnsys_output, file_save_path_cumulative_evaluation, path_cumulative_evaluation_template,
+                 path_sim_variants_excel, path_variant_evaluation_template, logger):
+
+        self.date_df = None
+        self.variant_parameter_df = None
+        self.list_variants = None
+        self.list_variant_directories = None
+
+        self.variant_result_columns = pd.DataFrame()
+        self.zone_1_with_df = pd.DataFrame()
+        self.zone_1_without_df = pd.DataFrame()
+        self.zone_3_with_df = pd.DataFrame()
+        self.zone_3_without_df = pd.DataFrame()
+
+        # region SHEET NAMES
+        # excel sheet names
+        self.sheet_name_variant_input = 'Rohdaten'
+        self.sheet_name_calculation = 'Berechn1'
+        self.sheet_name_cumulative_input = 'Rohinputs'
+        self.sheet_name_zone_1_input = 'Zusamm1'
+        self.sheet_name_zone_3_input = 'Zusamm3'
+        self.sheet_name_zone_1_with_operating_time = 'Zone1_Betrieb'
+        self.sheet_name_zone_1_without_operating_time = 'Zone1ges'
+        self.sheet_name_zone_3_with_operating_time = 'Zone3_Betrieb'
+        self.sheet_name_zone_3_without_operating_time = 'Zone3ges'
+        # endregion
 
         # region COLUMN NAMES
 
-        var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1', 'met1',
-                          'work1']
-        var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2',
-                          'met2', 'work2']
-        var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3', 'clo3',
-                          'met3', 'work3']
+        self.var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1',
+                               'met1', 'work1']
+        self.var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2',
+                               'met2', 'work2']
+        self.var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3', 'clo3',
+                               'met3', 'work3']
+        self.var_list_result_column = \
+            ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
 
         # endregion
 
-        # region CREATE DATE COLUMN   #todo: Wird derzeit künstlich erzeugt, Jahreszahl ist hard coded
+        # region PATHS
 
-        year = 2023
-        time_increment_profiles = 60
+        self.dir_save_path_evaluation = dir_save_path_evaluation
+        self.dir_sim_series = dir_sim_series
+        self.excel_export_cumulative_evaluation = excel_export_cumulative_evaluation
+        self.filename_trnsys_output = filename_trnsys_output
+        self.file_save_path_cumulative_evaluation = file_save_path_cumulative_evaluation
+        self.path_cumulative_evaluation_template = path_cumulative_evaluation_template
+        self.path_sim_variants_excel = path_sim_variants_excel
+        self.path_variant_evaluation_template = path_variant_evaluation_template
+        self.logger = logger
+
+        # endregion
+
+        self.create_date_column(2023)
+
+    def create_date_column(self, year, time_increment_profiles=60):
+
         date = pd.date_range(
             start=str(year) + '-01-01',
             end=str(year + 1) + '-01-01',
@@ -542,13 +609,16 @@ class SimulationSeries:
             'Stunde': date.dt.hour,
             'Minute': date.dt.minute
         })
-        date_df = date_df.reset_index()  # reset index
+        self.date_df = date_df.reset_index()  # reset index
 
-        # endregion
+    def remove_existing_files(self):
 
-        # check for existing files in output directory
         for existing_output in glob.glob(self.dir_save_path_evaluation + '/*.xlsx'):
-            os.remove(existing_output)  # remove existing files
+            os.remove(existing_output)
+
+    def start(self):
+
+        self.remove_existing_files()
 
         # create evaluation directory
         os.makedirs(self.dir_save_path_evaluation, exist_ok=True)
@@ -557,26 +627,25 @@ class SimulationSeries:
         shutil.copy(self.path_cumulative_evaluation_template, self.file_save_path_cumulative_evaluation)
 
         # read simulation variant parameters
-        variant_parameter_df = pd.read_excel(self.path_sim_variants_excel, sheet_name='Simulationsvarianten')
-        variant_parameter_df.columns = [str(parameter) for parameter in variant_parameter_df.columns]
+        self.variant_parameter_df = pd.read_excel(self.path_sim_variants_excel, sheet_name='Simulationsvarianten')
+        self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
 
-        # ensure variant names list consists of strings
-        list_variants = variant_parameter_df.columns.to_list()
-        # list_variants = [str(variant) for variant in list_variants]
+        # get variant names list
+        self.list_variants = self.variant_parameter_df.columns.to_list()
 
         # get top level directory list
-        list_variant_directories = next(os.walk(self.dir_sim_series))[1]
-        list_variant_directories.remove('evaluation')
-        list_variant_directories = natsorted(list_variant_directories)
+        self.list_variant_directories = next(os.walk(self.dir_sim_series))[1]
+        self.list_variant_directories.remove('evaluation')
+        self.list_variant_directories = natsorted(self.list_variant_directories)
 
         # initialize progress bar
         progress = 0
-        total = len(list_variant_directories)
+        total = len(self.list_variant_directories)
         functions.progress_bar(progress, total)
 
         # read TRNSYS output and save data
         count_variant = 0
-        for dir_variant in list_variant_directories:
+        for dir_variant in self.list_variant_directories:
             count_variant = count_variant + 1
             path_variant_directory = os.path.join(self.dir_sim_series, dir_variant)
             path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
@@ -590,7 +659,7 @@ class SimulationSeries:
                 continue
 
             # ...the variant has a corresponding directory
-            if dir_variant not in list_variants:
+            if dir_variant not in self.list_variants:
                 self.logger.error(f'Did not find {dir_variant} in {self.path_sim_variants_excel}')
                 continue
 
@@ -603,11 +672,11 @@ class SimulationSeries:
 
             # Schweiker model for zones 1, 2 & 3
             sm1 = SchweikerDataFrame()
-            sm1._df = trnsys_df[var_list_zone1].reindex(var_list_zone1, axis=1)
+            sm1._df = trnsys_df[self.var_list_zone1].reindex(self.var_list_zone1, axis=1)
             sm2 = SchweikerDataFrame()
-            sm2._df = trnsys_df[var_list_zone2].reindex(var_list_zone2, axis=1)
+            sm2._df = trnsys_df[self.var_list_zone2].reindex(self.var_list_zone2, axis=1)
             sm3 = SchweikerDataFrame()
-            sm3._df = trnsys_df[var_list_zone3].reindex(var_list_zone3, axis=1)
+            sm3._df = trnsys_df[self.var_list_zone3].reindex(self.var_list_zone3, axis=1)
 
             # adapt column headers
             var_list = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'pmv', 'ppd', 'clo', 'met', 'work']
@@ -616,9 +685,9 @@ class SimulationSeries:
             sm3.df.columns = var_list
 
             # insert date columns
-            sm1._df = pd.concat([date_df[0:len(sm1.df)], sm1.df], axis=1)
-            sm2._df = pd.concat([date_df[0:len(sm1.df)], sm2.df], axis=1)
-            sm3._df = pd.concat([date_df[0:len(sm1.df)], sm3.df], axis=1)
+            sm1._df = pd.concat([self.date_df[0:len(sm1.df)], sm1.df], axis=1)
+            sm2._df = pd.concat([self.date_df[0:len(sm1.df)], sm2.df], axis=1)
+            sm3._df = pd.concat([self.date_df[0:len(sm1.df)], sm3.df], axis=1)
 
             # schweiker main
             sm1.calculate()
@@ -660,7 +729,7 @@ class SimulationSeries:
             # save data
             functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, dir_variant,
                                                       save_path_variant_output,
-                                                      variant_parameter_df)
+                                                      self.variant_parameter_df)
 
             self.logger.info('Finished evaluation for variant {}'.format(dir_variant))
 
@@ -668,35 +737,33 @@ class SimulationSeries:
             functions.update_excel_file(save_path_variant_output)
 
             # read data from variant evaluation excel file, for the cumulative evaluation excel file
-            zone_1_with_df = pd.concat([
-                zone_1_with_df,
-                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[3],
-                              header=None, nrows=None, skiprows=None)], axis=1)
-            zone_1_without_df = pd.concat([
-                zone_1_without_df,
-                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[2],
-                              header=None, nrows=None, skiprows=None)], axis=1)
-            zone_3_with_df = pd.concat([
-                zone_3_with_df,
-                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[3],
-                              header=None, nrows=None, skiprows=None)], axis=1)
-            zone_3_without_df = pd.concat([
-                zone_3_without_df,
-                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[2],
-                              header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_1_with_df = \
+                pd.concat([self.zone_1_with_df,
+                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[3],
+                                         header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_1_without_df = \
+                pd.concat([self.zone_1_without_df,
+                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[2],
+                                         header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_3_with_df = \
+                pd.concat([self.zone_3_with_df,
+                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[3],
+                                         header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_3_without_df = \
+                pd.concat([self.zone_3_without_df,
+                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[2],
+                                         header=None, nrows=None, skiprows=None)], axis=1)
 
             # endregion
 
             # region CUMULATIVE EVALUATION
 
             # create single column with all hourly values, for the cumulative evaluation excel file
-            var_list_result_column \
-                = ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
-            result_column = functions.to_single_column(result[
-                                                           var_list_result_column])
+
+            result_column = functions.to_single_column(result[self.var_list_result_column])
 
             # save single column
-            variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
+            self.variant_result_columns = pd.concat([self.variant_result_columns, result_column], axis=1)
 
             # endregion
 
@@ -704,39 +771,14 @@ class SimulationSeries:
             functions.progress_bar(progress, total)
 
         # copy into cumulative evaluation file
-        self.excel_export_cumulative_evaluation(variant_result_columns, variant_parameter_df, zone_1_with_df,
-                                                zone_1_without_df, zone_3_with_df, zone_3_without_df)
+        self.excel_export_cumulative_evaluation(self.variant_result_columns, self.variant_parameter_df,
+                                                self.zone_1_with_df, self.zone_1_without_df, self.zone_3_with_df,
+                                                self.zone_3_without_df)
         # update cumulative excel
         functions.update_excel_file(self.file_save_path_cumulative_evaluation)
 
         # logger entry "finish"
         self.logger.info('Evaluation done.')
-
-    def excel_export_variant_evaluation(self, save_path_variant_output, result):
-        """Write data into variant evaluation file."""
-
-        with pd.ExcelWriter(save_path_variant_output, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
-            result.to_excel(writer, sheet_name=self.sheet_name_variant_input, startrow=2, index=False, header=False)
-
-    def excel_export_cumulative_evaluation(self, result_column, variant_parameter_df, zone_1_with_df,
-                                           zone_1_without_df, zone_3_with_df, zone_3_without_df):
-        """Write data into cumulative evaluation file."""
-
-        with pd.ExcelWriter(self.file_save_path_cumulative_evaluation, mode="a", engine="openpyxl",
-                            if_sheet_exists='overlay') as writer:
-            variant_parameter_df.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=1,
-                                          startcol=0, index=False)
-
-            zone_1_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_with_operating_time, startrow=1,
-                                    startcol=7, index=False, header=False)
-            zone_1_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_without_operating_time, startrow=1,
-                                       startcol=7, index=False, header=False)
-            zone_3_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_with_operating_time, startrow=1,
-                                    startcol=7, index=False, header=False)
-            zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time, startrow=1,
-                                       startcol=7, index=False, header=False)
-            result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
-                                   startcol=2, index=False, header=False)
 
 
 class SchweikerDataFrame:

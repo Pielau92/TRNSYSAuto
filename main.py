@@ -42,7 +42,7 @@ def start_gui():
 
         for sim_series in sim_queue:
             sim_series.start()  # start simulation
-            sim_series.evaluation()  # start evaluation
+            sim_series.evaluate()  # start evaluation
 
         window.quit()
 
@@ -69,7 +69,7 @@ def start_gui():
         sim_series.initialize_logging()
 
         # start evaluation
-        sim_series.evaluation()  # start evaluation
+        sim_series.evaluate()  # start evaluation
 
         window.quit()
 
