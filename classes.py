@@ -594,6 +594,27 @@ class Evaluation:
 
         self.create_date_column(2023)
 
+        # create evaluation directory
+        os.makedirs(self.dir_save_path_evaluation, exist_ok=True)
+
+        # create copy of cumulative evaluation file template
+        shutil.copy(self.path_cumulative_evaluation_template, self.file_save_path_cumulative_evaluation)
+
+        # read simulation variant parameters
+        self.variant_parameter_df = pd.read_excel(self.path_sim_variants_excel, sheet_name='Simulationsvarianten')
+        self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
+
+        # get variant names list
+        self.list_variants = self.variant_parameter_df.columns.to_list()
+
+        # initialize evaluation success list
+        self.success_list = [False] * len(self.list_variants)
+
+        # get top level directory list
+        self.list_variant_directories = next(os.walk(self.dir_sim_series))[1]
+        self.list_variant_directories.remove('evaluation')
+        self.list_variant_directories = natsorted(self.list_variant_directories)
+
     def create_date_column(self, year, time_increment_profiles=60):
 
         date = pd.date_range(
@@ -619,28 +640,28 @@ class Evaluation:
 
     def start(self):
 
-        self.remove_existing_files()
+        def prepare_schweiker_df(sm, zone):
 
-        # create evaluation directory
-        os.makedirs(self.dir_save_path_evaluation, exist_ok=True)
+            zone = str(zone)
 
-        # create copy of cumulative evaluation file template
-        shutil.copy(self.path_cumulative_evaluation_template, self.file_save_path_cumulative_evaluation)
+            # adapt column headers
+            sm.df.columns = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'pmv', 'ppd', 'clo', 'met', 'work']
 
-        # read simulation variant parameters
-        self.variant_parameter_df = pd.read_excel(self.path_sim_variants_excel, sheet_name='Simulationsvarianten')
-        self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
+            # insert date columns
+            sm._df = pd.concat([self.date_df[0:len(sm.df)], sm.df], axis=1)
 
-        # get variant names list
-        self.list_variants = self.variant_parameter_df.columns.to_list()
+            # schweiker main
+            sm.calculate()
 
-        # initialize evaluation success list
-        self.success_list = [False] * len(self.list_variants)
+            # remove redundant columns
+            sm.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
 
-        # get top level directory list
-        self.list_variant_directories = next(os.walk(self.dir_sim_series))[1]
-        self.list_variant_directories.remove('evaluation')
-        self.list_variant_directories = natsorted(self.list_variant_directories)
+            # numerate column names for each zone
+            sm.df.columns = ['schweiker_' + string + zone for string in sm.df.columns]
+
+            return sm
+
+        # self.remove_existing_files()
 
         # initialize progress bar
         progress = 0
@@ -674,40 +695,17 @@ class Evaluation:
 
             # region SCHWEIKER MODEL
 
-            # Schweiker model for zones 1, 2 & 3
             sm1 = SchweikerDataFrame()
-            sm1._df = trnsys_df[self.var_list_zone1].reindex(self.var_list_zone1, axis=1)
             sm2 = SchweikerDataFrame()
-            sm2._df = trnsys_df[self.var_list_zone2].reindex(self.var_list_zone2, axis=1)
             sm3 = SchweikerDataFrame()
+
+            sm1._df = trnsys_df[self.var_list_zone1].reindex(self.var_list_zone1, axis=1)
+            sm2._df = trnsys_df[self.var_list_zone2].reindex(self.var_list_zone2, axis=1)
             sm3._df = trnsys_df[self.var_list_zone3].reindex(self.var_list_zone3, axis=1)
 
-            # adapt column headers
-            var_list = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'pmv', 'ppd', 'clo', 'met', 'work']
-            sm1.df.columns = var_list
-            sm2.df.columns = var_list
-            sm3.df.columns = var_list
-
-            # insert date columns
-            sm1._df = pd.concat([self.date_df[0:len(sm1.df)], sm1.df], axis=1)
-            sm2._df = pd.concat([self.date_df[0:len(sm1.df)], sm2.df], axis=1)
-            sm3._df = pd.concat([self.date_df[0:len(sm1.df)], sm3.df], axis=1)
-
-            # schweiker main
-            sm1.calculate()
-            sm2.calculate()
-            sm3.calculate()
-
-            # remove redundant columns
-            redundant_columns = ['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period']
-            sm1.df.drop(redundant_columns, axis=1, inplace=True)
-            sm2.df.drop(redundant_columns, axis=1, inplace=True)
-            sm3.df.drop(redundant_columns, axis=1, inplace=True)
-
-            # numerate column names for each zone
-            sm1.df.columns = ['schweiker_' + string + '1' for string in sm1.df.columns]
-            sm2.df.columns = ['schweiker_' + string + '2' for string in sm2.df.columns]
-            sm3.df.columns = ['schweiker_' + string + '3' for string in sm3.df.columns]
+            sm1 = prepare_schweiker_df(sm1, 1)
+            sm2 = prepare_schweiker_df(sm2, 2)
+            sm3 = prepare_schweiker_df(sm3, 3)
 
             # endregion
 
