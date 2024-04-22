@@ -1,11 +1,12 @@
-# region FIX askdirectory/askfilename window does not open
-"""In case the askdirectory/askfile window does not open, try this (fixes compatibility issues between tkinter and
- pywinauto). This must happen before importing pywinauto and tkinter."""
+# region FIX askdirectory window does not open
+"""There are compatibility issues between filedialog.askdirectory() and pywinauto, which cause the askdirectory window
+ not to open. To fix this, use the following lines. This must happen before importing pywinauto and tkinter."""
 # import sys
 # import warnings
 
-# todo: deactivate warnings as workaround for higher stability, but it is not optimal
-# warnings.simplefilter("ignore", UserWarning)    # deactivate warnings
+# deactivate warnings as workaround for higher stability, but it is not optimal as other warnings are also suppressed
+# warnings.simplefilter("ignore", UserWarning)
+
 # sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
 # endregion
 
@@ -15,14 +16,12 @@ import functions
 import os
 import tkinter as tk
 
-# warnings.resetwarnings()  # reactivate warnings
-
 
 def main():
     """Main method."""
 
     # region FIX directory/file asked multiple times
-    """for some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
+    """For some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
     directory/file is asked multiple times), therefore the function "freeze_support" is necessary."""
     multiprocessing.freeze_support()
     # endregion
@@ -37,38 +36,37 @@ def start_gui():
     """
 
     def simulate_and_evaluate():
-        window.destroy()    # close GUI window
+        window.destroy()  # close GUI window
 
         sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
 
         for sim_series in sim_queue:
-            sim_series.start()  # start calculation
-            sim_series.evaluation()     # start evaluation
+            sim_series.start()  # start simulation
+            sim_series.evaluation()  # start evaluation
 
         window.quit()
 
     def simulate():
-        window.destroy()    # close GUI window
+        window.destroy()  # close GUI window
 
         sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
 
         for sim_series in sim_queue:
-            sim_series.start()  # start calculation
+            sim_series.start()  # start simulation
 
         window.quit()
 
     def evaluate():
-        window.destroy()    # close GUI window
+        window.destroy()  # close GUI window
 
-        # ask for pickle savefile
-        path_savefile = functions.ask_filename()
-        sim_series = functions.load(path_savefile)
+        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
         # adapt simulation series directory path, in case the simulation was done in another directory/another machine
         sim_series.dir_sim_series = os.path.dirname(path_savefile)
 
         # initialize logging file
-        # sim_series.initialize_logging()
+        sim_series.initialize_logging()
 
         # start evaluation
         sim_series.evaluation()  # start evaluation
@@ -78,21 +76,16 @@ def start_gui():
     def continue_simulation():
         window.destroy()  # close GUI window
 
-        # ask for pickle savefile
-        path_savefile = functions.ask_filename()
-        sim_series = functions.load(path_savefile)
+        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
-        # filename = 'SimulationSeries.pickle'
-
-        # ask simulation series directory
-        # sim_series_path = functions.ask_dir()
-        # savefile_path = os.path.join(sim_series_path, filename)
-        sim_series = functions.load(path_savefile)
+        # initialize logging file
+        sim_series.initialize_logging()
 
         sim_series.check_sim_success()
         sim_series.start_sim_series()
 
-        window.quit() # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
+        window.quit()
 
     # region GUI
 
@@ -165,6 +158,7 @@ def create_sim_queue():
         sim_queue.append(classes.SimulationSeries(path))
 
     return sim_queue
+
 
 if __name__ == '__main__':
     main()

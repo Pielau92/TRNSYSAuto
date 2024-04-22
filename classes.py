@@ -147,7 +147,7 @@ class SimulationSeries:
 
         # import and apply settings Excel file
         self.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
-                                         name_excelsheet_settings='Einstellungen')
+                                   name_excelsheet_settings='Einstellungen')
 
         # import simulation variants Excel file
         self.import_sim_variants_excel()
@@ -394,7 +394,7 @@ class SimulationSeries:
         try:
             success_message.wait('visible', timeout=60 * 10)
         except TimeoutError:
-            pass    # goes ahead and closes window after time out
+            pass  # goes ahead and closes window after time out
 
         app.kill()  # close window
         time.sleep(5)
@@ -415,7 +415,6 @@ class SimulationSeries:
         if self.multiprocessing_max > 1:
             lock = multiprocessing.Lock()
 
-        # self.multiprocessing_max = 1
         while not all(np.logical_or(self.sim_success, self.sim_ignore)):  # check for remaining simulations
 
             # initialize progress bar
