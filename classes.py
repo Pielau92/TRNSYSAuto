@@ -51,18 +51,6 @@ class SimulationSeries:
         self.logger = None
         self.logger_filename = 'log.log'
 
-        # filenames and directories
-        # self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
-        # self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
-        # self.filename_sim_variants_excel = os.path.basename(self.path_sim_variants_excel).split('.')[0]
-        # # simulation series directory in same directory as base folder
-        # self.dir_logfile = os.path.join(self.dir_sim_series, self.logger_filename)
-        # self.filename_trnsys_output = 'out5.txt'
-        # self.dir_save_path_evaluation = os.path.join(self.dir_sim_series, 'evaluation')
-        # self.file_save_path_cumulative_evaluation = os.path.join(self.dir_save_path_evaluation, 'gesamt.xlsx')
-        # self.path_cumulative_evaluation_template = os.path.abspath('./Basisordner/Auswertung_Gesamt.xlsx')
-        # self.path_variant_evaluation_template = './Basisordner/Auswertung_Variante.xlsx'
-
         self.dir_sim_series = \
             os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
         self.filename_trnsys_output = 'out5.txt'
@@ -659,7 +647,8 @@ class Evaluation:
 
                 path_variant_directory = os.path.join(self.dir_sim_series, dir_variant)
                 path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
-                save_path_variant_output = os.path.join(self.dir_save_path_evaluation, 'variant' + dir_variant + '.xlsx')
+                save_path_variant_output = os.path.join(self.dir_save_path_evaluation,
+                                                        'variant' + dir_variant + '.xlsx')
 
                 # region CHECK IF...
 
@@ -696,7 +685,8 @@ class Evaluation:
 
                 # concatenate output
                 result = pd.concat([trnsys_df[['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges',
-                                               'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3',
+                                               'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2',
+                                               'pmv3',
                                                'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2', 'met3']],
                                     sm1.df, sm2.df, sm3.df], axis=1)
 
@@ -788,7 +778,7 @@ class Evaluation:
                                          startcol=7, index=False, header=False)
             self.zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time,
                                             startrow=1, startcol=7, index=False, header=False)
-            self.result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,startcol=2,
+            self.result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60, startcol=2,
                                         index=False, header=False)
 
 
