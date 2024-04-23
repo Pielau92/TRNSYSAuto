@@ -158,7 +158,7 @@ class SimulationSeries:
 
         self.logger.info(('Log file created successfully in {}.'.format(self.dir_logfile)))
 
-    def import_settings_excel(self, filename_settings_excel, name_excelsheet_settings):
+    def import_settings_excel(self, filename_settings_excel: str, name_excelsheet_settings: str):
         """Import simulation series settings from settings Excel file.
 
         Imports simulation series settings from the settings Excel file and applies them to the corresponding attributes
@@ -173,6 +173,22 @@ class SimulationSeries:
             Name of the Excel sheet within the settings Excel file, where the settings are stored.
         """
 
+        def apply_settings():
+            """Apply imported settings to SimulationSeries object.
+
+            Applies the imported settings from the settings Excel file to the corresponding attributes of the
+            SimulationSeries object with the same name.
+            """
+
+            for index, value in enumerate(self.settings):
+                attribute_name = self.settings.index[index]
+                if not hasattr(self, attribute_name):
+                    raise AttributeError(f'Unknown setting "{attribute_name}" in settings Excel file found.')
+                setattr(self, attribute_name, value)
+
+            if self.multiprocessing_max == 'auto':
+                self.multiprocessing_max = multiprocessing.cpu_count()
+
         # read Excel data
         excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, filename_settings_excel))
 
@@ -183,27 +199,7 @@ class SimulationSeries:
         self.settings = df.Wert
 
         # apply imported settings
-        self.apply_settings()
-
-    # todo: automatischer Namensabgleich einführen, am besten mit Prüfung und Meldung bei Unstimmigkeiten
-    def apply_settings(self):
-        """Apply imported settings to SimulationSeries object.
-
-        Applies the imported settings from the settings Excel file to the corresponding attributes of the
-        SimulationSeries object with the same name.
-        """
-
-        self.path_exe = self.settings.loc['path_exe']
-        self.name_excelsheet_sim_variants = self.settings.loc['name_excelsheet_sim_variants']
-        self.filename_dck_template = self.settings.loc['filename_dck_template']
-        self.timeout = self.settings.loc['timeout']
-        self.start_time_buffer = self.settings.loc['start_time_buffer']
-        self.autostart_evaluation = bool(self.settings.loc['autostart_evaluation'])
-
-        if self.settings.loc['multiprocessing_max'] == 'auto':
-            self.multiprocessing_max = multiprocessing.cpu_count()
-        else:
-            self.multiprocessing_max = self.settings.loc['multiprocessing_max']
+        apply_settings()
 
     def import_sim_variants_excel(self):
         """Import simulation variants Excel file.
@@ -727,6 +723,7 @@ class Evaluation:
                 # update excel to receive cross-referenced values and updates calculations
                 functions.update_excel_file(save_path_variant_output)
 
+                # todo: Anstatt concat explizit den Spaltennamen eingeben
                 # read data from variant evaluation excel file, for the cumulative evaluation excel file
                 self.zone_1_with_df = \
                     pd.concat([self.zone_1_with_df,
@@ -764,7 +761,7 @@ class Evaluation:
                 functions.progress_bar(progress, total)
 
                 count_variant += 1
-
+        # todo: Trennung von variant evaluation und cumulative evaluation
         # copy into cumulative evaluation file
         self.excel_export_cumulative_evaluation(self.variant_result_columns, self.variant_parameter_df,
                                                 self.zone_1_with_df, self.zone_1_without_df, self.zone_3_with_df,
