@@ -128,7 +128,7 @@ class SimulationSeries:
         self.import_sim_variants_excel()
 
         # save SimulationSeries object
-        self.save(self.dir_sim_series)
+        self.save()
 
         # create simulation series directory
         self.create_dir_sim_series()
@@ -227,11 +227,11 @@ class SimulationSeries:
         self.b18_series.index = self.b18_series.index.map(str)
         self.df_dck.index = self.df_dck.index.map(str)
 
-    def save(self, save_dir):
+    def save(self):
         """Save SimulationSeries object in simulation series directory."""
 
         filename = 'SimulationSeries.pickle'
-        save_path = os.path.join(save_dir, filename)
+        save_path = os.path.join(self.dir_sim_series, filename)
 
         with open(save_path, 'wb') as file:
             pickle.dump(self, file)
