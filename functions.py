@@ -177,6 +177,8 @@ def ask_filename():
 
 
 def ask_dir():
+    """CAUTION: Has compatibility issues with pywinauto (explorer does not open to ask directory location), look in
+    main.py for a fix."""
     root = tk.Tk()
     root.withdraw()
     return filedialog.askdirectory()
