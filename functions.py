@@ -167,13 +167,13 @@ def load(savefile_path):
 def ask_filenames():
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askopenfilenames()
+    return [path.replace("/", "\\") for path in filedialog.askopenfilenames()]
 
 
 def ask_filename():
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askopenfilename()
+    return filedialog.askopenfilename().replace("/", "\\")
 
 
 def ask_dir():

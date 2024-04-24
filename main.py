@@ -38,9 +38,8 @@ def start_gui():
     def simulate_and_evaluate():
         window.destroy()  # close GUI window
 
-        sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
-
-        for sim_series in sim_queue:
+        # for each simulation series...
+        for sim_series in get_sim_queue():
             sim_series.start()  # start simulation
             sim_series.evaluate()  # start evaluation
 
@@ -49,9 +48,8 @@ def start_gui():
     def simulate():
         window.destroy()  # close GUI window
 
-        sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
-
-        for sim_series in sim_queue:
+        # for each simulation series...
+        for sim_series in get_sim_queue:
             sim_series.start()  # start simulation
 
         window.quit()
@@ -134,30 +132,13 @@ def start_gui():
     # endregion
 
 
-def create_sim_queue():
-    """Create queue of simulation series.
+def get_sim_queue():
+    """Ask for simulation variants Excel files and create list of SimulationSeries objects accordingly.
 
     Opens the explorer and asks for one or multiple simulation variants Excel files. For each selected Excel file, an
-    additional SimulationSeries object is created and added to the list sim_queue.
+    additional SimulationSeries object is created and added a list."""
 
-    Returns
-    -------
-    sim_queue : list of SimulationSeries
-        list with SimulationSeries objects.
-    """
-
-    # ask simulation variants Excel file path(s)
-    path_sim_variants_excel = functions.ask_filenames()
-
-    # create SimulationSeries object for each simulation variants Excel file selected
-    sim_queue = list()
-    for path in path_sim_variants_excel:
-        path = path.replace("/", "\\")
-
-        # create simulation series object and append to list
-        sim_queue.append(classes.SimulationSeries(path))
-
-    return sim_queue
+    return [classes.SimulationSeries(path) for path in functions.ask_filenames()]
 
 
 if __name__ == '__main__':
