@@ -11,6 +11,8 @@
 # endregion
 
 import multiprocessing
+import sys
+import time
 import classes
 import functions
 import os
@@ -29,6 +31,21 @@ def main():
     start_gui()
 
 
+def check_cwd():
+    """Check if base directory is located in current working directory.
+
+    Checks if current working directory (directory where the used main.exe file is located) is located in
+    the same directory as the base directory ("Basisordner"), as it is a requirement to perform simulations. If not,
+    issues a message and exits the program."""
+
+    if not os.path.exists(os.path.join(os.getcwd(), 'Basisordner')):
+        message = 'main.exe file must be located in the same directory as the base directory ("Basisordnder"), ' \
+                  'program will shortly be closed.'
+        print(message)
+        time.sleep(3)
+        sys.exit()
+
+
 def start_gui():
     """Start GUI
 
@@ -39,8 +56,8 @@ def start_gui():
         window.destroy()  # close GUI window
 
         # for each simulation series...
-        for sim_series in get_sim_queue():
             sim_series.start()  # start simulation
+        for sim_series in create_sim_queue():
             sim_series.evaluate()  # start evaluation
 
         window.quit()
@@ -48,9 +65,9 @@ def start_gui():
     def simulate():
         window.destroy()  # close GUI window
 
-        # for each simulation series...
-        for sim_series in get_sim_queue:
             sim_series.start()  # start simulation
+        # for each simulation series in the queue...
+        for sim_series in create_sim_queue():
 
         window.quit()
 
@@ -90,6 +107,8 @@ def start_gui():
     window = tk.Tk()
     label = tk.Label(text="Aktion auswählen")
     label.pack()
+
+    check_cwd()   # check if base directory is located in current working directory, otherwise exit
 
     btn_sim_and_eval = tk.Button(
         window,
@@ -132,7 +151,7 @@ def start_gui():
     # endregion
 
 
-def get_sim_queue():
+def create_sim_queue():
     """Ask for simulation variants Excel files and create list of SimulationSeries objects accordingly.
 
     Opens the explorer and asks for one or multiple simulation variants Excel files. For each selected Excel file, an
