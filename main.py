@@ -80,7 +80,7 @@ def start_gui():
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
         # adapt simulation series directory path, in case the simulation was done in another directory/another machine
-        sim_series.dir_sim_series = os.path.dirname(path_savefile)
+        # sim_series.path_sim_series_dir = os.path.dirname(path_savefile)
 
         # initialize logging file
         sim_series.initialize_logging()
