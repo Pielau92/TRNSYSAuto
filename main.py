@@ -56,8 +56,9 @@ def start_gui():
         window.destroy()  # close GUI window
 
         # for each simulation series...
-            sim_series.start()  # start simulation
         for sim_series in create_sim_queue():
+            sim_series.setup()  # set simulation up
+            sim_series.start_sim_series()   # start simulation series
             sim_series.evaluate()  # start evaluation
 
         window.quit()
@@ -65,9 +66,10 @@ def start_gui():
     def simulate():
         window.destroy()  # close GUI window
 
-            sim_series.start()  # start simulation
         # for each simulation series in the queue...
         for sim_series in create_sim_queue():
+            sim_series.setup()  # start simulation
+            sim_series.start_sim_series()  # start simulation series
 
         window.quit()
 
@@ -108,7 +110,7 @@ def start_gui():
     label = tk.Label(text="Aktion auswählen")
     label.pack()
 
-    check_cwd()   # check if base directory is located in current working directory, otherwise exit
+    check_cwd()  # check if base directory is located in current working directory, otherwise exit
 
     btn_sim_and_eval = tk.Button(
         window,

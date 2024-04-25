@@ -90,7 +90,7 @@ class SimulationSeries:
         return os.path.basename(self.path_sim_variants_excel).split('.')[0]
 
     @property
-    def dir_logfile(self):
+    def dir_logfile(self):  # todo keine property nötig
         return os.path.join(self.dir_sim_series, self.logger_filename)
 
     @property
@@ -111,8 +111,8 @@ class SimulationSeries:
 
     # endregion
 
-    def start(self):
-        """Start simulation series."""
+    def setup(self):
+        """Start simulation series."""  # todo PATH MANAGEMENT
 
         # create new directory for the simulation series
         os.makedirs(self.dir_sim_series)
@@ -132,9 +132,6 @@ class SimulationSeries:
 
         # create simulation series directory
         self.create_dir_sim_series()
-
-        # start simulation series
-        self.start_sim_series()
 
     def initialize_logging(self):
         """Initialize logging file."""
@@ -300,7 +297,7 @@ class SimulationSeries:
 
             # endregion
 
-        # copy simulation variants Excel file into simulation series directory
+        # copy simulation variants Excel file into simulation series directory todo: ganz am Anfang machen, dann nicht mehr auf Basisordner zugreifen
         shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
 
     def start_sim(self, path_dck_file, lock=None):
