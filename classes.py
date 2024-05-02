@@ -514,12 +514,6 @@ class SimulationSeries:
 
         self.evaluation.start()
 
-    def excel_export_variant_evaluation(self, save_path_variant_output, result):
-        """Write data into variant evaluation file. todo: NOT USED AT THE MOMENT, as it is too slow."""
-
-        with pd.ExcelWriter(save_path_variant_output, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
-            result.to_excel(writer, sheet_name=self.sheet_name_variant_input, startrow=2, index=False, header=False)
-
 
 class Evaluation:
     """Evaluation class"""
