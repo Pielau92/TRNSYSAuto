@@ -275,7 +275,7 @@ class SimulationSeries:
         Imports the simulation variants Excel file and applies the data to the SimulationSeries object."""
 
         # read simulation variants Excel file
-        excel_data = pd.ExcelFile(self.path_sim_variants_excel)
+        excel_data = pd.ExcelFile(self.path_original_sim_variants_excel)
 
         # convert Excel data into pandas DataFrame
         df = excel_data.parse(self.name_excelsheet_sim_variants, index_col=0)
@@ -766,9 +766,7 @@ class Evaluation:
                 count_variant += 1
         # todo: Trennung von variant evaluation und cumulative evaluation
         # copy into cumulative evaluation file
-        self.excel_export_cumulative_evaluation(self.variant_result_columns, self.variant_parameter_df,
-                                                self.zone_1_with_df, self.zone_1_without_df, self.zone_3_with_df,
-                                                self.zone_3_without_df)
+        self.excel_export_cumulative_evaluation()
         # update cumulative excel
         functions.update_excel_file(self.file_save_path_cumulative_evaluation)
 
@@ -791,7 +789,7 @@ class Evaluation:
                                          startcol=7, index=False, header=False)
             self.zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time,
                                             startrow=1, startcol=7, index=False, header=False)
-            self.result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60, startcol=2,
+            self.variant_result_columns.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60, startcol=2,
                                         index=False, header=False)
 
 
