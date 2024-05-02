@@ -141,7 +141,7 @@ class SimulationSeries:
         # save SimulationSeries object
         self.save()
 
-    def create_dir_sim_series(self): # todo: Methode aufteilen (Textmanipulation in eigene Methode geben)
+    def create_dir_sim_series(self):
         """Create simulation series directory.
 
         Creates a directory to save the results of the simulation series. Also fills the directory with the following:
@@ -153,25 +153,14 @@ class SimulationSeries:
         simulation variants Excel file.
         """
 
-        # create new directory for the simulation series
-        os.makedirs(self.path_sim_series_dir)
+        def create_sim_subdirectory():
+            """Create simulation subdirectory within simulation series directory.
 
-        # todo: ganz am Anfang machen, dann nicht mehr auf Basisordner zugreifen
-        # copy simulation variants Excel file into simulation series directory
-        shutil.copy(os.path.join(self.path_original_sim_variants_excel), self.path_sim_variants_excel)
+            Creates a subdirectory within the simulation series directory, with a copy of all template files from the
+            base directory "Basisordner".
+            """
 
-        for sim_index in range(0, len(self.sim_list)):
-            sim = self.sim_list[sim_index]  # name of the simulation variant
-            path_sim = os.path.join(self.path_sim_series_dir, sim)  # path of simulation subdirectory
-
-            # create new simulation subdirectory
-            os.makedirs(path_sim)
-
-            # region PREPARE COPYING PROCESS
-
-            # file name list of files to be copied
-            file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
-                         'Windetc20190804.txt', 'StrahlungBruck.txt']
+            os.makedirs(path_sim)   # create new empty simulation subdirectory
 
             # source paths
             src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
@@ -179,23 +168,24 @@ class SimulationSeries:
             # destination paths
             dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim]]
 
-            # endregion
-
-            path_dck = os.path.join(path_sim, dst_file_list[0])  # path of .dck file
-
-            # copy specified files into simulation directory
+            # copy specified files into simulation subdirectory
             for file_index in range(len(src_file_list)):
                 try:
                     shutil.copy(
-                        os.path.join(self.path_sim_series_dir, src_file_list[file_index]),
+                        os.path.join(self.path_base_dir, src_file_list[file_index]),
                         os.path.join(path_sim, dst_file_list[file_index]))
                 except FileNotFoundError:
-                    self.logger.error('File ' + os.path.join(self.path_sim_series_dir, src_file_list[file_index]
+                    self.logger.error('File ' + os.path.join(self.path_base_dir, src_file_list[file_index]
                                                              + ' could not be found, simulation variant added to ignore'
                                                                'list.'))
-                    self.sim_ignore[sim_index] = True  # simulation variant will be ignored
+                    self.sim_ignore[index] = True  # simulation variant will be ignored
 
-            # region FIND AND REPLACE PARAMETERS IN .dck FILE
+        def overwrite_dck_file_parameters():
+            """Overwrite parameters inside .dck File.
+
+            Overwrites the parameters inside the .dcp File, according to the corresponding simulation description in
+            the simulation variants Excel file.
+            """
 
             # find and replace weather data file name in .dck file
             functions.find_and_replace(
@@ -209,7 +199,22 @@ class SimulationSeries:
             functions.find_and_replace_parameter_values(path_dck, r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
             functions.find_and_replace_parameter_values(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
 
-            # endregion
+        # create new directory for the simulation series
+        os.makedirs(self.path_sim_series_dir)
+
+        # copy simulation variants Excel file into simulation series directory
+        shutil.copy(os.path.join(self.path_original_sim_variants_excel), self.path_sim_variants_excel)
+
+        # file name list of files to be copied into simulation subdirectories
+        file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
+                     'Windetc20190804.txt', 'StrahlungBruck.txt']
+
+        for index, sim in enumerate(self.sim_list):
+            path_sim = os.path.join(self.path_sim_series_dir, sim)  # path of simulation subdirectory
+            path_dck = os.path.join(path_sim, self.filename_dck_template)  # path of .dck file
+
+            create_sim_subdirectory()
+            overwrite_dck_file_parameters()
 
     def initialize_logging(self):
         """Initialize logging file."""
