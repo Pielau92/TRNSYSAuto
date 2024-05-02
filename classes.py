@@ -51,7 +51,7 @@ class SimulationSeries:
 
         self.filename_sim_variants_excel = os.path.basename(self.path_original_sim_variants_excel).split('.')[0]
         self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
-        self.path_sim_series_dir = os.path.abspath(self.dirname_sim_series)     # path to simulation series directory
+        self.path_sim_series_dir = os.path.abspath(self.dirname_sim_series)  # path to simulation series directory
 
         self.filename_logger = 'log.log'
         self.filename_trnsys_output = 'out5.txt'
@@ -75,6 +75,7 @@ class SimulationSeries:
         self.start_time_buffer = None  # time buffer (sec) between two simulations, for increased stability (optional)
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
+        self.filenames_redundant = None  # list of redundant TRNSYS files that are to be deleted after the simulation
 
         self.evaluation = None
         self.logger = None
@@ -258,6 +259,8 @@ class SimulationSeries:
             if self.multiprocessing_max == 'auto':
                 self.multiprocessing_max = multiprocessing.cpu_count()
 
+            self.filenames_redundant = self.filenames_redundant.split(', ')
+
         # read Excel data
         excel_data = pd.ExcelFile(os.path.join(self.path_base_dir, filename_settings_excel))
 
@@ -342,8 +345,7 @@ class SimulationSeries:
 
             path_sim = os.path.dirname(path_dck_file)
 
-            redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']  # todo: zu EInstellungs-Excel hinzufügen
-            for redundant_file in redundant_file_list:
+            for redundant_file in self.filenames_redundant:
                 try:
                     os.remove(os.path.join(path_sim, redundant_file))
                 except FileNotFoundError:
@@ -499,7 +501,7 @@ class SimulationSeries:
         self.logger.info(message)
         print(message)
 
-        if self.evaluation is None:     # todo: rework, keine eigene Evaluations-Klasse wenn nicht unbedingt nötig
+        if self.evaluation is None:  # todo: rework, keine eigene Evaluations-Klasse wenn nicht unbedingt nötig
             self.evaluation = Evaluation(
                 self.path_evaluation_save_dir,
                 self.path_sim_series_dir,
