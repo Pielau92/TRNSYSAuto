@@ -526,7 +526,7 @@ class Evaluation:
         self.variant_parameter_df = None
         # self.list_variants = None
         self.list_variant_directories = None
-        self.success_list = list()
+        self.eval_success = list()
 
         self.variant_result_columns = pd.DataFrame()
         self.zone_1_with_df = pd.DataFrame()
@@ -594,7 +594,7 @@ class Evaluation:
         self.list_variant_directories = natsorted(self.list_variant_directories)
 
         # initialize evaluation success list
-        self.success_list = [False] * len(self.list_variant_directories)
+        self.eval_success = [False] * len(self.list_variant_directories)
 
     def create_date_column(self, year, time_increment_profiles=60):
 
@@ -615,13 +615,18 @@ class Evaluation:
         self.date_df = date_df.reset_index()  # reset index
 
     def remove_existing_files(self):
+        """Remove all variant evaluation excel files."""
 
         for existing_output in glob.glob(self.dir_save_path_evaluation + '/*.xlsx'):
             os.remove(existing_output)
 
     def start(self):
 
-        def prepare_schweiker_df(sm, zone):
+        def create_schweiker_model(var_list_zone, zone):
+
+            sm = SchweikerDataFrame()
+
+            sm._df = trnsys_df[var_list_zone].reindex(var_list_zone, axis=1)
 
             zone = str(zone)
 
@@ -653,13 +658,8 @@ class Evaluation:
         count_variant = 0
         for dir_variant in self.list_variant_directories:
 
-            if self.success_list[count_variant]:
+            if self.eval_success[count_variant]:
                 count_variant += 1
-                # self.zone_1_with_df[dir_variant] = ''
-                # self.zone_1_without_df[dir_variant] = ''
-                # self.zone_3_with_df[dir_variant] = ''
-                # self.zone_3_without_df[dir_variant] = ''
-                # self.variant_result_columns[dir_variant] = ''
 
             else:
 
@@ -685,21 +685,10 @@ class Evaluation:
                 # read trnsys output file
                 trnsys_df = pd.read_csv(path_variant_file, sep='\s+', skiprows=1, skipfooter=0, engine='python')
 
-                # region SCHWEIKER MODEL
-
-                sm1 = SchweikerDataFrame()
-                sm2 = SchweikerDataFrame()
-                sm3 = SchweikerDataFrame()
-
-                sm1._df = trnsys_df[self.var_list_zone1].reindex(self.var_list_zone1, axis=1)
-                sm2._df = trnsys_df[self.var_list_zone2].reindex(self.var_list_zone2, axis=1)
-                sm3._df = trnsys_df[self.var_list_zone3].reindex(self.var_list_zone3, axis=1)
-
-                sm1 = prepare_schweiker_df(sm1, 1)
-                sm2 = prepare_schweiker_df(sm2, 2)
-                sm3 = prepare_schweiker_df(sm3, 3)
-
-                # endregion
+                # create schweiker models
+                sm1 = create_schweiker_model(self.var_list_zone1, 1)
+                sm2 = create_schweiker_model(self.var_list_zone2, 2)
+                sm3 = create_schweiker_model(self.var_list_zone3, 3)
 
                 # concatenate output
                 result = pd.concat([trnsys_df[['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges',
@@ -731,7 +720,6 @@ class Evaluation:
                 # update excel to receive cross-referenced values and updates calculations
                 functions.update_excel_file(save_path_variant_output)
 
-                # todo: Anstatt concat explizit den Spaltennamen eingeben
                 # read data from variant evaluation excel file, for the cumulative evaluation excel file
                 self.zone_1_with_df = \
                     pd.concat([self.zone_1_with_df,
@@ -754,8 +742,7 @@ class Evaluation:
 
                 # region CUMULATIVE EVALUATION
 
-                # create single column with all hourly values, for the cumulative evaluation excel file
-
+                # create single column with all hourly values, for the cumulative evaluation Excel file
                 result_column = functions.to_single_column(result[self.var_list_result_column])
 
                 # save single column
@@ -763,13 +750,13 @@ class Evaluation:
 
                 # endregion
 
-                self.success_list[count_variant] = True
+                self.eval_success[count_variant] = True
 
                 progress += 1
                 functions.progress_bar(progress, total)
 
                 count_variant += 1
-        # todo: Trennung von variant evaluation und cumulative evaluation
+        # todo: Trennung von variant evaluation und cumulative evaluation in eigene Funktionen
         # copy into cumulative evaluation file
         self.excel_export_cumulative_evaluation()
         # update cumulative excel
