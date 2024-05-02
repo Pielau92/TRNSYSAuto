@@ -25,7 +25,7 @@ class SimulationSeries:
     """Simulation series class.
 
     todo Beschreibung allgemeiner ausdrücken
-    A Simulation series is a series of TRNSYS simulations, which are computed using multiprocessing.
+    A Simulation series is a series of TRNSYS simulations, which can be computed using multiprocessing.
     """
 
     def __init__(self, path_original_sim_variants_excel):
@@ -46,17 +46,17 @@ class SimulationSeries:
         # current time when the main.exe file was executed
         self.execution_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
 
-        self.path_original_sim_variants_excel = path_original_sim_variants_excel  # path to simulation variants Excel file
+        # path to original simulation variants Excel file within the base directory "Basisordner"
+        self.path_original_sim_variants_excel = path_original_sim_variants_excel
+
         self.filename_sim_variants_excel = os.path.basename(self.path_original_sim_variants_excel).split('.')[0]
-        self.dirname_sim_series =  self.filename_sim_variants_excel + '_' + self.execution_time
+        self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
+        self.path_sim_series_dir = os.path.abspath(self.dirname_sim_series)     # path to simulation series directory
 
-        # path to simulation series directory.
-        self.path_sim_series_dir = os.path.abspath(self.dirname_sim_series)
-
-        self.logger = None
         self.filename_logger = 'log.log'
-
         self.filename_trnsys_output = 'out5.txt'
+        self.filename_settings_excel = 'Einstellungen.xlsx'
+        self.name_excelsheet_settings = 'Einstellungen'
 
         # simulation series data
         self.sim_list = None  # list of simulation variant names
@@ -77,6 +77,7 @@ class SimulationSeries:
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
 
         self.evaluation = None
+        self.logger = None
 
     # region PROPERTIES
 
@@ -126,8 +127,8 @@ class SimulationSeries:
         """Set simulation series up."""
 
         # import and apply settings Excel file
-        self.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
-                                   name_excelsheet_settings='Einstellungen')
+        self.import_settings_excel(filename_settings_excel=self.filename_settings_excel,
+                                   name_excelsheet_settings=self.name_excelsheet_settings)
 
         # import simulation variants Excel file
         self.import_sim_variants_excel()
@@ -160,7 +161,7 @@ class SimulationSeries:
             base directory "Basisordner".
             """
 
-            os.makedirs(path_sim)   # create new empty simulation subdirectory
+            os.makedirs(path_sim)  # create new empty simulation subdirectory
 
             # source paths
             src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
@@ -272,7 +273,8 @@ class SimulationSeries:
     def import_sim_variants_excel(self):
         """Import simulation variants Excel file.
 
-        Imports the simulation variants Excel file and applies the data to the SimulationSeries object."""
+        Imports the simulation variants Excel file and applies the data to the SimulationSeries object.
+        """
 
         # read simulation variants Excel file
         excel_data = pd.ExcelFile(self.path_original_sim_variants_excel)
@@ -319,9 +321,10 @@ class SimulationSeries:
     def start_sim(self, path_dck_file, lock=None):
         """Start simulation.
 
-        Starts a TRNSYS simulation using a specified dck-file. Also, a lock is passed which ensures no other simulation
-        starts until a specific point is reached. In this case, the lock is released as soon as the TRNSYS simulation
-        window opens. Optionally, start_time_buffer acts as a time buffer before releasing the lock.
+        Starts a TRNSYS simulation using a specified dck-file. If multiprocessing is used, a lock is passed which
+        ensures no other simulation starts until a specific point is reached. In this case, the lock is released as soon
+        as the TRNSYS simulation window opens. Optionally, start_time_buffer acts as a time buffer before releasing the
+        lock.
 
         Parameters
         ----------
@@ -332,9 +335,14 @@ class SimulationSeries:
         """
 
         def delete_redundant_files():
+            """Delete redundant files after the simulation.
+
+            To save disk space, redundant files are deleted.
+            """
+
             path_sim = os.path.dirname(path_dck_file)
-            # os.remove(path_dck_file[:-3] + 'lst')
-            redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
+
+            redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']  # todo: zu EInstellungs-Excel hinzufügen
             for redundant_file in redundant_file_list:
                 try:
                     os.remove(os.path.join(path_sim, redundant_file))
@@ -414,7 +422,8 @@ class SimulationSeries:
 
                 if not self.sim_success[index] and not self.sim_ignore[index]:
                     sim = self.sim_list[index]  # name of simulation
-                    path_dck = os.path.join(self.path_sim_series_dir, sim, self.filename_dck_template)  # path of dck-file
+                    path_dck = os.path.join(self.path_sim_series_dir, sim,
+                                            self.filename_dck_template)  # path of dck-file
 
                     try:
 
@@ -458,22 +467,22 @@ class SimulationSeries:
         """Check simulation success.
 
         Checks for each simulation inside the simulation series, if the simulation was calculated successfully. If so,
-        its sim_success flag is switched from False to True."""
+        its sim_success flag is switched from False to True.
+        """
 
         self.logger.info('Checking for failed simulations')
 
         for index in range(len(self.sim_list)):
-            sim = self.sim_list[index]
+            # path of output file
+            path_output = os.path.join(self.path_sim_series_dir, self.sim_list[index], self.filename_trnsys_output)
 
-            path_output = os.path.join(self.path_sim_series_dir, sim, 'out5.txt')  # path of output file
             if not self.sim_success[index]:
                 try:
                     with open(path_output) as f:
-                        reader = csv.reader(f, delimiter="\t")
-                        d = list(reader)
+                        data = list(csv.reader(f, delimiter="\t"))
 
                     # simulation was successful, if hourly data is complete (8760 entries)
-                    self.sim_success[index] = not len(d) < 8762
+                    self.sim_success[index] = not len(data) < 8762
                 except FileNotFoundError:  # no file found
                     self.sim_success[index] = False
 
@@ -490,7 +499,7 @@ class SimulationSeries:
         self.logger.info(message)
         print(message)
 
-        if self.evaluation is None:
+        if self.evaluation is None:     # todo: rework, keine eigene Evaluations-Klasse wenn nicht unbedingt nötig
             self.evaluation = Evaluation(
                 self.path_evaluation_save_dir,
                 self.path_sim_series_dir,
@@ -504,7 +513,7 @@ class SimulationSeries:
         self.evaluation.start()
 
     def excel_export_variant_evaluation(self, save_path_variant_output, result):
-        """Write data into variant evaluation file. todo NOT USED AT THE MOMENT."""
+        """Write data into variant evaluation file. todo: NOT USED AT THE MOMENT, as it is too slow."""
 
         with pd.ExcelWriter(save_path_variant_output, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
             result.to_excel(writer, sheet_name=self.sheet_name_variant_input, startrow=2, index=False, header=False)
@@ -789,8 +798,9 @@ class Evaluation:
                                          startcol=7, index=False, header=False)
             self.zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time,
                                             startrow=1, startcol=7, index=False, header=False)
-            self.variant_result_columns.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60, startcol=2,
-                                        index=False, header=False)
+            self.variant_result_columns.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
+                                                 startcol=2,
+                                                 index=False, header=False)
 
 
 class SchweikerDataFrame:
