@@ -182,3 +182,23 @@ def ask_dir():
     root = tk.Tk()
     root.withdraw()
     return filedialog.askdirectory()
+
+
+def create_date_column(year, time_increment_profiles=60):
+    date = pd.date_range(
+        start=str(year) + '-01-01',
+        end=str(year + 1) + '-01-01',
+        freq=str(time_increment_profiles) + 'min')
+
+    date = date.to_series()
+
+    date_df = pd.DataFrame({
+        'Tag': date.dt.day,
+        'Monat': date.dt.month,
+        'Jahr': date.dt.year,
+        'Stunde': date.dt.hour,
+        'Minute': date.dt.minute
+    })
+    date_df.reset_index(inplace=True)  # reset index
+
+    return date_df
