@@ -707,6 +707,10 @@ class SimulationSeries:
                 functions.progress_bar(progress, total)
 
                 count_variant += 1
+
+            if count_variant % 5 == 0:  # save progress every 5 variants
+                self.save()
+
         # copy into cumulative evaluation file
         self.excel_export_cumulative_evaluation()
         # update cumulative excel
