@@ -59,6 +59,8 @@ def start_gui():
         for sim_series in create_sim_queue():
             sim_series.setup_simulation()  # set simulation up
             sim_series.start_sim_series()   # start simulation series
+
+            sim_series.setup_evaluation()   # set evaluation up
             sim_series.evaluate()  # start evaluation
 
         window.quit()
@@ -86,6 +88,7 @@ def start_gui():
         sim_series.initialize_logging()
 
         # start evaluation
+        sim_series.setup_evaluation()   # set evaluation up
         sim_series.evaluate()  # start evaluation
 
         window.quit()
@@ -101,6 +104,19 @@ def start_gui():
 
         sim_series.check_sim_success()
         sim_series.start_sim_series()
+
+        window.quit()
+
+    def continue_evaluation():
+        window.destroy()  # close GUI window
+
+        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        sim_series = functions.load(path_savefile)  # load SimulationSeries object
+
+        # initialize logging file
+        sim_series.initialize_logging()
+
+        # sim_series.evaluate()
 
         window.quit()
 
@@ -147,6 +163,15 @@ def start_gui():
         command=continue_simulation,
     )
     btn_continue_sim.pack()
+
+    btn_continue_eval = tk.Button(
+        window,
+        text="Continue incomplete evaluation",
+        width=25,
+        height=5,
+        command=continue_evaluation,
+    )
+    btn_continue_eval.pack()
 
     window.mainloop()
 
