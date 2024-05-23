@@ -5,7 +5,6 @@ import multiprocessing
 import time
 import csv
 import logging
-import glob
 import math
 import functions
 import pickle
@@ -63,16 +62,24 @@ class SimulationSeries:
         self.sheet_name_zone_3_without_operating_time = 'Zone3ges'
 
         # column names
-        self.var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1',
-                               'met1', 'work1']
-        self.var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2',
-                               'clo2',
-                               'met2', 'work2']
-        self.var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3',
-                               'clo3',
-                               'met3', 'work3']
-        self.var_list_result_column = \
+        self.var_list_zone1 \
+            = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1', 'met1', 'work1']
+        self.var_list_zone2 \
+            = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2', 'met2', 'work2']
+        self.var_list_zone3 \
+            = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3', 'clo3', 'met3', 'work3']
+        self.col_headers_result_column = \
             ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
+        self.col_headers_trnsys_output \
+            = ['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3',
+               'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1',
+               'met2', 'met3']
+        self.col_headers_sim_variant \
+            = ['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3',
+               'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1',
+               'met2', 'met3', 'schweiker_pmv1', 'schweiker_pmv2', 'schweiker_pmv3', 'schweiker_ppd1', 'schweiker_ppd2',
+               'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2', 'schweiker_clo3', 'schweiker_met1',
+               'schweiker_met2', 'schweiker_met3']
 
         # endregion
 
@@ -94,7 +101,7 @@ class SimulationSeries:
         self.b18_series = None  # pandas series with the .b18 data file names
         self.weather_series = None  # pandas series with the weather data file names
 
-        # Settings
+        # settings
         self.settings = None  # Pandas series with miscellaneous simulation settings
         self.path_exe = None  # path to TRNSYS executable file
         self.name_excelsheet_sim_variants = None  # name of the Excel sheet containing the simulation variants table
@@ -560,20 +567,26 @@ class SimulationSeries:
             self.logger.info('{} out of {} simulations completed successfully'.format(
                 sum(self.sim_success), len(self.sim_success)))
 
-    def evaluate(self):
+    def start_evaluation(self):
 
         message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
         self.logger.info(message)
         print(message)
 
-        if self.eval_success is None:
-            self.setup_evaluation()
+        self.evaluation()
 
-        self.start_evaluation()
+        # copy into cumulative evaluation file
+        self.excel_export_cumulative_evaluation()
 
-    def start_evaluation(self):
+        # update cumulative excel
+        functions.update_excel_file(self.path_cumulative_evaluation_save_file)
 
-        def evaluate_variant():
+        # logger entry "finish"
+        self.logger.info('Evaluation done.')
+
+    def evaluation(self):
+
+        def evaluate_variant():     # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
 
             def create_schweiker_model(var_list_zone, zone):
                 sm = SchweikerDataFrame()
@@ -609,19 +622,10 @@ class SimulationSeries:
             sm3 = create_schweiker_model(self.var_list_zone3, 3)
 
             # concatenate output
-            result = pd.concat([trnsys_df[['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges',
-                                           'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2',
-                                           'pmv3',
-                                           'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2', 'met3']],
-                                sm1.df, sm2.df, sm3.df], axis=1)
+            result = pd.concat([trnsys_df[self.col_headers_trnsys_output], sm1.df, sm2.df, sm3.df], axis=1)
 
             # sort columns
-            result = result[
-                ['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1',
-                 'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1',
-                 'clo2', 'clo3', 'met1', 'met2', 'met3', 'schweiker_pmv1', 'schweiker_pmv2', 'schweiker_pmv3',
-                 'schweiker_ppd1', 'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2',
-                 'schweiker_clo3', 'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
+            result = result[self.col_headers_sim_variant]
 
             # region VARIANT EVALUATION
 
@@ -661,7 +665,7 @@ class SimulationSeries:
             # region CUMULATIVE EVALUATION
 
             # create single column with all hourly values, for the cumulative evaluation Excel file
-            result_column = functions.to_single_column(result[self.var_list_result_column])
+            result_column = functions.to_single_column(result[self.col_headers_result_column])
 
             # save single column
             self.variant_result_columns = pd.concat([self.variant_result_columns, result_column], axis=1)
@@ -675,49 +679,40 @@ class SimulationSeries:
         total = len(self.list_variant_directories)
         functions.progress_bar(progress, total)
 
-        # read TRNSYS output and save data
         count_variant = 0
         for dir_variant in self.list_variant_directories:
 
             if self.eval_success[count_variant]:
                 count_variant += 1
+                continue
 
-            else:
-                path_variant_directory = os.path.join(self.path_sim_series_dir, dir_variant)
-                path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
-                save_path_variant_output = \
-                    os.path.join(self.path_evaluation_save_dir, 'variant' + dir_variant + '.xlsx')
+            path_variant_directory = os.path.join(self.path_sim_series_dir, dir_variant)
+            path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
+            save_path_variant_output = \
+                os.path.join(self.path_evaluation_save_dir, 'variant' + dir_variant + '.xlsx')
 
-                # region CHECK IF...
+            # region CHECK IF...
 
-                # ...the trnsys output file is actually there
-                if not os.path.exists(path_variant_file):
-                    self.logger.error(f'File {path_variant_file} does not exist!')
-                    continue
+            # ...the trnsys output file is actually there
+            if not os.path.exists(path_variant_file):
+                self.logger.error(f'File {path_variant_file} does not exist!')
+                continue
 
-                # ...the variant has a corresponding directory
-                if dir_variant not in self.list_variant_directories:
-                    self.logger.error(f'Did not find {dir_variant} in {self.path_sim_variants_excel}')
-                    continue
+            # ...the variant has a corresponding directory
+            if dir_variant not in self.list_variant_directories:
+                self.logger.error(f'Did not find {dir_variant} in {self.path_sim_variants_excel}')
+                continue
 
-                # endregion
-                evaluate_variant()
+            # endregion
+            evaluate_variant()
 
-                progress += 1
-                functions.progress_bar(progress, total)
+            progress += 1
+            functions.progress_bar(progress, total)
 
-                count_variant += 1
+            count_variant += 1
 
             if count_variant % 5 == 0:  # save progress every 5 variants
                 self.save()
-
-        # copy into cumulative evaluation file
-        self.excel_export_cumulative_evaluation()
-        # update cumulative excel
-        functions.update_excel_file(self.path_cumulative_evaluation_save_file)
-
-        # logger entry "finish"
-        self.logger.info('Evaluation done.')
 
     def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""
@@ -738,6 +733,7 @@ class SimulationSeries:
             self.variant_result_columns.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
                                                  startcol=2,
                                                  index=False, header=False)
+
 
 class SchweikerDataFrame:
     """Modified pandas Dataframe for the Schweiker-Model."""

@@ -61,7 +61,7 @@ def start_gui():
             sim_series.start_sim_series()   # start simulation series
 
             sim_series.setup_evaluation()   # set evaluation up
-            sim_series.evaluate()  # start evaluation
+            sim_series.start_evaluation()  # start evaluation
 
         window.quit()
 
@@ -89,7 +89,7 @@ def start_gui():
 
         # start evaluation
         sim_series.setup_evaluation()   # set evaluation up
-        sim_series.evaluate()  # start evaluation
+        sim_series.start_evaluation()  # start evaluation
 
         window.quit()
 
