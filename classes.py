@@ -258,9 +258,11 @@ class SimulationSeries:
                         os.path.join(self.path_base_dir, src_file_list[file_index]),
                         os.path.join(path_sim, dst_file_list[file_index]))
                 except FileNotFoundError:
-                    self.logger.error('File ' + os.path.join(self.path_base_dir, src_file_list[file_index]
-                                                             + ' could not be found, simulation variant added to ignore'
-                                                               'list.'))
+                    message = 'File ' + os.path.join(self.path_base_dir, src_file_list[file_index] +
+                                                     ' could not be found, simulation variant added to ignore' 'list.')
+                    self.logger.error(message)
+                    print(message)
+
                     self.sim_ignore[index] = True  # simulation variant will be ignored
 
         def overwrite_dck_file_parameters():
@@ -540,7 +542,9 @@ class SimulationSeries:
         its sim_success flag is switched from False to True.
         """
 
-        self.logger.info('Checking for failed simulations')
+        message = 'Checking for failed simulations'
+        self.logger.info(message)
+        print(message)
 
         for index in range(len(self.sim_list)):
             # path of output file
@@ -558,14 +562,18 @@ class SimulationSeries:
 
         # log simulation success status
         if all(self.sim_success):
-            self.logger.info(('"{}" completed successfully'.format(self.filename_sim_variants_excel)))
+            message = '"{}" completed successfully'.format(self.filename_sim_variants_excel)
+            self.logger.info(message)
+            print(message)
         else:
-            self.logger.info('{} out of {} simulations completed successfully'.format(
-                sum(self.sim_success), len(self.sim_success)))
+            message = \
+                '{} out of {} simulations completed successfully'.format(sum(self.sim_success), len(self.sim_success))
+            self.logger.info(message)
+            print(message)
 
     def start_evaluation(self):
 
-        message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)     # todo: logger entry nach genau diesem Muster durchsetzen, u.U eigene Methode dafür hinzufügen
+        message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
         self.logger.info(message)
         print(message)
 
@@ -578,7 +586,9 @@ class SimulationSeries:
         functions.update_excel_file(self.path_cumulative_evaluation_save_file)
 
         # logger entry "finish"
-        self.logger.info('Evaluation done.')
+        message = 'Evaluation done.'
+        self.logger.info(message)
+        print(message)
 
     def evaluation(self):   # todo: wenn möglich vereinfachen
 
@@ -633,7 +643,9 @@ class SimulationSeries:
                                                       save_path_variant_output,
                                                       self.variant_parameter_df)
 
-            self.logger.info('Finished evaluation for variant {}'.format(dir_variant))
+            message = 'Finished evaluation for variant {}'.format(dir_variant)
+            self.logger.info(message)
+            print(message)
 
             # update excel to receive cross-referenced values and updates calculations
             functions.update_excel_file(save_path_variant_output)
@@ -691,12 +703,16 @@ class SimulationSeries:
 
             # ...the trnsys output file is actually there
             if not os.path.exists(path_variant_file):
-                self.logger.error(f'File {path_variant_file} does not exist!')
+                message = f'File {path_variant_file} does not exist!'
+                self.logger.error(message)
+                print(message)
                 continue
 
             # ...the variant has a corresponding directory
             if dir_variant not in self.list_variant_directories:
-                self.logger.error(f'Did not find {dir_variant} in {self.path_sim_variants_excel}')
+                message = f'Did not find {dir_variant} in {self.path_sim_variants_excel}'
+                self.logger.error(message)
+                print(message)
                 continue
 
             # endregion
