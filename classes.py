@@ -712,23 +712,20 @@ class SimulationSeries:
 
     def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""
-        # todo: nested funktion einsetzen, um Übersichtlicher zu machen
-        with pd.ExcelWriter(self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl",
-                            if_sheet_exists='overlay') as writer:
-            self.variant_parameter_df.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=1,
-                                               startcol=0, index=False)
 
-            self.zone_1_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_with_operating_time, startrow=1,
-                                         startcol=7, index=False, header=False)
-            self.zone_1_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_without_operating_time,
-                                            startrow=1, startcol=7, index=False, header=False)
-            self.zone_3_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_with_operating_time, startrow=1,
-                                         startcol=7, index=False, header=False)
-            self.zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time,
-                                            startrow=1, startcol=7, index=False, header=False)
-            self.variant_result_columns.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
-                                                 startcol=2,
-                                                 index=False, header=False)
+        def export(df, sheetname, startrow, startcol, header=False):
+            df.to_excel(writer, sheet_name=sheetname, startrow=startrow, startcol=startcol, index=False, header=False)
+
+        with pd.ExcelWriter(
+                self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl", if_sheet_exists='overlay')\
+                as writer:
+
+            export(self.variant_parameter_df.to_excel, self.sheet_name_cumulative_input, 1, 0, header=True)
+            export(self.zone_1_with_df, self.sheet_name_zone_1_with_operating_time, 1, 7)
+            export(self.zone_1_without_df, self.sheet_name_zone_1_without_operating_time, 1, 7)
+            export(self.zone_3_with_df, self.sheet_name_zone_3_with_operating_time, 1, 7)
+            export(self.zone_3_without_df, self.sheet_name_zone_3_without_operating_time, 1, 7)
+            export(self.variant_result_columns, self.sheet_name_cumulative_input, 60, 2)
 
 
 class SchweikerDataFrame:
