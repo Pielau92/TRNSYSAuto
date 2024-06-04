@@ -130,9 +130,6 @@ class SimulationSeries:
 
         self.logger = None
 
-        # initialize logging file
-        self.initialize_logging()
-
     # region PROPERTIES
 
     @property
@@ -287,6 +284,9 @@ class SimulationSeries:
 
         # create new directory for the simulation series
         os.makedirs(self.path_sim_series_dir)
+
+        # initialize logging file
+        self.initialize_logging()
 
         # copy simulation variants Excel file into simulation series directory
         shutil.copy(os.path.join(self.path_original_sim_variants_excel), self.path_sim_variants_excel)
