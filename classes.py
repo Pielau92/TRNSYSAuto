@@ -117,7 +117,6 @@ class SimulationSeries:
 
         self.date_df = functions.create_date_column(2024)
         self.variant_parameter_df = None
-        self.list_variant_directories = None
         self.eval_success = None
 
         self.variant_result_columns = pd.DataFrame()
@@ -174,7 +173,7 @@ class SimulationSeries:
 
     @property
     def path_savefile(self):
-        self.path_savefile = os.path.join(self.path_sim_series_dir, self.filename_savefile)
+        return os.path.join(self.path_sim_series_dir, self.filename_savefile)
 
     # endregion
 
@@ -212,17 +211,8 @@ class SimulationSeries:
         # create copy of cumulative evaluation file template
         shutil.copy(self.path_cumulative_evaluation_template, self.path_cumulative_evaluation_save_file)
 
-        # read simulation variant parameters    # todo: direkt und zu einem früheren Zeitpunkt aus simulationsvarianten-File ziehen (schauen wo das File zum ersten Mal aufgemacht wird)
-        self.variant_parameter_df = pd.read_excel(self.path_sim_variants_excel, sheet_name='Simulationsvarianten')
-        self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
-
-        # get top level directory list  # todo: direkt und zu einem früheren Zeitpunkt aus simulationsvarianten-File ziehen
-        self.list_variant_directories = next(os.walk(self.path_sim_series_dir))[1]
-        self.list_variant_directories.remove('evaluation')
-        self.list_variant_directories = natsorted(self.list_variant_directories)
-
         # initialize evaluation success list
-        self.eval_success = [False] * len(self.list_variant_directories)
+        self.eval_success = [False] * len(self.sim_list)
 
     def create_dir_sim_series(self):
         """Create simulation series directory.
@@ -358,6 +348,12 @@ class SimulationSeries:
         Imports the simulation variants Excel file and applies the data to the SimulationSeries object.
         """
 
+        # todo: hier wird zwei mal der Inhalt des Simulationsvariantenfiles importiert, auf 1 mal reduzieren
+        # read simulation variant parameters
+        self.variant_parameter_df = pd.read_excel(self.path_original_sim_variants_excel,
+                                                  sheet_name='Simulationsvarianten')
+        self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
+
         # read simulation variants Excel file
         excel_data = pd.ExcelFile(self.path_original_sim_variants_excel)
 
@@ -378,7 +374,7 @@ class SimulationSeries:
         self.df_dck = df_dck[1:]
 
         # list of simulation variants
-        self.sim_list = df.columns[1:].astype(str).tolist()     # todo: sim_list mehr verwenden!
+        self.sim_list = df.columns[1:].astype(str).tolist()
 
         # convert index into string (for stability reasons)
         self.weather_series.index = self.weather_series.index.map(str)
@@ -639,11 +635,11 @@ class SimulationSeries:
             shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
 
             # save data
-            functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, dir_variant,
+            functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, variant_name,
                                                       save_path_variant_output,
                                                       self.variant_parameter_df)
 
-            message = 'Finished evaluation for variant {}'.format(dir_variant)
+            message = 'Finished evaluation for variant {}'.format(variant_name)
             self.logger.info(message)
             print(message)
 
@@ -684,20 +680,20 @@ class SimulationSeries:
 
         # initialize progress bar
         progress = 0
-        total = len(self.list_variant_directories)
+        total = len(self.sim_list)
         functions.progress_bar(progress, total)
 
         count_variant = 0
-        for dir_variant in self.list_variant_directories:
+        for variant_name in self.sim_list:
 
             if self.eval_success[count_variant]:
                 count_variant += 1
                 continue
 
-            path_variant_directory = os.path.join(self.path_sim_series_dir, dir_variant)
+            path_variant_directory = os.path.join(self.path_sim_series_dir, variant_name)
             path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
             save_path_variant_output = \
-                os.path.join(self.path_evaluation_save_dir, 'variant' + dir_variant + '.xlsx')
+                os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
 
             # region CHECK IF...
 
@@ -709,8 +705,8 @@ class SimulationSeries:
                 continue
 
             # ...the variant has a corresponding directory
-            if dir_variant not in self.list_variant_directories:
-                message = f'Did not find {dir_variant} in {self.path_sim_variants_excel}'
+            if variant_name not in self.sim_list:
+                message = f'Did not find {variant_name} in {self.path_sim_variants_excel}'
                 self.logger.error(message)
                 print(message)
                 continue
@@ -736,7 +732,7 @@ class SimulationSeries:
                 self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl", if_sheet_exists='overlay')\
                 as writer:
 
-            export(self.variant_parameter_df.to_excel, self.sheet_name_cumulative_input, 1, 0, header=True)
+            export(self.variant_parameter_df, self.sheet_name_cumulative_input, 1, 0, header=True)
             export(self.zone_1_with_df, self.sheet_name_zone_1_with_operating_time, 1, 7)
             export(self.zone_1_without_df, self.sheet_name_zone_1_without_operating_time, 1, 7)
             export(self.zone_3_with_df, self.sheet_name_zone_3_with_operating_time, 1, 7)
