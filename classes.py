@@ -48,6 +48,7 @@ class SimulationSeries:
         self.filename_logger = 'log.log'
         self.filename_trnsys_output = 'out5.txt'
         self.filename_settings_excel = 'Einstellungen.xlsx'
+        self.filename_savefile = 'SimulationSeries.pickle'
 
         # Excel sheet names
         self.sheet_name_settings = 'Einstellungen'
@@ -129,6 +130,9 @@ class SimulationSeries:
 
         self.logger = None
 
+        # initialize logging file
+        self.initialize_logging()
+
     # region PROPERTIES
 
     @property
@@ -171,28 +175,39 @@ class SimulationSeries:
         """Path to variant evaluation template file."""
         return os.path.join(self.path_base_dir, filename)
 
+    @property
+    def path_savefile(self):
+        self.path_savefile = os.path.join(self.path_sim_series_dir, self.filename_savefile)
+
     # endregion
 
     def setup_simulation(self):
-        """Set simulation series up."""
+        """Set simulation series up.
+
+        Setting up the simulation series is only necessary once, continuing the simulation at a later time does not need
+        an additional setup."""
 
         # import and apply settings Excel file
-        self.import_settings_excel(filename_settings_excel=self.filename_settings_excel,
-                                   name_excelsheet_settings=self.sheet_name_settings)
+        self.import_settings_excel()
 
         # import simulation variants Excel file
         self.import_sim_variants_excel()
 
+        # initialize simulation success/ignore flags
+        self.sim_success = [False] * len(self.sim_list)
+        self.sim_ignore = [False] * len(self.sim_list)
+
         # create simulation series directory
         self.create_dir_sim_series()
-
-        # initialize logging file
-        self.initialize_logging()
 
         # save SimulationSeries object
         self.save()
 
     def setup_evaluation(self):
+        """Set evaluation of simulation series up.
+
+        Setting up the evaluation of a simulation series is only necessary once, continuing the evaluation at a later
+        time does not need an additional setup."""
 
         # create evaluation directory
         os.makedirs(self.path_evaluation_save_dir, exist_ok=True)
@@ -200,14 +215,11 @@ class SimulationSeries:
         # create copy of cumulative evaluation file template
         shutil.copy(self.path_cumulative_evaluation_template, self.path_cumulative_evaluation_save_file)
 
-        # read simulation variant parameters
+        # read simulation variant parameters    # todo: direkt und zu einem früheren Zeitpunkt aus simulationsvarianten-File ziehen (schauen wo das File zum ersten Mal aufgemacht wird)
         self.variant_parameter_df = pd.read_excel(self.path_sim_variants_excel, sheet_name='Simulationsvarianten')
         self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
 
-        # get variant names list
-        # self.list_variants = self.variant_parameter_df.columns.to_list()
-
-        # get top level directory list
+        # get top level directory list  # todo: direkt und zu einem früheren Zeitpunkt aus simulationsvarianten-File ziehen
         self.list_variant_directories = next(os.walk(self.path_sim_series_dir))[1]
         self.list_variant_directories.remove('evaluation')
         self.list_variant_directories = natsorted(self.list_variant_directories)
@@ -231,7 +243,7 @@ class SimulationSeries:
             """Create simulation subdirectory within simulation series directory.
 
             Creates a subdirectory within the simulation series directory, with a copy of all template files from the
-            base directory "Basisordner".
+            base directory "Basisordner". Each subdirectory corresponds to one simulation.
             """
 
             os.makedirs(path_sim)  # create new empty simulation subdirectory
@@ -257,7 +269,7 @@ class SimulationSeries:
         def overwrite_dck_file_parameters():
             """Overwrite parameters inside .dck File.
 
-            Overwrites the parameters inside the .dcp File, according to the corresponding simulation description in
+            Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
             the simulation variants Excel file.
             """
 
@@ -300,50 +312,43 @@ class SimulationSeries:
 
         self.logger.info(('Log file created successfully in {}.'.format(self.path_logfile)))
 
-    def import_settings_excel(self, filename_settings_excel: str, name_excelsheet_settings: str):
+    def import_settings_excel(self):
         """Import simulation series settings from settings Excel file.
 
         Imports simulation series settings from the settings Excel file and applies them to the corresponding attributes
         of the SimulationSeries object. Parameter names in the settings Excel file (column "Parameter") must correspond
         to an attribute name of the SimulationSeries class.
-
-        Parameters
-        ----------
-        filename_settings_excel : str
-            Filename of the settings Excel file.
-        name_excelsheet_settings : str
-            Name of the Excel sheet within the settings Excel file, where the settings are stored.
         """
 
-        def apply_settings():
-            """Apply imported settings to SimulationSeries object.
-
-            Applies the imported settings from the settings Excel file to the corresponding attributes of the
-            SimulationSeries object with the same name.
-            """
-
-            for index, value in enumerate(self.settings):
-                attribute_name = self.settings.index[index]
-                if not hasattr(self, attribute_name):
-                    raise AttributeError(f'Unknown setting "{attribute_name}" in settings Excel file found.')
-                setattr(self, attribute_name, value)
-
-            if self.multiprocessing_max == 'auto':
-                self.multiprocessing_max = multiprocessing.cpu_count()
-
-            self.filenames_redundant = self.filenames_redundant.split(', ')
-
         # read Excel data
-        excel_data = pd.ExcelFile(os.path.join(self.path_base_dir, filename_settings_excel))
+        excel_data = pd.ExcelFile(os.path.join(self.path_base_dir, self.filename_settings_excel))
 
         # convert Excel data into pandas DataFrame
-        df = excel_data.parse(name_excelsheet_settings, index_col=0)
+        df = excel_data.parse(self.sheet_name_settings, index_col=0)
 
         # extract values from the column "Wert"
         self.settings = df.Wert
 
         # apply imported settings
-        apply_settings()
+        self.apply_settings()
+
+    def apply_settings(self):
+        """Apply imported settings to SimulationSeries object.
+
+        Applies the imported settings from the settings Excel file to the corresponding attributes of the
+        SimulationSeries object with the same name.
+        """
+
+        for index, value in enumerate(self.settings):
+            attribute_name = self.settings.index[index]
+            if not hasattr(self, attribute_name):
+                raise AttributeError(f'Unknown setting "{attribute_name}" in settings Excel file found.')
+            setattr(self, attribute_name, value)
+
+        if self.multiprocessing_max == 'auto':
+            self.multiprocessing_max = multiprocessing.cpu_count()
+
+        self.filenames_redundant = self.filenames_redundant.split(', ')
 
     def import_sim_variants_excel(self):
         """Import simulation variants Excel file.
@@ -371,13 +376,7 @@ class SimulationSeries:
         self.df_dck = df_dck[1:]
 
         # list of simulation variants
-        self.sim_list = df.columns[1:].astype(str).tolist()
-
-        # initialize simulation success flags
-        self.sim_success = [False] * len(self.sim_list)
-
-        # initialize simulation ignore flags
-        self.sim_ignore = [False] * len(self.sim_list)
+        self.sim_list = df.columns[1:].astype(str).tolist()     # todo: sim_list mehr verwenden!
 
         # convert index into string (for stability reasons)
         self.weather_series.index = self.weather_series.index.map(str)
@@ -387,10 +386,7 @@ class SimulationSeries:
     def save(self):
         """Save SimulationSeries object in simulation series directory."""
 
-        filename = 'SimulationSeries.pickle'
-        save_path = os.path.join(self.path_sim_series_dir, filename)
-
-        with open(save_path, 'wb') as file:
+        with open(self.path_savefile, 'wb') as file:
             pickle.dump(self, file)
 
     def start_sim(self, path_dck_file, lock=None):
@@ -412,7 +408,7 @@ class SimulationSeries:
         def delete_redundant_files():
             """Delete redundant files after the simulation.
 
-            To save disk space, redundant files are deleted.
+            Deletes redundant files to save disk space.
             """
 
             path_sim = os.path.dirname(path_dck_file)
@@ -442,7 +438,7 @@ class SimulationSeries:
             # wait for the simulation window to open
             app.Öffnen.wait_not('visible', timeout=10)
 
-        except Exception:  # TimeoutError:  todo: Add specific exceptions
+        except Exception:  # TimeoutError:  todo: Add specific exceptions + add logger entry
             # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
             app.kill()
             if lock is not None:
@@ -569,7 +565,7 @@ class SimulationSeries:
 
     def start_evaluation(self):
 
-        message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
+        message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)     # todo: logger entry nach genau diesem Muster durchsetzen, u.U eigene Methode dafür hinzufügen
         self.logger.info(message)
         print(message)
 
@@ -584,7 +580,7 @@ class SimulationSeries:
         # logger entry "finish"
         self.logger.info('Evaluation done.')
 
-    def evaluation(self):
+    def evaluation(self):   # todo: wenn möglich vereinfachen
 
         def evaluate_variant():     # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
 
@@ -716,7 +712,7 @@ class SimulationSeries:
 
     def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""
-
+        # todo: nested funktion einsetzen, um Übersichtlicher zu machen
         with pd.ExcelWriter(self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl",
                             if_sheet_exists='overlay') as writer:
             self.variant_parameter_df.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=1,

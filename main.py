@@ -82,7 +82,7 @@ def start_gui():
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
         # adapt simulation series directory path, in case the simulation was done in another directory/another machine
-        # sim_series.path_sim_series_dir = os.path.dirname(path_savefile)
+        # sim_series.path_sim_series_dir = os.path.dirname(path_savefile)   # todo: noch nötig?
 
         # initialize logging file
         sim_series.initialize_logging()
@@ -116,7 +116,7 @@ def start_gui():
         # initialize logging file
         sim_series.initialize_logging()
 
-        # sim_series.evaluate()
+        # sim_series.evaluate() # todo: funtkioniert noch nicht
 
         window.quit()
 
