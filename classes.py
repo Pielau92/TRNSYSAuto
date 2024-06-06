@@ -436,7 +436,12 @@ class SimulationSeries:
             # wait for the simulation window to open
             app.Öffnen.wait_not('visible', timeout=10)
 
-        except Exception:  # TimeoutError:  todo: Add specific exceptions + add logger entry
+        except Exception:  # TimeoutError:  todo: Add specific exceptions
+
+            message = 'Unknown error occured during simulation of {}.'.format(path_dck_file)
+            self.logger.error(message)
+            print(message)
+
             # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
             app.kill()
             if lock is not None:
