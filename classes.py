@@ -620,6 +620,28 @@ class SimulationSeries:
 
                 return sm
 
+            path_variant_directory = os.path.join(self.path_sim_series_dir, variant_name)
+            path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
+            save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
+
+            # region CHECK IF...
+
+            # ...the trnsys output file is actually there
+            if not os.path.exists(path_variant_file):
+                message = f'File {path_variant_file} does not exist!'
+                self.logger.error(message)
+                print(message)
+                return
+
+            # ...the variant has a corresponding directory
+            if variant_name not in self.sim_list:
+                message = f'Did not find {variant_name} in {self.path_sim_variants_excel}'
+                self.logger.error(message)
+                print(message)
+                return
+
+            # endregion
+
             # read trnsys output file
             trnsys_df = pd.read_csv(path_variant_file, sep='\s+', skiprows=1, skipfooter=0, engine='python')
 
@@ -681,51 +703,21 @@ class SimulationSeries:
 
             # endregion
 
-            self.eval_success[count_variant] = True
+            self.eval_success[variant_index] = True
 
         # initialize progress bar
         progress = 0
-        total = len(self.sim_list)
+        total = len(self.eval_success) - sum(self.eval_success)
         functions.progress_bar(progress, total)
 
-        count_variant = 0
-        for variant_name in self.sim_list:
+        for variant_index, variant_name in enumerate(self.sim_list):
 
-            if self.eval_success[count_variant]:
-                count_variant += 1
-                continue
-
-            path_variant_directory = os.path.join(self.path_sim_series_dir, variant_name)
-            path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
-            save_path_variant_output = \
-                os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
-
-            # region CHECK IF...
-
-            # ...the trnsys output file is actually there
-            if not os.path.exists(path_variant_file):
-                message = f'File {path_variant_file} does not exist!'
-                self.logger.error(message)
-                print(message)
-                continue
-
-            # ...the variant has a corresponding directory
-            if variant_name not in self.sim_list:
-                message = f'Did not find {variant_name} in {self.path_sim_variants_excel}'
-                self.logger.error(message)
-                print(message)
-                continue
-
-            # endregion
-            evaluate_variant()
-
-            progress += 1
-            functions.progress_bar(progress, total)
-
-            count_variant += 1
-
-            if count_variant % 5 == 0:  # save progress every 5 variants
-                self.save()
+            if not self.eval_success[variant_index]:
+                evaluate_variant()
+                progress += 1
+                functions.progress_bar(progress, total)
+                if progress % 5 == 0:  # save progress every 5 evaluation attempts
+                    self.save()
 
     def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""

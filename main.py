@@ -116,7 +116,7 @@ def start_gui():
         # initialize logging file
         sim_series.initialize_logging()
 
-        # sim_series.evaluate() # todo: funtkioniert noch nicht
+        sim_series.start_evaluation()
 
         window.quit()
 
