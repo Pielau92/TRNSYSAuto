@@ -697,6 +697,15 @@ class SimulationSeries:
             return pd.read_excel(save_path_variant_output, sheet_name=sheet_name, usecols=usecols, header=None,
                                  nrows=None, skiprows=None)
 
+        # initialize progress bar
+        progress = 0
+        total = len(self.sim_list)
+        functions.progress_bar(progress, total)
+
+        # logger entry "start"
+        message = 'Reading variant evaluation files for the cumulative evaluation.'
+        self.logger.info(message)
+        print(message)
 
         for variant_index, variant_name in enumerate(self.sim_list):
 
@@ -707,6 +716,10 @@ class SimulationSeries:
             self.zone_1_without_df[variant_name] = read(sheet_name=self.sheet_name_zone_1_input, usecols=[2])
             self.zone_3_with_df[variant_name] = read(sheet_name=self.sheet_name_zone_3_input, usecols=[3])
             self.zone_3_without_df[variant_name] = read(sheet_name=self.sheet_name_zone_3_input, usecols=[2])
+
+            # update progress bar
+            progress += 1
+            functions.progress_bar(progress, total)
 
         # copy into cumulative evaluation excel file
         self.excel_export_cumulative_evaluation()
