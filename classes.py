@@ -763,6 +763,11 @@ class SimulationSeries:
             progress += 1
             functions.progress_bar(progress, total)
 
+        # logger entry "export"
+        message = 'Exporting cumulative evaluation results.'
+        self.logger.info(message)
+        print(message)
+
         # copy into cumulative evaluation excel file
         self.excel_export_cumulative_evaluation()
 
