@@ -116,11 +116,11 @@ class SimulationSeries:
         self.variant_parameter_df = None
         self.eval_success = None
 
-        self.variant_result_columns = pd.DataFrame()
-        self.zone_1_with_df = pd.DataFrame()
-        self.zone_1_without_df = pd.DataFrame()
-        self.zone_3_with_df = pd.DataFrame()
-        self.zone_3_without_df = pd.DataFrame()
+        self.variant_result_columns = None
+        self.zone_1_with_df = None
+        self.zone_1_without_df = None
+        self.zone_3_with_df = None
+        self.zone_3_without_df = None
 
         # endregion
 
@@ -210,6 +210,13 @@ class SimulationSeries:
 
         # initialize evaluation success list
         self.eval_success = [False] * len(self.sim_list)
+
+        # initialize tables for cumulative evaluation
+        self.variant_result_columns = pd.DataFrame(columns=self.sim_list)
+        self.zone_1_with_df = pd.DataFrame(columns=self.sim_list)
+        self.zone_1_without_df = pd.DataFrame(columns=self.sim_list)
+        self.zone_3_with_df = pd.DataFrame(columns=self.sim_list)
+        self.zone_3_without_df = pd.DataFrame(columns=self.sim_list)
 
     def create_dir_sim_series(self):
         """Create simulation series directory.
@@ -675,45 +682,37 @@ class SimulationSeries:
         # create single column with all hourly values, for the cumulative evaluation Excel file
         result_column = functions.to_single_column(result[self.col_headers_result_column])
 
-        # save single column
-        self.variant_result_columns = pd.concat([self.variant_result_columns, result_column], axis=1)
+        # save single column    todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
+        self.variant_result_columns[variant_name] = result_column
 
-        self.eval_success[variant_index] = True     # todo: eval_success durch DataFrame ersetzen, um über den Variantennamen anstatt index eintragen zu können. Dann index als inputparameter entfernen
+        self.eval_success[variant_index] = True
 
         message = 'Finished evaluation for variant {}'.format(variant_name)
         self.logger.info(message)
         print(message)
 
-    def cumulative_evaluation(self):    # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
+    def cumulative_evaluation(self):
+
+        def read(sheet_name, usecols):
+            return pd.read_excel(save_path_variant_output, sheet_name=sheet_name, usecols=usecols, header=None,
+                                 nrows=None, skiprows=None)
+
 
         for variant_index, variant_name in enumerate(self.sim_list):
 
             save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
-            # region CUMULATIVE EVALUATION
 
             # read data from variant evaluation excel file, for the cumulative evaluation excel file
-            self.zone_1_with_df = \
-                pd.concat([self.zone_1_with_df,
-                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
-                                         usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
-            self.zone_1_without_df = \
-                pd.concat([self.zone_1_without_df,
-                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
-                                         usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
-            self.zone_3_with_df = \
-                pd.concat([self.zone_3_with_df,
-                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
-                                         usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
-            self.zone_3_without_df = \
-                pd.concat([self.zone_3_without_df,
-                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
-                                         usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_1_with_df[variant_name] = read(sheet_name=self.sheet_name_zone_1_input, usecols=[3])
+            self.zone_1_without_df[variant_name] = read(sheet_name=self.sheet_name_zone_1_input, usecols=[2])
+            self.zone_3_with_df[variant_name] = read(sheet_name=self.sheet_name_zone_3_input, usecols=[3])
+            self.zone_3_without_df[variant_name] = read(sheet_name=self.sheet_name_zone_3_input, usecols=[2])
 
-            # copy into cumulative evaluation excel file
-            self.excel_export_cumulative_evaluation()
+        # copy into cumulative evaluation excel file
+        self.excel_export_cumulative_evaluation()
 
-            # update cumulative excel
-            functions.update_excel_file(self.path_cumulative_evaluation_save_file)
+        # update cumulative excel
+        functions.update_excel_file(self.path_cumulative_evaluation_save_file)
 
     def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""
