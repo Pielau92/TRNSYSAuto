@@ -81,9 +81,6 @@ def start_gui():
         path_savefile = functions.ask_filename()  # ask for pickle savefile
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
-        # adapt simulation series directory path, in case the simulation was done in another directory/another machine
-        # sim_series.path_sim_series_dir = os.path.dirname(path_savefile)   # todo: noch nötig?
-
         # initialize logging file
         sim_series.initialize_logging()
 

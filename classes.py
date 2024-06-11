@@ -13,17 +13,13 @@ import openpyxl
 import numpy as np
 import pandas as pd
 
-from natsort import natsorted
 from pywinauto.application import Application
 from datetime import datetime
 
-
-# todo: SimulationSeries durch Vererbung erweitern, damit auch andere Programme als TRNSYS leichter automatisiert werden
-#  können
+# todo: docstrings aktualisieren
 class SimulationSeries:
     """Simulation series class.
 
-    todo Beschreibung allgemeiner ausdrücken
     A Simulation series is a series of TRNSYS simulations, which can be computed using multiprocessing.
     """
 
@@ -591,9 +587,9 @@ class SimulationSeries:
         self.logger.info(message)
         print(message)
 
-    def evaluation(self):   # todo: wenn möglich vereinfachen
+    def evaluation(self):
 
-        def evaluate_variant():     # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
+        def evaluate_variant():  # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
 
             def create_schweiker_model(var_list_zone, zone):
                 sm = SchweikerDataFrame()
@@ -716,7 +712,7 @@ class SimulationSeries:
                 evaluate_variant()
                 progress += 1
                 functions.progress_bar(progress, total)
-                if progress % 5 == 0:  # save progress every 5 evaluation attempts
+                if progress % 5 == 0:  # save progress every 5 evaluation attempts  todo: die "5" durch Variable im Einstellungsexcel ersetzen
                     self.save()
 
     def excel_export_cumulative_evaluation(self):
@@ -726,9 +722,8 @@ class SimulationSeries:
             df.to_excel(writer, sheet_name=sheetname, startrow=startrow, startcol=startcol, index=False, header=header)
 
         with pd.ExcelWriter(
-                self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl", if_sheet_exists='overlay')\
+                self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl", if_sheet_exists='overlay') \
                 as writer:
-
             export(self.variant_parameter_df, self.sheet_name_cumulative_input, 1, 0, header=True)
             export(self.zone_1_with_df, self.sheet_name_zone_1_with_operating_time, 1, 7)
             export(self.zone_1_without_df, self.sheet_name_zone_1_without_operating_time, 1, 7)
@@ -768,8 +763,9 @@ class SchweikerDataFrame:
         self.df['ppd'] = ppd
 
     def calcFloatingAverageTemperature(self):
-        """Calculate floating average temperature."""
-        # todo: foreign code without documentation
+        """Calculate floating average temperature.
+
+        Foreign code without documentation"""
 
         floating_alpha = 0.8
         values_name = 'ta'
@@ -854,7 +850,9 @@ class SchweikerDataFrame:
         self.df['Aussentemp_floating_average'] = df[floating_average_name]
 
     def calcComfort(self):
-        # todo: foreign code without documentation
+        """Calculate comfort.
+
+         Foreign code without documentation"""
 
         # PMV und PPD Berechnung
         # nach DIN EN ISO 7730 (mit Berichtigung)
