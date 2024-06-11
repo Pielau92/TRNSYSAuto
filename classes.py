@@ -543,6 +543,9 @@ class SimulationSeries:
             # check for each simulation if it was successful
             self.check_sim_success()
 
+            # save progress
+            self.save()
+
     def check_sim_success(self):
         """Check simulation success.
 
@@ -605,6 +608,9 @@ class SimulationSeries:
                 functions.progress_bar(progress, total)
                 if progress % 5 == 0:  # save evaluation progress
                     self.save()
+
+        # save progress
+        self.save()
 
         # cumulative evaluation
         self.cumulative_evaluation()
