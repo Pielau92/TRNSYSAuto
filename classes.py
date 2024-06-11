@@ -591,18 +591,15 @@ class SimulationSeries:
                 if progress % 5 == 0:  # save evaluation progress
                     self.save()
 
-        # copy into cumulative evaluation file
-        self.excel_export_cumulative_evaluation()
-
-        # update cumulative excel
-        functions.update_excel_file(self.path_cumulative_evaluation_save_file)
+        # cumulative evaluation
+        self.cumulative_evaluation()
 
         # logger entry "finish"
         message = 'Evaluation done.'
         self.logger.info(message)
         print(message)
 
-    def evaluate_variant(self, variant_name, variant_index):  # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
+    def evaluate_variant(self, variant_name, variant_index):    # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
 
         def create_schweiker_model(var_list_zone, zone):
             sm = SchweikerDataFrame()
@@ -665,44 +662,15 @@ class SimulationSeries:
         # sort columns
         result = result[self.col_headers_sim_variant]
 
-        # region VARIANT EVALUATION
-
         # save copy of variant evaluation template
         shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
 
         # save data
-        functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, variant_name,
-                                                  save_path_variant_output,
-                                                  self.variant_parameter_df)
-
-        message = 'Finished evaluation for variant {}'.format(variant_name)
-        self.logger.info(message)
-        print(message)
+        functions.excel_export_variant_evaluation(
+            self.sheet_name_variant_input, result, variant_name, save_path_variant_output, self.variant_parameter_df)
 
         # update excel to receive cross-referenced values and updates calculations
         functions.update_excel_file(save_path_variant_output)
-
-        # read data from variant evaluation excel file, for the cumulative evaluation excel file
-        self.zone_1_with_df = \
-            pd.concat([self.zone_1_with_df,
-                       pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
-                                     usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
-        self.zone_1_without_df = \
-            pd.concat([self.zone_1_without_df,
-                       pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
-                                     usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
-        self.zone_3_with_df = \
-            pd.concat([self.zone_3_with_df,
-                       pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
-                                     usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
-        self.zone_3_without_df = \
-            pd.concat([self.zone_3_without_df,
-                       pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
-                                     usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
-
-        # endregion
-
-        # region CUMULATIVE EVALUATION
 
         # create single column with all hourly values, for the cumulative evaluation Excel file
         result_column = functions.to_single_column(result[self.col_headers_result_column])
@@ -710,9 +678,42 @@ class SimulationSeries:
         # save single column
         self.variant_result_columns = pd.concat([self.variant_result_columns, result_column], axis=1)
 
-        # endregion
+        self.eval_success[variant_index] = True     # todo: eval_success durch DataFrame ersetzen, um über den Variantennamen anstatt index eintragen zu können. Dann index als inputparameter entfernen
 
-        self.eval_success[variant_index] = True
+        message = 'Finished evaluation for variant {}'.format(variant_name)
+        self.logger.info(message)
+        print(message)
+
+    def cumulative_evaluation(self):    # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
+
+        for variant_index, variant_name in enumerate(self.sim_list):
+
+            save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
+            # region CUMULATIVE EVALUATION
+
+            # read data from variant evaluation excel file, for the cumulative evaluation excel file
+            self.zone_1_with_df = \
+                pd.concat([self.zone_1_with_df,
+                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
+                                         usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_1_without_df = \
+                pd.concat([self.zone_1_without_df,
+                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
+                                         usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_3_with_df = \
+                pd.concat([self.zone_3_with_df,
+                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
+                                         usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_3_without_df = \
+                pd.concat([self.zone_3_without_df,
+                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
+                                         usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
+
+            # copy into cumulative evaluation excel file
+            self.excel_export_cumulative_evaluation()
+
+            # update cumulative excel
+            functions.update_excel_file(self.path_cumulative_evaluation_save_file)
 
     def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""
