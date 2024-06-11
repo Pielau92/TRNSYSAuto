@@ -108,6 +108,7 @@ class SimulationSeries:
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
         self.filenames_redundant = None  # list of redundant TRNSYS files that are to be deleted after the simulation
+        self.eval_save_interval = None  # the evaluation progress is saved after each save interval
 
         # region EVALUATION
 
@@ -712,7 +713,7 @@ class SimulationSeries:
                 evaluate_variant()
                 progress += 1
                 functions.progress_bar(progress, total)
-                if progress % 5 == 0:  # save progress every 5 evaluation attempts  todo: die "5" durch Variable im Einstellungsexcel ersetzen
+                if progress % 5 == 0:  # save evaluation progress
                     self.save()
 
     def excel_export_cumulative_evaluation(self):
