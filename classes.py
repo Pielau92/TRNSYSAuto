@@ -723,7 +723,7 @@ class SimulationSeries:
         """Write data into cumulative evaluation file."""
 
         def export(df, sheetname, startrow, startcol, header=False):
-            df.to_excel(writer, sheet_name=sheetname, startrow=startrow, startcol=startcol, index=False, header=False)
+            df.to_excel(writer, sheet_name=sheetname, startrow=startrow, startcol=startcol, index=False, header=header)
 
         with pd.ExcelWriter(
                 self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl", if_sheet_exists='overlay')\
