@@ -462,7 +462,7 @@ class SimulationSeries:
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
         try:
-            success_message.wait('visible', timeout=60 * 10)
+            success_message.wait('visible', timeout=self.timeout)
         except TimeoutError:
             pass  # goes ahead and closes window after time out
 
