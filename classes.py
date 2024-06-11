@@ -571,11 +571,25 @@ class SimulationSeries:
 
     def start_evaluation(self):
 
+        # initialize progress bar
+        progress = 0
+        total = len(self.eval_success) - sum(self.eval_success)
+        functions.progress_bar(progress, total)
+
+        # logger entry "start"
         message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
         self.logger.info(message)
         print(message)
 
-        self.evaluation()
+        # evaluate variants
+        for variant_index, variant_name in enumerate(self.sim_list):
+
+            if not self.eval_success[variant_index]:
+                self.evaluate_variant(variant_name, variant_index)
+                progress += 1
+                functions.progress_bar(progress, total)
+                if progress % 5 == 0:  # save evaluation progress
+                    self.save()
 
         # copy into cumulative evaluation file
         self.excel_export_cumulative_evaluation()
@@ -588,133 +602,117 @@ class SimulationSeries:
         self.logger.info(message)
         print(message)
 
-    def evaluation(self):
+    def evaluate_variant(self, variant_name, variant_index):  # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
 
-        def evaluate_variant():  # todo: Auswertungsergebnisse nicht mehr durch concat speichern, sondern explizit über Variantennamen
+        def create_schweiker_model(var_list_zone, zone):
+            sm = SchweikerDataFrame()
 
-            def create_schweiker_model(var_list_zone, zone):
-                sm = SchweikerDataFrame()
+            sm._df = trnsys_df[var_list_zone].reindex(var_list_zone, axis=1)
 
-                sm._df = trnsys_df[var_list_zone].reindex(var_list_zone, axis=1)
+            zone = str(zone)
 
-                zone = str(zone)
+            # adapt column headers
+            sm.df.columns = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'pmv', 'ppd', 'clo', 'met',
+                             'work']
 
-                # adapt column headers
-                sm.df.columns = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'pmv', 'ppd', 'clo', 'met',
-                                 'work']
+            # insert date columns
+            sm._df = pd.concat([self.date_df[0:len(sm.df)], sm.df], axis=1)
 
-                # insert date columns
-                sm._df = pd.concat([self.date_df[0:len(sm.df)], sm.df], axis=1)
+            # schweiker main
+            sm.calculate()
 
-                # schweiker main
-                sm.calculate()
+            # remove redundant columns
+            sm.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
 
-                # remove redundant columns
-                sm.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
+            # numerate column names for each zone
+            sm.df.columns = ['schweiker_' + string + zone for string in sm.df.columns]
 
-                # numerate column names for each zone
-                sm.df.columns = ['schweiker_' + string + zone for string in sm.df.columns]
+            return sm
 
-                return sm
+        path_variant_directory = os.path.join(self.path_sim_series_dir, variant_name)
+        path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
+        save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
 
-            path_variant_directory = os.path.join(self.path_sim_series_dir, variant_name)
-            path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
-            save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
+        # region CHECK IF...
 
-            # region CHECK IF...
-
-            # ...the trnsys output file is actually there
-            if not os.path.exists(path_variant_file):
-                message = f'File {path_variant_file} does not exist!'
-                self.logger.error(message)
-                print(message)
-                return
-
-            # ...the variant has a corresponding directory
-            if variant_name not in self.sim_list:
-                message = f'Did not find {variant_name} in {self.path_sim_variants_excel}'
-                self.logger.error(message)
-                print(message)
-                return
-
-            # endregion
-
-            # read trnsys output file
-            trnsys_df = pd.read_csv(path_variant_file, sep='\s+', skiprows=1, skipfooter=0, engine='python')
-
-            # create schweiker models
-            sm1 = create_schweiker_model(self.var_list_zone1, 1)
-            sm2 = create_schweiker_model(self.var_list_zone2, 2)
-            sm3 = create_schweiker_model(self.var_list_zone3, 3)
-
-            # concatenate output
-            result = pd.concat([trnsys_df[self.col_headers_trnsys_output], sm1.df, sm2.df, sm3.df], axis=1)
-
-            # sort columns
-            result = result[self.col_headers_sim_variant]
-
-            # region VARIANT EVALUATION
-
-            # save copy of variant evaluation template
-            shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
-
-            # save data
-            functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, variant_name,
-                                                      save_path_variant_output,
-                                                      self.variant_parameter_df)
-
-            message = 'Finished evaluation for variant {}'.format(variant_name)
-            self.logger.info(message)
+        # ...the trnsys output file is actually there
+        if not os.path.exists(path_variant_file):
+            message = f'File {path_variant_file} does not exist!'
+            self.logger.error(message)
             print(message)
+            return
 
-            # update excel to receive cross-referenced values and updates calculations
-            functions.update_excel_file(save_path_variant_output)
+        # ...the variant has a corresponding directory
+        if variant_name not in self.sim_list:
+            message = f'Did not find {variant_name} in {self.path_sim_variants_excel}'
+            self.logger.error(message)
+            print(message)
+            return
 
-            # read data from variant evaluation excel file, for the cumulative evaluation excel file
-            self.zone_1_with_df = \
-                pd.concat([self.zone_1_with_df,
-                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
-                                         usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
-            self.zone_1_without_df = \
-                pd.concat([self.zone_1_without_df,
-                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
-                                         usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
-            self.zone_3_with_df = \
-                pd.concat([self.zone_3_with_df,
-                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
-                                         usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
-            self.zone_3_without_df = \
-                pd.concat([self.zone_3_without_df,
-                           pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
-                                         usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
+        # endregion
 
-            # endregion
+        # read trnsys output file
+        trnsys_df = pd.read_csv(path_variant_file, sep='\s+', skiprows=1, skipfooter=0, engine='python')
 
-            # region CUMULATIVE EVALUATION
+        # create schweiker models
+        sm1 = create_schweiker_model(self.var_list_zone1, 1)
+        sm2 = create_schweiker_model(self.var_list_zone2, 2)
+        sm3 = create_schweiker_model(self.var_list_zone3, 3)
 
-            # create single column with all hourly values, for the cumulative evaluation Excel file
-            result_column = functions.to_single_column(result[self.col_headers_result_column])
+        # concatenate output
+        result = pd.concat([trnsys_df[self.col_headers_trnsys_output], sm1.df, sm2.df, sm3.df], axis=1)
 
-            # save single column
-            self.variant_result_columns = pd.concat([self.variant_result_columns, result_column], axis=1)
+        # sort columns
+        result = result[self.col_headers_sim_variant]
 
-            # endregion
+        # region VARIANT EVALUATION
 
-            self.eval_success[variant_index] = True
+        # save copy of variant evaluation template
+        shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
 
-        # initialize progress bar
-        progress = 0
-        total = len(self.eval_success) - sum(self.eval_success)
-        functions.progress_bar(progress, total)
+        # save data
+        functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, variant_name,
+                                                  save_path_variant_output,
+                                                  self.variant_parameter_df)
 
-        for variant_index, variant_name in enumerate(self.sim_list):
+        message = 'Finished evaluation for variant {}'.format(variant_name)
+        self.logger.info(message)
+        print(message)
 
-            if not self.eval_success[variant_index]:
-                evaluate_variant()
-                progress += 1
-                functions.progress_bar(progress, total)
-                if progress % 5 == 0:  # save evaluation progress
-                    self.save()
+        # update excel to receive cross-referenced values and updates calculations
+        functions.update_excel_file(save_path_variant_output)
+
+        # read data from variant evaluation excel file, for the cumulative evaluation excel file
+        self.zone_1_with_df = \
+            pd.concat([self.zone_1_with_df,
+                       pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
+                                     usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
+        self.zone_1_without_df = \
+            pd.concat([self.zone_1_without_df,
+                       pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input,
+                                     usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
+        self.zone_3_with_df = \
+            pd.concat([self.zone_3_with_df,
+                       pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
+                                     usecols=[3], header=None, nrows=None, skiprows=None)], axis=1)
+        self.zone_3_without_df = \
+            pd.concat([self.zone_3_without_df,
+                       pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input,
+                                     usecols=[2], header=None, nrows=None, skiprows=None)], axis=1)
+
+        # endregion
+
+        # region CUMULATIVE EVALUATION
+
+        # create single column with all hourly values, for the cumulative evaluation Excel file
+        result_column = functions.to_single_column(result[self.col_headers_result_column])
+
+        # save single column
+        self.variant_result_columns = pd.concat([self.variant_result_columns, result_column], axis=1)
+
+        # endregion
+
+        self.eval_success[variant_index] = True
 
     def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""
