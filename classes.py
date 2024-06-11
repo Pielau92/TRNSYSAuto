@@ -589,28 +589,29 @@ class SimulationSeries:
         a cumulative evaluation using the combined results of those individual evaluations.
         """
 
-        # initialize progress bar
-        progress = 0
-        total = len(self.eval_success) - sum(self.eval_success)
-        functions.progress_bar(progress, total)
+        if not all(self.eval_success):
+            # initialize progress bar
+            progress = 0
+            total = len(self.eval_success) - sum(self.eval_success)
+            functions.progress_bar(progress, total)
 
-        # logger entry "start"
-        message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
-        self.logger.info(message)
-        print(message)
+            # logger entry "start"
+            message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
+            self.logger.info(message)
+            print(message)
 
-        # evaluate variants
-        for variant_index, variant_name in enumerate(self.sim_list):
+            # evaluate variants
+            for variant_index, variant_name in enumerate(self.sim_list):
 
-            if not self.eval_success[variant_index]:
-                self.evaluate_variant(variant_name, variant_index)
-                progress += 1
-                functions.progress_bar(progress, total)
-                if progress % 5 == 0:  # save evaluation progress
-                    self.save()
+                if not self.eval_success[variant_index]:
+                    self.evaluate_variant(variant_name, variant_index)
+                    progress += 1
+                    functions.progress_bar(progress, total)
+                    if progress % 5 == 0:  # save evaluation progress
+                        self.save()
 
-        # save progress
-        self.save()
+            # save progress
+            self.save()
 
         # cumulative evaluation
         self.cumulative_evaluation()
