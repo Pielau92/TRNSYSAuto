@@ -491,8 +491,6 @@ class SimulationSeries:
             progress = 0
             total = len(self.sim_list) - sum(np.logical_or(self.sim_success, self.sim_ignore))
             functions.progress_bar(progress, total)
-            print(progress)
-            print(total)
 
             message = 'Starting simulation series from "{}"'.format(self.filename_sim_variants_excel)
             self.logger.info(message)
@@ -738,9 +736,9 @@ class SimulationSeries:
 
         self.eval_success[variant_index] = True
 
-        message = 'Finished evaluation for variant {}'.format(variant_name)
-        self.logger.info(message)
-        print(message)
+        # message = 'Finished evaluation for variant {}'.format(variant_name)
+        # self.logger.info(message)
+        # print(message)
 
     def cumulative_evaluation(self):
         """Perform cumulative evaluation.
