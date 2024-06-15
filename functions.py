@@ -160,7 +160,6 @@ def progress_bar(progress, total):
 
 
 def load(savefile_path):
-
     with open(savefile_path, 'rb') as file:
         return pickle.load(file)
 
@@ -168,143 +167,38 @@ def load(savefile_path):
 def ask_filenames():
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askopenfilenames()
+    return [path.replace("/", "\\") for path in filedialog.askopenfilenames()]
 
 
 def ask_filename():
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askopenfilename()
+    return filedialog.askopenfilename().replace("/", "\\")
 
 
 def ask_dir():
+    """CAUTION: Has compatibility issues with pywinauto (explorer does not open to ask directory location), look in
+    main.py for a fix."""
     root = tk.Tk()
     root.withdraw()
     return filedialog.askdirectory()
 
-# region BIN
 
+def create_date_column(year, time_increment_profiles=60):
+    date = pd.date_range(
+        start=str(year) + '-01-01',
+        end=str(year + 1) + '-01-01',
+        freq=str(time_increment_profiles) + 'min')
 
-# def read_excel(file, sheet_name=0, usecols=None, nrows=None, skiprows=None):
-#     df = pd.read_excel(file, sheet_name=sheet_name, usecols=usecols, nrows=nrows, skiprows=skiprows)
-#     return df
-#
-#
-# def read_multi_header(file, sheet_name=0, index_col=None, usecols=None, to_row=None, header_top=0, header_bottom=1):
-#     # if type(header) == list:
-#     #    largest_header = header.pop(header.index(max(header)))
-#     # else:
-#     #    raise ValueError('given header is not a list')
-#
-#     if to_row is None:
-#         nrows = None
-#     else:
-#         nrows = to_row - header_bottom
-#
-#     # get data and lowest header row
-#     df = pd.read_excel(file,
-#                        sheet_name=sheet_name,
-#                        index_col=index_col,
-#                        # header=0,
-#                        usecols=usecols,
-#                        nrows=nrows,
-#                        skiprows=header_bottom - 1,
-#                        parse_dates=False)
-#     # print(df)
-#
-#     #
-#     index = pd.read_excel(file,
-#                           sheet_name=sheet_name,
-#                           index_col=index_col,
-#                           header=None,
-#                           skiprows=header_top - 1,
-#                           nrows=header_bottom - header_top + 1,
-#                           usecols=usecols,
-#                           parse_dates=False)
-#     # print(index)
-#     index = index.fillna(method='ffill', axis=1)
-#     df.columns = pd.MultiIndex.from_arrays(index.values)
-#     # print(df)
-#
-#
-# def convert_time(data_frame_of_file, conversion, date_format=None):
-#     if conversion == "unix":
-#         data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index, unit='s')
-#     elif conversion == "datetime":
-#         if format == None:
-#             data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index, errors='coerce')
-#         else:
-#             data_frame_of_file.index = pd.to_datetime(data_frame_of_file.index, format=date_format)
-#
-#     elif conversion == 'split':
-#         data_frame_of_file = data_frame_of_file.reset_index()
-#         date_series = combine64(years=data_frame_of_file[data_frame_of_file.columns[0]],
-#                                 months=data_frame_of_file[data_frame_of_file.columns[1]],
-#                                 days=data_frame_of_file[data_frame_of_file.columns[2]],
-#                                 hours=data_frame_of_file[data_frame_of_file.columns[3]],
-#                                 minutes=data_frame_of_file[data_frame_of_file.columns[4]])
-#         data_frame_of_file = data_frame_of_file.assign(date=date_series)
-#         data_frame_of_file.set_index('date', inplace=True)
-#
-#     elif conversion == 'two':
-#         data_frame_of_file = data_frame_of_file.reset_index(drop=True)
-#         datetime_string_column = data_frame_of_file[data_frame_of_file.columns[0]] + ' ' + data_frame_of_file[
-#             data_frame_of_file.columns[1]]
-#
-#         if format == None:
-#             date_series = pd.to_datetime(datetime_string_column, errors='coerce')
-#         else:
-#             date_series = pd.to_datetime(datetime_string_column, format=date_format)
-#
-#         data_frame_of_file = data_frame_of_file.assign(date=date_series)
-#         data_frame_of_file.set_index('date', inplace=True)
-#     return data_frame_of_file
-#
-#
-# def combine64(years, months=1, days=1, weeks=None, hours=None, minutes=None,
-#               seconds=None, milliseconds=None, microseconds=None, nanoseconds=None):
-#     years = np.asarray(years) - 1970
-#     months = np.asarray(months) - 1
-#     days = np.asarray(days) - 1
-#     types = ('<M8[Y]', '<m8[M]', '<m8[D]', '<m8[W]', '<m8[h]',
-#              '<m8[m]', '<m8[s]', '<m8[ms]', '<m8[us]', '<m8[ns]')
-#     vals = (years, months, days, weeks, hours, minutes, seconds,
-#             milliseconds, microseconds, nanoseconds)
-#     return sum(np.asarray(v, dtype=t) for t, v in zip(types, vals)
-#                if v is not None)
-#
-#
-# def get_filename_without_extension(name):
-#     name = name.replace("\\", '/')
-#     return ".".join((name.split("/")[len(name.split("/")) - 1]).split(".")[:-1])
-#
-#
-# def datenum(yearColumn, monthColumn, dayColumn, hourColumn, minuteColumn, secondColumn):
-#     if isinstance(yearColumn, np.int64):
-#         datenum_single = \
-#             date.toordinal(datetime(yearColumn, monthColumn, dayColumn, hourColumn, minuteColumn, secondColumn))
-#         return datenum_single
-#
-#     elif isinstance(yearColumn, pd.core.series.Series):
-#         datenum_array = []
-#         for index in range(len(yearColumn)):
-#             datenum_array.append(date.toordinal(datetime(yearColumn[index], monthColumn[index], dayColumn[index],
-#                                                          hourColumn[index], minuteColumn[index], secondColumn[index])))
-#         return datenum_array
-#
-#
-# def weeknum(time_array=None, year=None, month=None, day=None):
-#     if all(x is not None for x in [year, month, day]):
-#         return date(year, month, day).isocalendar().week
-#     elif time_array is not None:
-#         return date(time_array[0], time_array[1], time_array[2]).isocalendar().week
-#     else:
-#         print('Wrong Input for weeknum function.')
-#         return np.nan
-#
-#
-# def isequal(array):
-#     """Check if all values in input array are identical"""
-#     return all(x == array[0] for x in array)
+    date = date.to_series()
 
-# endregion
+    date_df = pd.DataFrame({
+        'Tag': date.dt.day,
+        'Monat': date.dt.month,
+        'Jahr': date.dt.year,
+        'Stunde': date.dt.hour,
+        'Minute': date.dt.minute
+    })
+    date_df.reset_index(inplace=True)  # reset index
+
+    return date_df

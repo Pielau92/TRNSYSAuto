@@ -5,7 +5,6 @@ import multiprocessing
 import time
 import csv
 import logging
-import glob
 import math
 import functions
 import pickle
@@ -14,21 +13,17 @@ import openpyxl
 import numpy as np
 import pandas as pd
 
-from natsort import natsorted
 from pywinauto.application import Application
 from datetime import datetime
 
 
-# todo: SimulationSeries durch Vererbung erweitern, damit auch andere Programme als TRNSYS leichter automatisiert werden
-#  können
 class SimulationSeries:
     """Simulation series class.
 
-    todo Beschreibung allgemeiner ausdrücken
-    A Simulation series is a series of TRNSYS simulations, which are computed using multiprocessing.
+    A Simulation series is a series of TRNSYS simulations, which can be computed using multiprocessing.
     """
 
-    def __init__(self, path_sim_variants_excel):
+    def __init__(self, path_original_sim_variants_excel):
         """ Initialize simulation series object.
 
         A simulation series is saved in a directory in the same directory as the base folder (which contains templates,
@@ -39,33 +34,20 @@ class SimulationSeries:
 
         Parameters
         ----------
-        path_sim_variants_excel : str
-            path to simulation variants Excel file corresponding to the simulation series.
+        path_original_sim_variants_excel : str
+            path to original simulation variants Excel file corresponding to the simulation series.
         """
 
-        # current time when the main.exe file was executed
-        self.current_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
+        # region SET NAMES
 
-        self.path_sim_variants_excel = path_sim_variants_excel  # path to simulation variants Excel file
-
-        self.logger = None
-        self.logger_filename = 'log.log'
-
-        # filenames and directories
-        self.dir_sim_variants_excel = os.path.dirname(self.path_sim_variants_excel)
-        self.dir_base_folder = os.path.dirname(self.dir_sim_variants_excel)
-        self.filename_sim_variants_excel = os.path.basename(self.path_sim_variants_excel).split('.')[0]
-        # simulation series directory in same directory as base folder
-        self.dir_sim_series = \
-            os.path.join(self.dir_base_folder, self.filename_sim_variants_excel + '_' + self.current_time)
-        self.dir_logfile = os.path.join(self.dir_sim_series, self.logger_filename)
+        # filenames
+        self.filename_logger = 'log.log'
         self.filename_trnsys_output = 'out5.txt'
-        self.dir_save_path_evaluation = os.path.join(self.dir_sim_series, 'evaluation')
-        self.file_save_path_cumulative_evaluation = os.path.join(self.dir_save_path_evaluation, 'gesamt.xlsx')
-        self.path_cumulative_evaluation_template = os.path.abspath('./Basisordner/Auswertung_Gesamt.xlsx')
-        self.path_variant_evaluation_template = './Basisordner/Auswertung_Variante.xlsx'
+        self.filename_settings_excel = 'Einstellungen.xlsx'
+        self.filename_savefile = 'SimulationSeries.pickle'
 
-        # excel sheet names
+        # Excel sheet names
+        self.sheet_name_settings = 'Einstellungen'
         self.sheet_name_variant_input = 'Rohdaten'
         self.sheet_name_calculation = 'Berechn1'
         self.sheet_name_cumulative_input = 'Rohinputs'
@@ -76,6 +58,38 @@ class SimulationSeries:
         self.sheet_name_zone_3_with_operating_time = 'Zone3_Betrieb'
         self.sheet_name_zone_3_without_operating_time = 'Zone3ges'
 
+        # column names
+        self.var_list_zone1 \
+            = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1', 'met1', 'work1']
+        self.var_list_zone2 \
+            = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2', 'met2', 'work2']
+        self.var_list_zone3 \
+            = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3', 'clo3', 'met3', 'work3']
+        self.col_headers_result_column = \
+            ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
+        self.col_headers_trnsys_output \
+            = ['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3',
+               'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1',
+               'met2', 'met3']
+        self.col_headers_sim_variant \
+            = ['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3',
+               'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1',
+               'met2', 'met3', 'schweiker_pmv1', 'schweiker_pmv2', 'schweiker_pmv3', 'schweiker_ppd1', 'schweiker_ppd2',
+               'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2', 'schweiker_clo3', 'schweiker_met1',
+               'schweiker_met2', 'schweiker_met3']
+
+        # endregion
+
+        # current time when the main.exe file was executed
+        self.execution_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
+
+        # path to original simulation variants Excel file within the base directory "Basisordner"
+        self.path_original_sim_variants_excel = path_original_sim_variants_excel
+
+        self.filename_sim_variants_excel = os.path.basename(self.path_original_sim_variants_excel).split('.')[0]
+        self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
+        self.path_sim_series_dir = os.path.abspath(self.dirname_sim_series)  # path to simulation series directory
+
         # simulation series data
         self.sim_list = None  # list of simulation variant names
         self.sim_success = None  # boolean list, documenting the successful simulation of each simulation variant
@@ -84,7 +98,7 @@ class SimulationSeries:
         self.b18_series = None  # pandas series with the .b18 data file names
         self.weather_series = None  # pandas series with the weather data file names
 
-        # Settings
+        # settings
         self.settings = None  # Pandas series with miscellaneous simulation settings
         self.path_exe = None  # path to TRNSYS executable file
         self.name_excelsheet_sim_variants = None  # name of the Excel sheet containing the simulation variants table
@@ -93,59 +107,221 @@ class SimulationSeries:
         self.start_time_buffer = None  # time buffer (sec) between two simulations, for increased stability (optional)
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
         self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
+        self.filenames_redundant = None  # list of redundant TRNSYS files that are to be deleted after the simulation
+        self.eval_save_interval = None  # the evaluation progress is saved after each save interval
 
-    def start(self):
-        """Start simulation series."""
+        # region EVALUATION
 
-        # create new directory for the simulation series
-        os.makedirs(self.dir_sim_series)
+        self.date_df = functions.create_date_column(2024)
+        self.variant_parameter_df = None
+        self.eval_success = None
 
-        # initialize logging file
-        self.initialize_logging()
+        self.variant_result_columns = None
+        self.zone_1_with_df = None
+        self.zone_1_without_df = None
+        self.zone_3_with_df = None
+        self.zone_3_without_df = None
+
+        # endregion
+
+        self.logger = None
+
+    # region PROPERTIES
+
+    @property
+    def cwd(self):
+        """Current working directory."""
+        return os.getcwd()
+
+    @property
+    def path_base_dir(self, base_name='Basisordner'):
+        """Path to base directory "Basisordner"."""
+        return os.path.abspath(base_name)
+
+    @property
+    def path_sim_variants_excel(self):
+        """Path to simulation series Excel file, copied from the base directory "Basisordner"."""
+        return os.path.join(self.path_sim_series_dir, self.filename_sim_variants_excel)
+
+    @property
+    def path_logfile(self):
+        """Path to logfile."""
+        return os.path.join(self.path_sim_series_dir, self.filename_logger)
+
+    @property
+    def path_evaluation_save_dir(self, dir_name='evaluation'):
+        """Path to directory, where evaluation results are saved."""
+        return os.path.join(self.path_sim_series_dir, dir_name)
+
+    @property
+    def path_cumulative_evaluation_save_file(self, filename='gesamt.xlsx'):
+        """Path to cumulative evaluation file."""
+        return os.path.join(self.path_evaluation_save_dir, filename)
+
+    @property
+    def path_cumulative_evaluation_template(self, filename='Auswertung_Gesamt.xlsx'):
+        """Path to cumulative evaluation template file."""
+        return os.path.join(self.path_base_dir, filename)
+
+    @property
+    def path_variant_evaluation_template(self, filename='Auswertung_Variante.xlsx'):
+        """Path to variant evaluation template file."""
+        return os.path.join(self.path_base_dir, filename)
+
+    @property
+    def path_savefile(self):
+        """Path to savefile where the SimulationSeries object (and the simulation/evaluation progress) is saved."""
+        return os.path.join(self.path_sim_series_dir, self.filename_savefile)
+
+    # endregion
+
+    def setup_simulation(self):
+        """Set simulation series up.
+
+        Setting up the simulation series is only necessary once, continuing the simulation at a later time does not need
+        an additional setup. Doing so anyway results in a reset of the simulation progress."""
 
         # import and apply settings Excel file
-        self.import_settings_excel(filename_settings_excel='Einstellungen.xlsx',
-                                         name_excelsheet_settings='Einstellungen')
+        self.import_settings_excel()
 
         # import simulation variants Excel file
         self.import_sim_variants_excel()
 
-        # save SimulationSeries object
-        self.save(self.dir_sim_series)
+        # initialize simulation success/ignore flags
+        self.sim_success = [False] * len(self.sim_list)
+        self.sim_ignore = [False] * len(self.sim_list)
 
-        # start simulation series
-        self.start_sim_series()
+        # create simulation series directory
+        self.create_dir_sim_series()
+
+        # save SimulationSeries object
+        self.save()
+
+    def setup_evaluation(self):
+        """Set evaluation of simulation series up.
+
+        Setting up the evaluation of a simulation series is only necessary once, continuing the evaluation at a later
+        time does not need an additional setup. Doing so anyway results in a reset of the evaluation progress."""
+
+        # create evaluation directory
+        os.makedirs(self.path_evaluation_save_dir, exist_ok=True)
+
+        # create copy of cumulative evaluation file template
+        shutil.copy(self.path_cumulative_evaluation_template, self.path_cumulative_evaluation_save_file)
+
+        # initialize evaluation success list
+        self.eval_success = [False] * len(self.sim_list)
+
+        # initialize tables for cumulative evaluation
+        self.variant_result_columns = pd.DataFrame(columns=self.sim_list)
+        self.zone_1_with_df = pd.DataFrame(columns=self.sim_list)
+        self.zone_1_without_df = pd.DataFrame(columns=self.sim_list)
+        self.zone_3_with_df = pd.DataFrame(columns=self.sim_list)
+        self.zone_3_without_df = pd.DataFrame(columns=self.sim_list)
+
+    def create_dir_sim_series(self):
+        """Create simulation series directory.
+
+        Creates a directory to save the results of the simulation series. Also fills the directory with the following:
+        -   copy of the simulation variants Excel file
+        -   separate subdirectories for each simulation within the simulation series, containing a copy of each file and
+        template necessary for the simulation.
+
+        Afterwards, the simulation parameters from the simulation variants Excel file are applied by modifying the
+        copied template files.
+        """
+
+        def create_sim_subdirectory():
+            """Create simulation subdirectory within simulation series directory.
+
+            Creates a subdirectory within the simulation series directory, with a copy of all template files from the
+            base directory "Basisordner". Each subdirectory corresponds to one simulation.
+            """
+
+            os.makedirs(path_sim)  # create new empty simulation subdirectory
+
+            # source paths
+            src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
+                                         os.path.join('Wetterdaten', self.weather_series[sim])]
+            # destination paths
+            dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim]]
+
+            # copy specified files into simulation subdirectory
+            for file_index in range(len(src_file_list)):
+                try:
+                    shutil.copy(
+                        os.path.join(self.path_base_dir, src_file_list[file_index]),
+                        os.path.join(path_sim, dst_file_list[file_index]))
+                except FileNotFoundError:
+                    message = 'File ' + os.path.join(self.path_base_dir, src_file_list[file_index] +
+                                                     ' could not be found, simulation variant added to ignore' 'list.')
+                    self.logger.error(message)
+                    print(message)
+
+                    self.sim_ignore[index] = True  # simulation variant will be ignored
+
+        def overwrite_dck_file_parameters():
+            """Overwrite parameters inside .dck File.
+
+            Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
+            the simulation variants Excel file.
+            """
+
+            # find and replace weather data file name in .dck file
+            functions.find_and_replace(
+                path_dck, pattern=r'(\*ASSIGN "tm2")', replacement=r'ASSIGN "' + self.weather_series[sim] + '"')
+
+            # find and replace .b17/.b18 file name in .dck file
+            functions.find_and_replace(
+                path_dck, pattern=r'(\*ASSIGN "b17")', replacement=r'ASSIGN "' + self.b18_series[sim] + '"')
+
+            # find and replace
+            functions.find_and_replace_parameter_values(path_dck, r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
+            functions.find_and_replace_parameter_values(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
+
+        # create new directory for the simulation series
+        os.makedirs(self.path_sim_series_dir)
+
+        # initialize logging file
+        self.initialize_logging()
+
+        # copy simulation variants Excel file into simulation series directory
+        shutil.copy(os.path.join(self.path_original_sim_variants_excel), self.path_sim_variants_excel)
+
+        # file name list of files to be copied into simulation subdirectories
+        file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
+                     'Windetc20190804.txt', 'StrahlungBruck.txt']
+
+        for index, sim in enumerate(self.sim_list):
+            path_sim = os.path.join(self.path_sim_series_dir, sim)  # path of simulation subdirectory
+            path_dck = os.path.join(path_sim, self.filename_dck_template)  # path of .dck file
+
+            create_sim_subdirectory()
+            overwrite_dck_file_parameters()
 
     def initialize_logging(self):
         """Initialize logging file."""
 
         self.logger = logging.getLogger(__name__)
-        logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.logger_filename)
-        handler = logging.FileHandler(self.dir_logfile)
+        logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.filename_logger)
+        handler = logging.FileHandler(self.path_logfile)
         self.logger.addHandler(handler)
 
-        self.logger.info(('Log file created successfully in {}.'.format(self.dir_logfile)))
+        self.logger.info(('Log file created successfully in {}.'.format(self.path_logfile)))
 
-    def import_settings_excel(self, filename_settings_excel, name_excelsheet_settings):
+    def import_settings_excel(self):
         """Import simulation series settings from settings Excel file.
 
         Imports simulation series settings from the settings Excel file and applies them to the corresponding attributes
         of the SimulationSeries object. Parameter names in the settings Excel file (column "Parameter") must correspond
         to an attribute name of the SimulationSeries class.
-
-        Parameters
-        ----------
-        filename_settings_excel : str
-            Filename of the settings Excel file.
-        name_excelsheet_settings : str
-            Name of the Excel sheet within the settings Excel file, where the settings are stored.
         """
 
         # read Excel data
-        excel_data = pd.ExcelFile(os.path.join(self.dir_sim_variants_excel, filename_settings_excel))
+        excel_data = pd.ExcelFile(os.path.join(self.path_base_dir, self.filename_settings_excel))
 
         # convert Excel data into pandas DataFrame
-        df = excel_data.parse(name_excelsheet_settings, index_col=0)
+        df = excel_data.parse(self.sheet_name_settings, index_col=0)
 
         # extract values from the column "Wert"
         self.settings = df.Wert
@@ -153,7 +329,6 @@ class SimulationSeries:
         # apply imported settings
         self.apply_settings()
 
-    # todo: automatischer Namensabgleich einführen, am besten mit Prüfung und Meldung bei Unstimmigkeiten
     def apply_settings(self):
         """Apply imported settings to SimulationSeries object.
 
@@ -161,25 +336,31 @@ class SimulationSeries:
         SimulationSeries object with the same name.
         """
 
-        self.path_exe = self.settings.loc['path_exe']
-        self.name_excelsheet_sim_variants = self.settings.loc['name_excelsheet_sim_variants']
-        self.filename_dck_template = self.settings.loc['filename_dck_template']
-        self.timeout = self.settings.loc['timeout']
-        self.start_time_buffer = self.settings.loc['start_time_buffer']
-        self.autostart_evaluation = bool(self.settings.loc['autostart_evaluation'])
+        for index, value in enumerate(self.settings):
+            attribute_name = self.settings.index[index]
+            if not hasattr(self, attribute_name):
+                raise AttributeError(f'Unknown setting "{attribute_name}" in settings Excel file found.')
+            setattr(self, attribute_name, value)
 
-        if self.settings.loc['multiprocessing_max'] == 'auto':
+        if self.multiprocessing_max == 'auto':
             self.multiprocessing_max = multiprocessing.cpu_count()
-        else:
-            self.multiprocessing_max = self.settings.loc['multiprocessing_max']
+
+        self.filenames_redundant = self.filenames_redundant.split(', ')
 
     def import_sim_variants_excel(self):
         """Import simulation variants Excel file.
 
-        Imports the simulation variants Excel file and applies the data to the SimulationSeries object."""
+        Imports the simulation variants Excel file and applies the data to the SimulationSeries object.
+        """
+
+        # todo: hier wird zwei mal der Inhalt des Simulationsvariantenfiles importiert, auf 1 mal reduzieren
+        # read simulation variant parameters
+        self.variant_parameter_df = pd.read_excel(self.path_original_sim_variants_excel,
+                                                  sheet_name='Simulationsvarianten')
+        self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
 
         # read simulation variants Excel file
-        excel_data = pd.ExcelFile(self.path_sim_variants_excel)
+        excel_data = pd.ExcelFile(self.path_original_sim_variants_excel)
 
         # convert Excel data into pandas DataFrame
         df = excel_data.parse(self.name_excelsheet_sim_variants, index_col=0)
@@ -200,150 +381,24 @@ class SimulationSeries:
         # list of simulation variants
         self.sim_list = df.columns[1:].astype(str).tolist()
 
-        # initialize simulation success flags
-        self.sim_success = [False] * len(self.sim_list)
-
-        # initialize simulation ignore flags
-        self.sim_ignore = [False] * len(self.sim_list)
-
         # convert index into string (for stability reasons)
         self.weather_series.index = self.weather_series.index.map(str)
         self.b18_series.index = self.b18_series.index.map(str)
         self.df_dck.index = self.df_dck.index.map(str)
 
-    def save(self, save_dir):
+    def save(self):
         """Save SimulationSeries object in simulation series directory."""
 
-        filename = 'SimulationSeries.pickle'
-        save_path = os.path.join(save_dir, filename)
-
-        with open(save_path, 'wb') as file:
+        with open(self.path_savefile, 'wb') as file:
             pickle.dump(self, file)
 
-    # todo: Methode aufteilen (Textmanipulation in eigene Methode geben)
-    def create_dir_sim_series(self):
-        """Create simulation series directory.
-
-        Creates a directory to save the results of the simulation series. Also fills the directory with the following:
-        -   copy of the simulation variants Excel file
-        -   separate subdirectories for each simulation within the simulation series, containing a copy of each file and
-        template necessary for the simulation.
-
-        Afterwards, the copied template files are modified in order to apply specific simulation parameters from the
-        simulation variants Excel file.
-        """
-
-        for sim_index in range(0, len(self.sim_list)):
-            sim = self.sim_list[sim_index]  # name of the simulation variant
-            path_sim = os.path.join(self.dir_sim_series, sim)  # path of simulation subdirectory
-
-            # create new simulation subdirectory
-            os.makedirs(path_sim)
-
-            # region PREPARE COPYING PROCESS
-
-            # file name list of files to be copied
-            file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
-                         'Windetc20190804.txt', 'StrahlungBruck.txt']
-
-            # source paths
-            src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
-                                         os.path.join('Wetterdaten', self.weather_series[sim])]
-            # destination paths
-            dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim]]
-
-            # endregion
-
-            path_dck = os.path.join(path_sim, dst_file_list[0])  # path of .dck file
-
-            # copy specified files into simulation directory
-            for file_index in range(len(src_file_list)):
-                try:
-                    shutil.copy(
-                        os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]),
-                        os.path.join(path_sim, dst_file_list[file_index]))
-                except FileNotFoundError:
-                    self.logger.error('File ' + os.path.join(self.dir_sim_variants_excel, src_file_list[file_index]
-                                                             + ' could not be found, simulation variant added to ignore'
-                                                               'list.'))
-                    self.sim_ignore[sim_index] = True  # simulation variant will be ignored
-
-            # region FIND AND REPLACE PARAMETERS IN .dck FILE
-
-            # find and replace weather data file name in .dck file
-            functions.find_and_replace(
-                path_dck, pattern=r'(\*ASSIGN "tm2")', replacement=r'ASSIGN "' + self.weather_series[sim] + '"')
-
-            # find and replace .b17/.b18 file name in .dck file
-            functions.find_and_replace(
-                path_dck, pattern=r'(\*ASSIGN "b17")', replacement=r'ASSIGN "' + self.b18_series[sim] + '"')
-
-            # find and replace
-            functions.find_and_replace_parameter_values(path_dck, r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
-            functions.find_and_replace_parameter_values(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
-
-            # endregion
-
-        # copy simulation variants Excel file into simulation series directory
-        shutil.copy(self.path_sim_variants_excel, self.dir_sim_series)
-
-    def start_sim_solo(self, path_dck_file):
-        """start_sim, but without multiprocessing. Useful for debugging."""
-
-        # start application
-        app = Application(backend='uia')
-        app.start(self.path_exe)
-
-        try:
-            app.connect(title="Öffnen", timeout=2)  # self.timeout)
-            app.Öffnen.wait('visible')
-            app.Öffnen.set_focus()
-
-            # insert .dck file path
-            app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)
-
-            # press start button
-            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
-            Button.click_input()
-
-            # wait for the simulation window to open
-            app.Öffnen.wait_not('visible', timeout=10)
-
-        except Exception:  # TimeoutError:  todo: Add specific exceptions
-            # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
-            app.kill()
-            return
-
-        # add a time buffer before releasing the lock, which delays the next simulation
-        time.sleep(self.start_time_buffer)
-
-        window_title = 'TRNSYS: ' + path_dck_file
-
-        success_message = app.window(title=window_title)  # .window(control_type="Text")
-        success_message.wait('visible', timeout=60 * 10)
-
-        app.kill()  # close window
-        time.sleep(5)
-
-        # region DELETE REDUNDANT FILES
-
-        path_sim = os.path.dirname(path_dck_file)
-        # os.remove(path_dck_file[:-3] + 'lst')
-        redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
-        for redundant_file in redundant_file_list:
-            try:
-                os.remove(os.path.join(path_sim, redundant_file))
-            except FileNotFoundError:
-                pass
-
-        # endregion
-
-    def start_sim(self, path_dck_file, lock):
+    def start_sim(self, path_dck_file, lock=None):
         """Start simulation.
 
-        Starts a TRNSYS simulation using a specified dck-file. Also, a lock is passed which ensures no other simulation
-        starts until a specific point is reached. In this case, the lock is released as soon as the TRNSYS simulation
-        window opens. Optionally, start_time_buffer acts as a time buffer before releasing the lock.
+        Starts a TRNSYS simulation using a specified dck-file. If multiprocessing is used, a lock is passed which
+        ensures no other simulation starts until a specific point is reached. In this case, the lock is released as soon
+        as the TRNSYS simulation window opens. Optionally, start_time_buffer acts as a time buffer before releasing the
+        lock.
 
         Parameters
         ----------
@@ -353,6 +408,20 @@ class SimulationSeries:
             Lock object from the multiprocessing module.
         """
 
+        def delete_redundant_files():
+            """Delete redundant files after the simulation.
+
+            Deletes redundant files generated by TRNSYS, to save disk space.
+            """
+
+            path_sim = os.path.dirname(path_dck_file)
+
+            for redundant_file in self.filenames_redundant:
+                try:
+                    os.remove(os.path.join(path_sim, redundant_file))
+                except FileNotFoundError:
+                    pass
+
         # start application
         app = Application(backend='uia')
         app.start(self.path_exe)
@@ -373,53 +442,49 @@ class SimulationSeries:
             app.Öffnen.wait_not('visible', timeout=10)
 
         except Exception:  # TimeoutError:  todo: Add specific exceptions
+
+            message = 'Unknown error occured during simulation of {}.'.format(path_dck_file)
+            self.logger.error(message)
+            print(message)
+
             # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
             app.kill()
-            lock.release()
+            if lock is not None:
+                lock.release()
             return
 
         # add a time buffer before releasing the lock, which delays the next simulation
         time.sleep(self.start_time_buffer)
-        lock.release()
+        if lock is not None:
+            lock.release()
 
         window_title = 'TRNSYS: ' + path_dck_file
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
-        success_message.wait('visible', timeout=60 * 10)
+        try:
+            success_message.wait('visible', timeout=self.timeout)
+        except TimeoutError:
+            pass  # goes ahead and closes window after time out
 
         app.kill()  # close window
         time.sleep(5)
 
-        # region DELETE REDUNDANT FILES
-
-        path_sim = os.path.dirname(path_dck_file)
-        # os.remove(path_dck_file[:-3] + 'lst')
-        redundant_file_list = ['out11.txt', 'out8.txt', 'out6.txt', 'out7.txt', 'out10.txt', 'Speicher1_step.out']
-        for redundant_file in redundant_file_list:
-            try:
-                os.remove(os.path.join(path_sim, redundant_file))
-            except FileNotFoundError:
-                pass
-
-        # endregion
+        delete_redundant_files()
 
     def start_sim_series(self):
         """Start simulation series.
 
-        Starts the calculation of the simulation series and creates a simulation series directory to store the
-        simulation results. Multiple simulation may run simultaneously, depending on the class attribute
-        "multiprocessing_max". After all simulations are done, the method checks if all simulations were calculated
-        successfully. If needed, unsuccessful simulations are calculated and checked again (this process is repeated
-        until all simulations were calculated successfully, unless some simulations are on the "ignore" list anyway).
+        Starts the calculation of the simulation series. Multiple simulations may run simultaneously, depending on the
+        attribute "multiprocessing_max". After all simulations are done, the method checks if all simulations were
+        calculated successfully. If needed, unsuccessful simulations are calculated and checked again (this process is
+        repeated until all simulations were calculated successfully, unless some simulations are on the "ignore" list
+        anyway).
         """
 
-        # create simulation series directory
-        self.create_dir_sim_series()
+        # initialize lock, if multiprocessing is enabled
+        if self.multiprocessing_max > 1:
+            lock = multiprocessing.Lock()
 
-        # initialize lock
-        lock = multiprocessing.Lock()
-
-        # self.multiprocessing_max = 1
         while not all(np.logical_or(self.sim_success, self.sim_ignore)):  # check for remaining simulations
 
             # initialize progress bar
@@ -435,7 +500,8 @@ class SimulationSeries:
 
                 if not self.sim_success[index] and not self.sim_ignore[index]:
                     sim = self.sim_list[index]  # name of simulation
-                    path_dck = os.path.join(self.dir_sim_series, sim, self.filename_dck_template)  # path of dck-file
+                    path_dck = os.path.join(self.path_sim_series_dir, sim,
+                                            self.filename_dck_template)  # path of dck-file
 
                     try:
 
@@ -455,7 +521,7 @@ class SimulationSeries:
                             lock.acquire()
 
                         elif self.multiprocessing_max == 1:
-                            self.start_sim_solo(path_dck)
+                            self.start_sim(path_dck)
 
                     except Exception:
 
@@ -463,8 +529,8 @@ class SimulationSeries:
                         self.logger.error(message)
                         print(message)
 
-                progress += 1
-                functions.progress_bar(progress, total)
+                    progress += 1
+                    functions.progress_bar(progress, total)
 
             # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:
@@ -475,273 +541,265 @@ class SimulationSeries:
             # check for each simulation if it was successful
             self.check_sim_success()
 
-    def check_sim_success(self):
+            # save progress
+            self.save()
+
+    def check_sim_success(self, reset = False):
         """Check simulation success.
 
         Checks for each simulation inside the simulation series, if the simulation was calculated successfully. If so,
-        its sim_success flag is switched from False to True."""
+        its sim_success flag is switched from False to True. If reset is set to True, the sim_success flags are reset
+        first.
 
-        self.logger.info('Checking for failed simulations')
+        Parameters
+        ----------
+        reset : bool
+            Determines if the sim_success flags should be reset before checking.
+        """
+
+        if reset:
+            message = 'Resetting simulation success flags'
+            self.logger.info(message)
+            print(message)
+
+            self.sim_success = [False] * len(self.sim_list)
+
+        message = 'Checking for failed simulations'
+        self.logger.info(message)
+        print(message)
 
         for index in range(len(self.sim_list)):
-            sim = self.sim_list[index]
+            # path of output file
+            path_output = os.path.join(self.path_sim_series_dir, self.sim_list[index], self.filename_trnsys_output)
 
-            path_output = os.path.join(self.dir_sim_series, sim, 'out5.txt')  # path of output file
             if not self.sim_success[index]:
                 try:
                     with open(path_output) as f:
-                        reader = csv.reader(f, delimiter="\t")
-                        d = list(reader)
+                        data = list(csv.reader(f, delimiter="\t"))
 
                     # simulation was successful, if hourly data is complete (8760 entries)
-                    self.sim_success[index] = not len(d) < 8762
+                    self.sim_success[index] = not len(data) < 8762
                 except FileNotFoundError:  # no file found
                     self.sim_success[index] = False
 
         # log simulation success status
         if all(self.sim_success):
-            self.logger.info(('"{}" completed successfully'.format(self.filename_sim_variants_excel)))
+            message = '"{}" completed successfully'.format(self.filename_sim_variants_excel)
+            self.logger.info(message)
+            print(message)
         else:
-            self.logger.info('{} out of {} simulations completed successfully'.format(
-                sum(self.sim_success), len(self.sim_success)))
+            message = \
+                '{} out of {} simulations completed successfully'.format(sum(self.sim_success), len(self.sim_success))
+            self.logger.info(message)
+            print(message)
 
-    def evaluation(self):
-        """Perform evaluation routine."""
+    def start_evaluation(self):
+        """Start evaluation.
 
-        message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
+        Starts the evaluation process, which includes the evaluation of each individual simulation variant, followed by
+        a cumulative evaluation using the combined results of those individual evaluations.
+        """
+
+        if not all(self.eval_success):
+            # initialize progress bar
+            progress = 0
+            total = len(self.eval_success) - sum(self.eval_success)
+            functions.progress_bar(progress, total)
+
+            # logger entry "start"
+            message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
+            self.logger.info(message)
+            print(message)
+
+            # evaluate variants
+            for variant_index, variant_name in enumerate(self.sim_list):
+
+                if not self.eval_success[variant_index]:
+                    self.evaluate_variant(variant_name, variant_index)
+                    progress += 1
+                    functions.progress_bar(progress, total)
+                    if progress % 5 == 0:  # save evaluation progress
+                        self.save()
+
+            # save progress
+            self.save()
+
+        # cumulative evaluation
+        self.cumulative_evaluation()
+
+        # logger entry "finish"
+        message = 'Evaluation done.'
         self.logger.info(message)
         print(message)
 
-        variant_result_columns = pd.DataFrame()
-        zone_1_with_df = pd.DataFrame()
-        zone_1_without_df = pd.DataFrame()
-        zone_3_with_df = pd.DataFrame()
-        zone_3_without_df = pd.DataFrame()
+    def evaluate_variant(self, variant_name, variant_index):
+        """Evaluate simulation variant.
 
-        # region COLUMN NAMES
+        Performs a Schweiker model evaluation and exports the result to a simulation variant evaluation template Excel
+        file.
 
-        var_list_zone1 = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1', 'met1',
-                          'work1']
-        var_list_zone2 = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2',
-                          'met2', 'work2']
-        var_list_zone3 = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3', 'clo3',
-                          'met3', 'work3']
+        Parameters
+        ----------
+        variant_name : str
+            Name of the simulation variant.
+        variant_index : int
+            Index of the simulation variant inside the sim_list attribute.
+        """
+
+        def create_schweiker_model(var_list_zone, zone):
+            """Create SchweikerModel object.
+
+            Creates a SchweikerModel object for a specified zone (the current model has 3).
+
+            Parameters
+            ----------
+            var_list_zone : str
+                Variable list of the zone.
+            zone : int
+                Index of the zone.
+            """
+            sm = SchweikerDataFrame()
+
+            sm._df = trnsys_df[var_list_zone].reindex(var_list_zone, axis=1)
+
+            zone = str(zone)
+
+            # adapt column headers
+            sm.df.columns = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'pmv', 'ppd', 'clo', 'met',
+                             'work']
+
+            # insert date columns
+            sm._df = pd.concat([self.date_df[0:len(sm.df)], sm.df], axis=1)
+
+            # schweiker main
+            sm.calculate()
+
+            # remove redundant columns
+            sm.df.drop(['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period'], axis=1, inplace=True)
+
+            # numerate column names for each zone
+            sm.df.columns = ['schweiker_' + string + zone for string in sm.df.columns]
+
+            return sm
+
+        path_variant_directory = os.path.join(self.path_sim_series_dir, variant_name)
+        path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
+        save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
+
+        # region CHECK IF...
+
+        # ...the trnsys output file is actually there
+        if not os.path.exists(path_variant_file):
+            message = f'File {path_variant_file} does not exist!'
+            self.logger.error(message)
+            print(message)
+            return
+
+        # ...the variant has a corresponding directory
+        if variant_name not in self.sim_list:
+            message = f'Did not find {variant_name} in {self.path_sim_variants_excel}'
+            self.logger.error(message)
+            print(message)
+            return
 
         # endregion
 
-        # region CREATE DATE COLUMN   #todo: Wird derzeit künstlich erzeugt, Jahreszahl ist hard coded
+        # read trnsys output file
+        trnsys_df = pd.read_csv(path_variant_file, sep='\s+', skiprows=1, skipfooter=0, engine='python')
 
-        year = 2023
-        time_increment_profiles = 60
-        date = pd.date_range(
-            start=str(year) + '-01-01',
-            end=str(year + 1) + '-01-01',
-            freq=str(time_increment_profiles) + 'min')
+        # create schweiker models
+        sm1 = create_schweiker_model(self.var_list_zone1, 1)
+        sm2 = create_schweiker_model(self.var_list_zone2, 2)
+        sm3 = create_schweiker_model(self.var_list_zone3, 3)
 
-        date = date.to_series()
+        # concatenate output
+        result = pd.concat([trnsys_df[self.col_headers_trnsys_output], sm1.df, sm2.df, sm3.df], axis=1)
 
-        date_df = pd.DataFrame({
-            'Tag': date.dt.day,
-            'Monat': date.dt.month,
-            'Jahr': date.dt.year,
-            'Stunde': date.dt.hour,
-            'Minute': date.dt.minute
-        })
-        date_df = date_df.reset_index()  # reset index
+        # sort columns
+        result = result[self.col_headers_sim_variant]
 
-        # endregion
+        # save copy of variant evaluation template
+        shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
 
-        # check for existing files in output directory
-        for existing_output in glob.glob(self.dir_save_path_evaluation + '/*.xlsx'):
-            os.remove(existing_output)  # remove existing files
+        # save data
+        functions.excel_export_variant_evaluation(
+            self.sheet_name_variant_input, result, variant_name, save_path_variant_output, self.variant_parameter_df)
 
-        # create evaluation directory
-        os.makedirs(self.dir_save_path_evaluation, exist_ok=True)
+        # update excel to receive cross-referenced values and updates calculations
+        functions.update_excel_file(save_path_variant_output)
 
-        # create copy of cumulative evaluation file template
-        shutil.copy(self.path_cumulative_evaluation_template, self.file_save_path_cumulative_evaluation)
+        # create single column with all hourly values, for the cumulative evaluation Excel file
+        result_column = functions.to_single_column(result[self.col_headers_result_column])
 
-        # read simulation variant parameters
-        variant_parameter_df = pd.read_excel(self.path_sim_variants_excel, sheet_name='Simulationsvarianten')
-        variant_parameter_df.columns = [str(parameter) for parameter in variant_parameter_df.columns]
+        # save single column
+        self.variant_result_columns[variant_name] = result_column
 
-        # ensure variant names list consists of strings
-        list_variants = variant_parameter_df.columns.to_list()
-        # list_variants = [str(variant) for variant in list_variants]
+        self.eval_success[variant_index] = True
 
-        # get top level directory list
-        list_variant_directories = next(os.walk(self.dir_sim_series))[1]
-        list_variant_directories.remove('evaluation')
-        list_variant_directories = natsorted(list_variant_directories)
+        # message = 'Finished evaluation for variant {}'.format(variant_name)
+        # self.logger.info(message)
+        # print(message)
+
+    def cumulative_evaluation(self):
+        """Perform cumulative evaluation.
+
+        Performs a cumulative evaluation by accessing the evaluation results of the individual variants, combining them
+        and exporting the result into the cumulative evaluation template Excel file.
+        """
+
+        def read(sheet_name, usecols):
+            return pd.read_excel(save_path_variant_output, sheet_name=sheet_name, usecols=usecols, header=None,
+                                 nrows=None, skiprows=None)
 
         # initialize progress bar
         progress = 0
-        total = len(list_variant_directories)
+        total = len(self.sim_list)
         functions.progress_bar(progress, total)
 
-        # read TRNSYS output and save data
-        count_variant = 0
-        for dir_variant in list_variant_directories:
-            count_variant = count_variant + 1
-            path_variant_directory = os.path.join(self.dir_sim_series, dir_variant)
-            path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
-            save_path_variant_output = os.path.join(self.dir_save_path_evaluation, 'variant' + dir_variant + '.xlsx')
+        # logger entry "start"
+        message = 'Reading variant evaluation files for the cumulative evaluation.'
+        self.logger.info(message)
+        print(message)
 
-            # region CHECK IF...
-
-            # ...the trnsys output file is actually there
-            if not os.path.exists(path_variant_file):
-                self.logger.error(f'File {path_variant_file} does not exist!')
-                continue
-
-            # ...the variant has a corresponding directory
-            if dir_variant not in list_variants:
-                self.logger.error(f'Did not find {dir_variant} in {self.path_sim_variants_excel}')
-                continue
-
-            # endregion
-
-            # read trnsys output file
-            trnsys_df = pd.read_csv(path_variant_file, sep='\s+', skiprows=1, skipfooter=0, engine='python')
-
-            # region SCHWEIKER MODEL
-
-            # Schweiker model for zones 1, 2 & 3
-            sm1 = SchweikerDataFrame()
-            sm1._df = trnsys_df[var_list_zone1].reindex(var_list_zone1, axis=1)
-            sm2 = SchweikerDataFrame()
-            sm2._df = trnsys_df[var_list_zone2].reindex(var_list_zone2, axis=1)
-            sm3 = SchweikerDataFrame()
-            sm3._df = trnsys_df[var_list_zone3].reindex(var_list_zone3, axis=1)
-
-            # adapt column headers
-            var_list = ['Period', 'ta', 'tzone', 'TMSURF_ZONE', 'relh', 'vel', 'pmv', 'ppd', 'clo', 'met', 'work']
-            sm1.df.columns = var_list
-            sm2.df.columns = var_list
-            sm3.df.columns = var_list
-
-            # insert date columns
-            sm1._df = pd.concat([date_df[0:len(sm1.df)], sm1.df], axis=1)
-            sm2._df = pd.concat([date_df[0:len(sm1.df)], sm2.df], axis=1)
-            sm3._df = pd.concat([date_df[0:len(sm1.df)], sm3.df], axis=1)
-
-            # schweiker main
-            sm1.calculate()
-            sm2.calculate()
-            sm3.calculate()
-
-            # remove redundant columns
-            redundant_columns = ['Tag', 'Monat', 'Jahr', 'Stunde', 'Minute', 'index', 'Period']
-            sm1.df.drop(redundant_columns, axis=1, inplace=True)
-            sm2.df.drop(redundant_columns, axis=1, inplace=True)
-            sm3.df.drop(redundant_columns, axis=1, inplace=True)
-
-            # numerate column names for each zone
-            sm1.df.columns = ['schweiker_' + string + '1' for string in sm1.df.columns]
-            sm2.df.columns = ['schweiker_' + string + '2' for string in sm2.df.columns]
-            sm3.df.columns = ['schweiker_' + string + '3' for string in sm3.df.columns]
-
-            # endregion
-
-            # concatenate output
-            result = pd.concat([trnsys_df[['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges',
-                                           'qvolgesh', 'qc1', 'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3',
-                                           'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1', 'met2', 'met3']],
-                                sm1.df, sm2.df, sm3.df], axis=1)
-
-            # sort columns
-            result = result[
-                ['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1',
-                 'qc2', 'qc3', 'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1',
-                 'clo2', 'clo3', 'met1', 'met2', 'met3', 'schweiker_pmv1', 'schweiker_pmv2', 'schweiker_pmv3',
-                 'schweiker_ppd1', 'schweiker_ppd2', 'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2',
-                 'schweiker_clo3', 'schweiker_met1', 'schweiker_met2', 'schweiker_met3']]
-
-            # region VARIANT EVALUATION
-
-            # save copy of variant evaluation template
-            shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
-
-            # save data
-            functions.excel_export_variant_evaluation(self.sheet_name_variant_input, result, dir_variant,
-                                                      save_path_variant_output,
-                                                      variant_parameter_df)
-
-            self.logger.info('Finished evaluation for variant {}'.format(dir_variant))
-
-            # update excel to receive cross-referenced values and updates calculations
-            functions.update_excel_file(save_path_variant_output)
+        for variant_index, variant_name in enumerate(self.sim_list):
+            save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
 
             # read data from variant evaluation excel file, for the cumulative evaluation excel file
-            zone_1_with_df = pd.concat([
-                zone_1_with_df,
-                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[3],
-                              header=None, nrows=None, skiprows=None)], axis=1)
-            zone_1_without_df = pd.concat([
-                zone_1_without_df,
-                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_1_input, usecols=[2],
-                              header=None, nrows=None, skiprows=None)], axis=1)
-            zone_3_with_df = pd.concat([
-                zone_3_with_df,
-                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[3],
-                              header=None, nrows=None, skiprows=None)], axis=1)
-            zone_3_without_df = pd.concat([
-                zone_3_without_df,
-                pd.read_excel(save_path_variant_output, sheet_name=self.sheet_name_zone_3_input, usecols=[2],
-                              header=None, nrows=None, skiprows=None)], axis=1)
+            self.zone_1_with_df[variant_name] = read(sheet_name=self.sheet_name_zone_1_input, usecols=[3])
+            self.zone_1_without_df[variant_name] = read(sheet_name=self.sheet_name_zone_1_input, usecols=[2])
+            self.zone_3_with_df[variant_name] = read(sheet_name=self.sheet_name_zone_3_input, usecols=[3])
+            self.zone_3_without_df[variant_name] = read(sheet_name=self.sheet_name_zone_3_input, usecols=[2])
 
-            # endregion
-
-            # region CUMULATIVE EVALUATION
-
-            # create single column with all hourly values, for the cumulative evaluation excel file
-            var_list_result_column \
-                = ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
-            result_column = functions.to_single_column(result[
-                                                           var_list_result_column])
-
-            # save single column
-            variant_result_columns = pd.concat([variant_result_columns, result_column], axis=1)
-
-            # endregion
-
+            # update progress bar
             progress += 1
             functions.progress_bar(progress, total)
 
-        # copy into cumulative evaluation file
-        self.excel_export_cumulative_evaluation(variant_result_columns, variant_parameter_df, zone_1_with_df,
-                                                zone_1_without_df, zone_3_with_df, zone_3_without_df)
+        # logger entry "export"
+        message = 'Exporting cumulative evaluation results.'
+        self.logger.info(message)
+        print(message)
+
+        # copy into cumulative evaluation excel file
+        self.excel_export_cumulative_evaluation()
+
         # update cumulative excel
-        functions.update_excel_file(self.file_save_path_cumulative_evaluation)
+        functions.update_excel_file(self.path_cumulative_evaluation_save_file)
 
-        # logger entry "finish"
-        self.logger.info('Evaluation done.')
-
-    def excel_export_variant_evaluation(self, save_path_variant_output, result):
-        """Write data into variant evaluation file."""
-
-        with pd.ExcelWriter(save_path_variant_output, mode="a", engine="openpyxl", if_sheet_exists='overlay') as writer:
-            result.to_excel(writer, sheet_name=self.sheet_name_variant_input, startrow=2, index=False, header=False)
-
-    def excel_export_cumulative_evaluation(self, result_column, variant_parameter_df, zone_1_with_df,
-                                           zone_1_without_df, zone_3_with_df, zone_3_without_df):
+    def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""
 
-        with pd.ExcelWriter(self.file_save_path_cumulative_evaluation, mode="a", engine="openpyxl",
-                            if_sheet_exists='overlay') as writer:
-            variant_parameter_df.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=1,
-                                          startcol=0, index=False)
+        def export(df, sheetname, startrow, startcol, header=False):
+            df.to_excel(writer, sheet_name=sheetname, startrow=startrow, startcol=startcol, index=False, header=header)
 
-            zone_1_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_with_operating_time, startrow=1,
-                                    startcol=7, index=False, header=False)
-            zone_1_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_1_without_operating_time, startrow=1,
-                                       startcol=7, index=False, header=False)
-            zone_3_with_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_with_operating_time, startrow=1,
-                                    startcol=7, index=False, header=False)
-            zone_3_without_df.to_excel(writer, sheet_name=self.sheet_name_zone_3_without_operating_time, startrow=1,
-                                       startcol=7, index=False, header=False)
-            result_column.to_excel(writer, sheet_name=self.sheet_name_cumulative_input, startrow=60,
-                                   startcol=2, index=False, header=False)
+        with pd.ExcelWriter(
+                self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl", if_sheet_exists='overlay') \
+                as writer:
+            export(self.variant_parameter_df, self.sheet_name_cumulative_input, 1, 0, header=True)
+            export(self.zone_1_with_df, self.sheet_name_zone_1_with_operating_time, 1, 7)
+            export(self.zone_1_without_df, self.sheet_name_zone_1_without_operating_time, 1, 7)
+            export(self.zone_3_with_df, self.sheet_name_zone_3_with_operating_time, 1, 7)
+            export(self.zone_3_without_df, self.sheet_name_zone_3_without_operating_time, 1, 7)
+            export(self.variant_result_columns, self.sheet_name_cumulative_input, 60, 2)
 
 
 class SchweikerDataFrame:
@@ -775,8 +833,9 @@ class SchweikerDataFrame:
         self.df['ppd'] = ppd
 
     def calcFloatingAverageTemperature(self):
-        """Calculate floating average temperature."""
-        # todo: foreign code without documentation
+        """Calculate floating average temperature.
+
+        Foreign code without documentation"""
 
         floating_alpha = 0.8
         values_name = 'ta'
@@ -861,7 +920,9 @@ class SchweikerDataFrame:
         self.df['Aussentemp_floating_average'] = df[floating_average_name]
 
     def calcComfort(self):
-        # todo: foreign code without documentation
+        """Calculate comfort.
+
+         Foreign code without documentation"""
 
         # PMV und PPD Berechnung
         # nach DIN EN ISO 7730 (mit Berichtigung)

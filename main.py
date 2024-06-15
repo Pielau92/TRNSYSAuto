@@ -1,11 +1,18 @@
-# region FIX askdirectory/askfilename window does not open
-"""In case the askdirectory/askfile window does not open, try this (fixes compatibility issues between tkinter and
- pywinauto). This must happen before importing pywinauto and tkinter."""
-import sys
-sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
+# region FIX askdirectory window does not open
+"""There are compatibility issues between filedialog.askdirectory() and pywinauto, which cause the askdirectory window
+ not to open. To fix this, use the following lines. This must happen before importing pywinauto and tkinter."""
+# import sys
+# import warnings
+
+# deactivate warnings as workaround for higher stability, but it is not optimal as other warnings are also suppressed
+# warnings.simplefilter("ignore", UserWarning)
+
+# sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
 # endregion
 
 import multiprocessing
+import sys
+import time
 import classes
 import functions
 import os
@@ -16,12 +23,27 @@ def main():
     """Main method."""
 
     # region FIX directory/file asked multiple times
-    """for some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
+    """For some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
     directory/file is asked multiple times), therefore the function "freeze_support" is necessary."""
     multiprocessing.freeze_support()
     # endregion
 
     start_gui()
+
+
+def check_cwd():
+    """Check if base directory is located in current working directory.
+
+    Checks if current working directory (directory where the used main.exe file is located) is located in
+    the same directory as the base directory ("Basisordner"), as it is a requirement to perform simulations. If not,
+    issues a message and exits the program."""
+
+    if not os.path.exists(os.path.join(os.getcwd(), 'Basisordner')):
+        message = 'main.exe file must be located in the same directory as the base directory ("Basisordnder"), ' \
+                  'program will shortly be closed.'
+        print(message)
+        time.sleep(3)
+        sys.exit()
 
 
 def start_gui():
@@ -31,73 +53,77 @@ def start_gui():
     """
 
     def simulate_and_evaluate():
-        window.destroy()    # close GUI window
+        window.destroy()  # close GUI window
 
-        sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
+        # for each simulation series...
+        for sim_series in create_sim_queue():
+            sim_series.setup_simulation()  # set simulation up
+            sim_series.start_sim_series()   # start simulation series
 
-        for sim_series in sim_queue:
-            sim_series.start()  # start calculation
-            sim_series.evaluation()     # start evaluation
+            sim_series.setup_evaluation()   # set evaluation up
+            sim_series.start_evaluation()  # start evaluation
 
         window.quit()
 
     def simulate():
-        window.destroy()    # close GUI window
+        window.destroy()  # close GUI window
 
-        sim_queue = create_sim_queue()  # create queue of simulation series (list of SimulationSeries object(s))
-
-        for sim_series in sim_queue:
-            sim_series.start()  # start calculation
+        # for each simulation series in the queue...
+        for sim_series in create_sim_queue():
+            sim_series.setup_simulation()  # start simulation
+            sim_series.start_sim_series()  # start simulation series
 
         window.quit()
 
     def evaluate():
-        window.destroy()    # close GUI window
+        window.destroy()  # close GUI window
 
-        # ask simulation series directory
-        sim_series_dir = functions.ask_dir()
-
-        # todo: load SimulationSeries object here
-
-        # find path to simulation variants excel file
-        path_sim_variants_excel = os.path.join(
-            sim_series_dir,[filename for filename in os.listdir(sim_series_dir) if ".xlsx" in filename][0])
-
-        # create SimulationSeries object
-        sim_series = classes.SimulationSeries(path_sim_variants_excel)
-
-        # replace object attributes  with those of the selected simulation series to be evaluated
-        sim_series.dir_sim_series = sim_series_dir
-        sim_series.dir_save_path_evaluation = os.path.join(sim_series.dir_sim_series, 'evaluation')
-        sim_series.file_save_path_cumulative_evaluation = os.path.join(sim_series.dir_save_path_evaluation, 'gesamt.xlsx')
-        sim_series.filename_sim_variants_excel = os.path.basename(sim_series.path_sim_variants_excel).split('.')[0]
-        sim_series.dir_logfile = os.path.join(sim_series.dir_sim_series, sim_series.logger_filename)
+        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
         # initialize logging file
         sim_series.initialize_logging()
 
         # start evaluation
-        sim_series.evaluation()  # start evaluation
+        sim_series.setup_evaluation()   # set evaluation up
+        sim_series.start_evaluation()  # start evaluation
 
         window.quit()
 
     def continue_simulation():
         window.destroy()  # close GUI window
 
-        filename = 'SimulationSeries.pickle'
+        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
-        # ask simulation series directory
-        sim_series_path = functions.ask_dir()
-        savefile_path = os.path.join(sim_series_path, filename)
-        sim_series = functions.load(savefile_path)
+        # initialize logging file
+        sim_series.initialize_logging()
 
-        window.quit() # todo: sim_series herannehmen und Simulation anstoßen, nachdem check_success ausgeführt wurde.
+        sim_series.check_sim_success(reset=True)
+        sim_series.start_sim_series()
+
+        window.quit()
+
+    def continue_evaluation():
+        window.destroy()  # close GUI window
+
+        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        sim_series = functions.load(path_savefile)  # load SimulationSeries object
+
+        # initialize logging file
+        sim_series.initialize_logging()
+
+        sim_series.start_evaluation()
+
+        window.quit()
 
     # region GUI
 
     window = tk.Tk()
     label = tk.Label(text="Aktion auswählen")
     label.pack()
+
+    check_cwd()  # check if base directory is located in current working directory, otherwise exit
 
     btn_sim_and_eval = tk.Button(
         window,
@@ -128,12 +154,21 @@ def start_gui():
 
     btn_continue_sim = tk.Button(
         window,
-        text="Continue interrupted Simulation",
+        text="Continue incomplete simulation",
         width=25,
         height=5,
         command=continue_simulation,
     )
     btn_continue_sim.pack()
+
+    btn_continue_eval = tk.Button(
+        window,
+        text="Continue incomplete evaluation",
+        width=25,
+        height=5,
+        command=continue_evaluation,
+    )
+    btn_continue_eval.pack()
 
     window.mainloop()
 
@@ -141,29 +176,13 @@ def start_gui():
 
 
 def create_sim_queue():
-    """Create queue of simulation series.
+    """Ask for simulation variants Excel files and create list of SimulationSeries objects accordingly.
 
     Opens the explorer and asks for one or multiple simulation variants Excel files. For each selected Excel file, an
-    additional SimulationSeries object is created and added to the list sim_queue.
+    additional SimulationSeries object is created and added a list."""
 
-    Returns
-    -------
-    sim_queue : list of SimulationSeries
-        list with SimulationSeries objects.
-    """
+    return [classes.SimulationSeries(path) for path in functions.ask_filenames()]
 
-    # ask simulation variants Excel file path(s)
-    path_sim_variants_excel = functions.ask_filenames()
-
-    # create SimulationSeries object for each simulation variants Excel file selected
-    sim_queue = list()
-    for path in path_sim_variants_excel:
-        path = path.replace("/", "\\")
-
-        # create simulation series object and append to list
-        sim_queue.append(classes.SimulationSeries(path))
-
-    return sim_queue
 
 if __name__ == '__main__':
     main()
