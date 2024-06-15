@@ -546,12 +546,25 @@ class SimulationSeries:
             # save progress
             self.save()
 
-    def check_sim_success(self):
+    def check_sim_success(self, reset = False):
         """Check simulation success.
 
         Checks for each simulation inside the simulation series, if the simulation was calculated successfully. If so,
-        its sim_success flag is switched from False to True.
+        its sim_success flag is switched from False to True. If reset is set to True, the sim_success flags are reset
+        first.
+
+        Parameters
+        ----------
+        reset : bool
+            Determines if the sim_success flags should be reset before checking.
         """
+
+        if reset:
+            message = 'Resetting simulation success flags'
+            self.logger.info(message)
+            print(message)
+
+            self.sim_success = [False] * len(self.sim_list)
 
         message = 'Checking for failed simulations'
         self.logger.info(message)

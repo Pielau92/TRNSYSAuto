@@ -99,7 +99,7 @@ def start_gui():
         # initialize logging file
         sim_series.initialize_logging()
 
-        sim_series.check_sim_success()
+        sim_series.check_sim_success(reset=True)
         sim_series.start_sim_series()
 
         window.quit()
