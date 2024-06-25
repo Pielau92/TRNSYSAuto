@@ -141,7 +141,7 @@ class SimulationSeries:
     @property
     def path_sim_variants_excel(self):
         """Path to simulation series Excel file, copied from the base directory "Basisordner"."""
-        return os.path.join(self.path_sim_series_dir, self.filename_sim_variants_excel)
+        return os.path.join(self.path_sim_series_dir, self.filename_sim_variants_excel) + '.xlsx'
 
     @property
     def path_logfile(self):
