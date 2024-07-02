@@ -106,7 +106,6 @@ class SimulationSeries:
         self.timeout = None  # if timeout (sec) is reached without starting another simulation, stop program
         self.start_time_buffer = None  # time buffer (sec) between two simulations, for increased stability (optional)
         self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
-        self.autostart_evaluation = False  # start the evaluation routine for the simulation results afterwards if True
         self.filenames_redundant = None  # list of redundant TRNSYS files that are to be deleted after the simulation
         self.eval_save_interval = None  # the evaluation progress is saved after each save interval
 
