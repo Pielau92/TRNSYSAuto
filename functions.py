@@ -143,13 +143,14 @@ def to_single_column(df_input):
     var_list_result_column = df_input.columns
     header = pd.DataFrame(var_list_result_column[1:] + ['']).transpose()
     header.columns = var_list_result_column[:-1] + ['']
+    header.index = ['header']
     single_column = pd.concat([
         df_input[var_list_result_column],
         pd.DataFrame(index=['']),
         header],
         axis=0)
     # single_column = single_column.drop(single_column.columns[-1], axis=1)
-    single_column = single_column.transpose().stack(dropna=False)
+    single_column = single_column.transpose().stack(future_stack=True) #, dropna=False)
     return single_column
 
 
