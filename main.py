@@ -18,39 +18,15 @@ import functions
 import os
 import tkinter as tk
 
+"""For some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
+directory/file is asked multiple times), freeze_support() prevents this."""
+multiprocessing.freeze_support()
+
 
 def main():
-    """Main method."""
+    """Main method.
 
-    # region FIX directory/file asked multiple times
-    """For some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
-    directory/file is asked multiple times), therefore the function "freeze_support" is necessary."""
-    multiprocessing.freeze_support()
-    # endregion
-
-    start_gui()
-
-
-def check_cwd():
-    """Check if base directory is located in current working directory.
-
-    Checks if current working directory (directory where the used main.exe file is located) is located in
-    the same directory as the base directory ("Basisordner"), as it is a requirement to perform simulations. If not,
-    issues a message and exits the program."""
-
-    if not os.path.exists(os.path.join(os.getcwd(), 'Basisordner')):
-        message = 'main.exe file must be located in the same directory as the base directory ("Basisordnder"), ' \
-                  'program will shortly be closed.'
-        print(message)
-        time.sleep(3)
-        sys.exit()
-
-
-def start_gui():
-    """Start GUI
-
-    https://realpython.com/python-gui-tkinter/
-    """
+    GUI guide: https://realpython.com/python-gui-tkinter/"""
 
     def simulate_and_evaluate():
         window.destroy()  # close GUI window
@@ -117,62 +93,50 @@ def start_gui():
 
         window.quit()
 
-    # region GUI
+    def add_button(button_text, button_command):
 
+        button = tk.Button(
+            window,
+            text=button_text,
+            width=25,
+            height=5,
+            command=button_command,
+        )
+        button.pack()
+
+    # Start GUI ()
     window = tk.Tk()
     label = tk.Label(text="Aktion auswählen")
     label.pack()
 
     check_cwd()  # check if base directory is located in current working directory, otherwise exit
 
-    btn_sim_and_eval = tk.Button(
-        window,
-        text="Simulate and evaluate",
-        width=25,
-        height=5,
-        command=simulate_and_evaluate,
-    )
-    btn_sim_and_eval.pack()
-
-    btn_sim = tk.Button(
-        window,
-        text="Simulate only",
-        width=25,
-        height=5,
-        command=simulate,
-    )
-    btn_sim.pack()
-
-    btn_eval = tk.Button(
-        window,
-        text="Evaluate only",
-        width=25,
-        height=5,
-        command=evaluate,
-    )
-    btn_eval.pack()
-
-    btn_continue_sim = tk.Button(
-        window,
-        text="Continue incomplete simulation",
-        width=25,
-        height=5,
-        command=continue_simulation,
-    )
-    btn_continue_sim.pack()
-
-    btn_continue_eval = tk.Button(
-        window,
-        text="Continue incomplete evaluation",
-        width=25,
-        height=5,
-        command=continue_evaluation,
-    )
-    btn_continue_eval.pack()
+    button_dict = {"Simulate and evaluate": simulate_and_evaluate,
+                   "Simulate only": simulate,
+                   "Evaluate only": evaluate,
+                   "Continue incomplete simulation": continue_simulation,
+                   "Continue incomplete evaluation": continue_evaluation,
+                   }
+    
+    for text, command in button_dict.items():
+        add_button(text, command)
 
     window.mainloop()
 
-    # endregion
+
+def check_cwd():
+    """Check if base directory is located in current working directory.
+
+    Checks if current working directory (directory where the used main.exe file is located) is located in
+    the same directory as the base directory ("Basisordner"), as it is a requirement to perform simulations. If not,
+    issues a message and exits the program."""
+
+    if not os.path.exists(os.path.join(os.getcwd(), 'Basisordner')):
+        message = 'main.exe file must be located in the same directory as the base directory ("Basisordnder"), ' \
+                  'program will shortly be closed.'
+        print(message)
+        time.sleep(3)
+        sys.exit()
 
 
 def create_sim_queue():
