@@ -9,6 +9,7 @@ import math
 import functions
 import pickle
 import openpyxl
+import settings
 
 import numpy as np
 import pandas as pd
@@ -34,9 +35,18 @@ class SimulationSeries:
 
         Parameters
         ----------
-        path_original_sim_variants_excel : str
+        path.original_sim_variants_excel : str
             path to original simulation variants Excel file corresponding to the simulation series.
         """
+
+        # self.settings = settings.Settings(self)   # todo: settings hier rein speichern
+        self.path = settings.PathSettings(self, path_original_sim_variants_excel)
+
+        # current time when the main.exe file was executed
+        self.execution_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
+
+        self.filename_sim_variants_excel = os.path.basename(self.path.original_sim_variants_excel).split('.')[0]
+        self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
 
         # region SET NAMES
 
@@ -80,16 +90,6 @@ class SimulationSeries:
 
         # endregion
 
-        # current time when the main.exe file was executed
-        self.execution_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
-
-        # path to original simulation variants Excel file within the base directory "Basisordner"
-        self.path_original_sim_variants_excel = path_original_sim_variants_excel
-
-        self.filename_sim_variants_excel = os.path.basename(self.path_original_sim_variants_excel).split('.')[0]
-        self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
-        self.path_sim_series_dir = os.path.abspath(self.dirname_sim_series)  # path to simulation series directory
-
         # simulation series data
         self.sim_list = None  # list of simulation variant names
         self.sim_success = None  # boolean list, documenting the successful simulation of each simulation variant
@@ -125,54 +125,10 @@ class SimulationSeries:
 
         self.logger = None
 
-    # region PROPERTIES
-
     @property
     def cwd(self):
         """Current working directory."""
         return os.getcwd()
-
-    @property
-    def path_base_dir(self, base_name='Basisordner'):
-        """Path to base directory "Basisordner"."""
-        return os.path.abspath(base_name)
-
-    @property
-    def path_sim_variants_excel(self):
-        """Path to simulation series Excel file, copied from the base directory "Basisordner"."""
-        return os.path.join(self.path_sim_series_dir, self.filename_sim_variants_excel) + '.xlsx'
-
-    @property
-    def path_logfile(self):
-        """Path to logfile."""
-        return os.path.join(self.path_sim_series_dir, self.filename_logger)
-
-    @property
-    def path_evaluation_save_dir(self, dir_name='evaluation'):
-        """Path to directory, where evaluation results are saved."""
-        return os.path.join(self.path_sim_series_dir, dir_name)
-
-    @property
-    def path_cumulative_evaluation_save_file(self, filename='gesamt.xlsx'):
-        """Path to cumulative evaluation file."""
-        return os.path.join(self.path_evaluation_save_dir, filename)
-
-    @property
-    def path_cumulative_evaluation_template(self, filename='Auswertung_Gesamt.xlsx'):
-        """Path to cumulative evaluation template file."""
-        return os.path.join(self.path_base_dir, filename)
-
-    @property
-    def path_variant_evaluation_template(self, filename='Auswertung_Variante.xlsx'):
-        """Path to variant evaluation template file."""
-        return os.path.join(self.path_base_dir, filename)
-
-    @property
-    def path_savefile(self):
-        """Path to savefile where the SimulationSeries object (and the simulation/evaluation progress) is saved."""
-        return os.path.join(self.path_sim_series_dir, self.filename_savefile)
-
-    # endregion
 
     def setup_simulation(self):
         """Set simulation series up.
@@ -203,10 +159,10 @@ class SimulationSeries:
         time does not need an additional setup. Doing so anyway results in a reset of the evaluation progress."""
 
         # create evaluation directory
-        os.makedirs(self.path_evaluation_save_dir, exist_ok=True)
+        os.makedirs(self.path.evaluation_save_dir, exist_ok=True)
 
         # create copy of cumulative evaluation file template
-        shutil.copy(self.path_cumulative_evaluation_template, self.path_cumulative_evaluation_save_file)
+        shutil.copy(self.path.cumulative_evaluation_template, self.path.cumulative_evaluation_save_file)
 
         # initialize evaluation success list
         self.eval_success = [False] * len(self.sim_list)
@@ -249,10 +205,10 @@ class SimulationSeries:
             for file_index in range(len(src_file_list)):
                 try:
                     shutil.copy(
-                        os.path.join(self.path_base_dir, src_file_list[file_index]),
+                        os.path.join(self.path.base_dir, src_file_list[file_index]),
                         os.path.join(path_sim, dst_file_list[file_index]))
                 except FileNotFoundError:
-                    message = 'File ' + os.path.join(self.path_base_dir, src_file_list[file_index] +
+                    message = 'File ' + os.path.join(self.path.base_dir, src_file_list[file_index] +
                                                      ' could not be found, simulation variant added to ignore' 'list.')
                     self.logger.error(message)
                     print(message)
@@ -279,20 +235,20 @@ class SimulationSeries:
             functions.find_and_replace_parameter_values(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
 
         # create new directory for the simulation series
-        os.makedirs(self.path_sim_series_dir)
+        os.makedirs(self.path.sim_series_dir)
 
         # initialize logging file
         self.initialize_logging()
 
         # copy simulation variants Excel file into simulation series directory
-        shutil.copy(os.path.join(self.path_original_sim_variants_excel), self.path_sim_variants_excel)
+        shutil.copy(os.path.join(self.path.original_sim_variants_excel), self.path.sim_variants_excel)
 
         # file name list of files to be copied into simulation subdirectories
         file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
                      'Windetc20190804.txt', 'StrahlungBruck.txt']
 
         for index, sim in enumerate(self.sim_list):
-            path_sim = os.path.join(self.path_sim_series_dir, sim)  # path of simulation subdirectory
+            path_sim = os.path.join(self.path.sim_series_dir, sim)  # path of simulation subdirectory
             path_dck = os.path.join(path_sim, self.filename_dck_template)  # path of .dck file
 
             create_sim_subdirectory()
@@ -303,10 +259,10 @@ class SimulationSeries:
 
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.filename_logger)
-        handler = logging.FileHandler(self.path_logfile)
+        handler = logging.FileHandler(self.path.logfile)
         self.logger.addHandler(handler)
 
-        self.logger.info(('Log file created successfully in {}.'.format(self.path_logfile)))
+        self.logger.info(('Log file created successfully in {}.'.format(self.path.logfile)))
 
     def import_settings_excel(self):
         """Import simulation series settings from settings Excel file.
@@ -317,7 +273,7 @@ class SimulationSeries:
         """
 
         # read Excel data
-        excel_data = pd.ExcelFile(os.path.join(self.path_base_dir, self.filename_settings_excel))
+        excel_data = pd.ExcelFile(os.path.join(self.path.base_dir, self.filename_settings_excel))
 
         # convert Excel data into pandas DataFrame
         df = excel_data.parse(self.sheet_name_settings, index_col=0)
@@ -354,12 +310,12 @@ class SimulationSeries:
 
         # todo: hier wird zwei mal der Inhalt des Simulationsvariantenfiles importiert, auf 1 mal reduzieren
         # read simulation variant parameters
-        self.variant_parameter_df = pd.read_excel(self.path_original_sim_variants_excel,
+        self.variant_parameter_df = pd.read_excel(self.path.original_sim_variants_excel,
                                                   sheet_name='Simulationsvarianten')
         self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
 
         # read simulation variants Excel file
-        excel_data = pd.ExcelFile(self.path_original_sim_variants_excel)
+        excel_data = pd.ExcelFile(self.path.original_sim_variants_excel)
 
         # convert Excel data into pandas DataFrame
         df = excel_data.parse(self.name_excelsheet_sim_variants, index_col=0)
@@ -388,7 +344,7 @@ class SimulationSeries:
     def save(self):
         """Save SimulationSeries object in simulation series directory."""
 
-        with open(self.path_savefile, 'wb') as file:
+        with open(self.path.savefile, 'wb') as file:
             pickle.dump(self, file)
 
     def start_sim(self, path_dck_file, lock=None):
@@ -499,7 +455,7 @@ class SimulationSeries:
 
                 if not self.sim_success[index] and not self.sim_ignore[index]:
                     sim = self.sim_list[index]  # name of simulation
-                    path_dck = os.path.join(self.path_sim_series_dir, sim,
+                    path_dck = os.path.join(self.path.sim_series_dir, sim,
                                             self.filename_dck_template)  # path of dck-file
 
                     try:
@@ -569,7 +525,7 @@ class SimulationSeries:
 
         for index in range(len(self.sim_list)):
             # path of output file
-            path_output = os.path.join(self.path_sim_series_dir, self.sim_list[index], self.filename_trnsys_output)
+            path_output = os.path.join(self.path.sim_series_dir, self.sim_list[index], self.filename_trnsys_output)
 
             if not self.sim_success[index]:
                 try:
@@ -681,9 +637,9 @@ class SimulationSeries:
 
             return sm
 
-        path_variant_directory = os.path.join(self.path_sim_series_dir, variant_name)
+        path_variant_directory = os.path.join(self.path.sim_series_dir, variant_name)
         path_variant_file = os.path.join(path_variant_directory, self.filename_trnsys_output)
-        save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
+        save_path_variant_output = os.path.join(self.path.evaluation_save_dir, variant_name + '.xlsx')
 
         # region CHECK IF...
 
@@ -696,7 +652,7 @@ class SimulationSeries:
 
         # ...the variant has a corresponding directory
         if variant_name not in self.sim_list:
-            message = f'Did not find {variant_name} in {self.path_sim_variants_excel}'
+            message = f'Did not find {variant_name} in {self.path.sim_variants_excel}'
             self.logger.error(message)
             print(message)
             return
@@ -718,7 +674,7 @@ class SimulationSeries:
         result = result[self.col_headers_sim_variant]
 
         # save copy of variant evaluation template
-        shutil.copy(self.path_variant_evaluation_template, save_path_variant_output)
+        shutil.copy(self.path.variant_evaluation_template, save_path_variant_output)
 
         # save data
         functions.excel_export_variant_evaluation(
@@ -761,7 +717,7 @@ class SimulationSeries:
         print(message)
 
         for variant_index, variant_name in enumerate(self.sim_list):
-            save_path_variant_output = os.path.join(self.path_evaluation_save_dir, variant_name + '.xlsx')
+            save_path_variant_output = os.path.join(self.path.evaluation_save_dir, variant_name + '.xlsx')
 
             # read data from variant evaluation excel file, for the cumulative evaluation excel file
             self.zone_1_with_df[variant_name] = read(sheet_name=self.sheet_name_zone_1_input, usecols=[3])
@@ -782,7 +738,7 @@ class SimulationSeries:
         self.excel_export_cumulative_evaluation()
 
         # update cumulative excel
-        functions.update_excel_file(self.path_cumulative_evaluation_save_file)
+        functions.update_excel_file(self.path.cumulative_evaluation_save_file)
 
     def excel_export_cumulative_evaluation(self):
         """Write data into cumulative evaluation file."""
@@ -791,7 +747,7 @@ class SimulationSeries:
             df.to_excel(writer, sheet_name=sheetname, startrow=startrow, startcol=startcol, index=False, header=header)
 
         with pd.ExcelWriter(
-                self.path_cumulative_evaluation_save_file, mode="a", engine="openpyxl", if_sheet_exists='overlay') \
+                self.path.cumulative_evaluation_save_file, mode="a", engine="openpyxl", if_sheet_exists='overlay') \
                 as writer:
             export(self.variant_parameter_df, self.sheet_name_cumulative_input, 1, 0, header=True)
             export(self.zone_1_with_df, self.sheet_name_zone_1_with_operating_time, 1, 7)
