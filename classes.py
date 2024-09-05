@@ -39,7 +39,7 @@ class SimulationSeries:
             path to original simulation variants Excel file corresponding to the simulation series.
         """
 
-        # self.settings = settings.Settings(self)   # todo: settings hier rein speichern
+        self.settings = settings.Settings(self)   # todo: settings hier rein speichern
         self.path = settings.PathSettings(self, path_original_sim_variants_excel)
 
         # current time when the main.exe file was executed

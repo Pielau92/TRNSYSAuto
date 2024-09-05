@@ -1,20 +1,61 @@
 import os
+from configparser import ConfigParser
 
 
 class Settings:
     """Class for storing settings of SimulationSeries object."""
     def __init__(self, sim_series):
         self.sim_series = sim_series
+        self._save_path = sim_series.path.settings
+        self._settings = ConfigParser()
+
+        # https://docs.python.org/2/library/configparser.html
+        # https://www.youtube.com/watch?v=DSG6KGF4qJQ
+
+    def load_settings(self):
+        # todo testen
+        try:
+            self._settings.read(self._save_path)
+        except:     # todo Exception einfügen
+            print("settings.ini format error")
+            raise SystemExit()
+
+    def save_settings(self):
+        # todo testen
+        with open(self._save_path, 'w') as f:
+            self._settings.write(f)
+
+    def reset_settings(self):
+        # todo
+        #  Es gibt automatisch eine Sektion DEFAULT, vielleicht lässt sich diese verwenden um ein reset elegant
+        #  durchzuführen
+
+        # self._settings.add_section('main')
+        # self._settings.set('main', 'key1', 'value1')
+        # self._settings.set('main', 'key2', 'value2')
+        # self._settings.set('main', 'key3', 'value3')
+        #
+        # for section in self._settings:
+        #     for s in self._settings[section]:
+        #         print(s)
+
+        pass
 
 
 class PathSettings:
-    """todo: docstring schreiben"""
+    """todo: docstring schreiben + zu PathConfig umbenennen (settings stehen dem User zur Verfügung, paths aber nicht
+        deshalb config)"""
 
     def __init__(self, sim_series, path_original_sim_variants_excel):
         self.sim_series = sim_series
 
         # original simulation variants within base directory
         self.original_sim_variants_excel = path_original_sim_variants_excel
+
+    @property
+    def settings(self, filename='settings.ini'):
+        """Path to settings.ini file."""
+        return os.path.join(self.base_dir, filename)
 
     @property
     def sim_series_dir(self):
