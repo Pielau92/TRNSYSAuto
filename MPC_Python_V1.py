@@ -12,7 +12,7 @@ import numpy as np
 from Building import Building
 from functions_mpc import convert_16_48, convert_48_16, lse
 
-# Variable & Constant definition
+# region Variable & Constant definition
 n = 48  # prediction horizont
 n_s = 16  # shortened horizont, to run the program faster
 dHeat = 0.5  # perturbation value
@@ -31,7 +31,11 @@ T_start_TAB = 22  # start conditions for optimization
 
 season = 0  # Heating or Cooling: Heating = 1, Cooling = 0
 
+point_temperature = 20
+
 header = ["Stunde", "T_out", "Q_solar", "T_sp"]
+
+# endregion
 
 df = pd.read_csv("Test_MPC_Python.csv",
                  encoding="latin1",
@@ -41,7 +45,7 @@ df = pd.read_csv("Test_MPC_Python.csv",
                  delimiter=";",
                  decimal=".")
 
-df["T_sp"] = 20  # Set point Temperatur
+df["T_sp"] = point_temperature  # Set point Temperatur
 
 Q_heat = np.zeros(n)
 Q_heat_s = np.zeros(n_s)
