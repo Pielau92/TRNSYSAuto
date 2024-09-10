@@ -37,6 +37,7 @@ header = ["Stunde", "T_out", "Q_solar", "T_sp"]
 
 # endregion
 
+
 df = pd.read_csv("Test_MPC_Python.csv",
                  encoding="latin1",
                  header=0,
@@ -52,7 +53,14 @@ Q_heat_s = np.zeros(n_s)
 Q_help = np.zeros(n)
 Q_help_s = np.zeros(n_s)
 
-building = Building()
+# BUILDING A
+building = Building(area=158.46,
+                    alpha_w=6.5,
+                    alpha_s=10.75,
+                    k=120.71,
+                    cp_tab=23.45,
+                    cp_r=54.91,
+                    dt=3600)
 
 while NrIt < max_count and ChgProgress >= ChgProgTol:
 
