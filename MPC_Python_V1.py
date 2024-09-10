@@ -30,10 +30,7 @@ season = 0                  # Heating or Cooling: Heating = 1, Cooling = 0
 
 # Import of functions
 from Building import Building
-from LeastSquareError import LeastSquareError
-from Convert_48_16 import Convert_48_16
-from Convert_16_48 import Convert_16_48
-
+from functions_mpc import Convert_16_48, Convert_48_16, LeastSquareError
 
 header = ["Stunde", "T_out", "Q_solar", "T_sp"]
 
