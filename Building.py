@@ -22,12 +22,30 @@ class Building:
         self.dt = dt            # time interval [s] (e.g 3600 = 1 hour)
 
     def calculate(self, Q_heat, Q_solar, T_out, T_start_in, T_start_TAB, season, n):
+        """Calculate todo: spezifizieren
+
+        Parameters
+        ----------
+        Q_heat :
+        Q_solar :
+        T_out :
+        T_start_in :
+        T_start_TAB :
+        season :
+        n :
+
+        Returns
+        -------
+        T_in :
+        T_tab :
+
+        """
 
         # starting values
         Q_loss = np.zeros(n)    # prediction convection, transition and ventilation losses [kW]
-        Q_tab = np.zeros(n)
-        T_tab = np.zeros(n)
-        T_in = np.zeros(n)
+        Q_tab = np.zeros(n)     # thermal heat flow [kW]
+        T_in = np.zeros(n)      # prediction room temperature [°C]; m_R * (cp_r = 54.91 kWh/K)
+        T_tab = np.zeros(n)     # temperature TAB [°C]; m_TAB *cp_tab = 23.45 kWh/K
 
         T_tab[0] = T_start_TAB
         T_in[0] = T_start_in
@@ -37,16 +55,14 @@ class Building:
             Q_loss[i] = (T_in[i] - T_out[i]) * self.k / 1000
 
             if season:
-                # heating in winter (thermal heat flow from TAB to room [kW])
+                # heating in winter (heat flow from TAB to room)
                 Q_tab[i] = (T_tab[i] - T_in[i]) * (self.alpha_w / 1000 * self.area)
             else:
-                # cooling in summer (thermal heat flow from room to TAB [kW])
+                # cooling in summer (heat flow from room to TAB)
                 Q_tab[i] = (T_tab[i] - T_in[i]) * (self.alpha_s / 1000 * self.area)
 
             if i < n - 1:  # to avoid array overflow
-                # temperature TAB [°C]; m_TAB*cp_tab = 23.45 kWh/K
                 T_tab[i + 1] = (Q_heat[i] - Q_tab[i]) / self.cp_tab * (self.dt / 3600) + T_tab[i]
-                # prediction room temperature [°C]; m_R*cp_r = 54.91 kWh/K
                 T_in[i + 1] = (Q_tab[i] + Q_solar[i] - Q_loss[i]) / self.cp_r * (self.dt / 3600) + T_in[i]
 
             # print ("Q_heat[",i,"]:", Q_heat[i], "Q_TAB:", Q_Tab[i], "T_Tab:", T_Tab[i], "T_in", T_in[i])

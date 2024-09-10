@@ -17,26 +17,25 @@ n = 48  # prediction horizont
 n_s = 16  # shortened horizont, to run the program faster
 dHeat = 0.5  # perturbation value
 
-ChgProgTol = 0.000005  # Termination criterion optimization - Change in LSE
-ChgProgress = 1  # Termination criterion optimization - Difference between LSE_old and LSE
+ChgProgTol = 0.000005  # termination criterion optimization - Change in LSE
+ChgProgress = 1  # termination criterion optimization - Difference between LSE_old and LSE
 
 NrIt = 0  # number of iterations - while loop count
 max_count = 500  # max. runs of iteration possible
 
-MaxHtg = 13  # Max. heating Power - Reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
-MinHtg = -10  # Max. cooling Power - Both TOPS: -10 kW
+MaxHtg = 13  # max. heating Power - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
+MinHtg = -10  # max. cooling Power - both TOPS: -10 kW
 
 T_start_in = 22  # start conditions for optimization
 T_start_TAB = 22  # start conditions for optimization
 
-season = 0  # Heating or Cooling: Heating = 1, Cooling = 0
+season = 0  # heating or cooling: heating = 1, cooling = 0
 
 point_temperature = 20
 
 header = ["Stunde", "T_out", "Q_solar", "T_sp"]
 
 # endregion
-
 
 df = pd.read_csv("Test_MPC_Python.csv",
                  encoding="latin1",
@@ -46,14 +45,14 @@ df = pd.read_csv("Test_MPC_Python.csv",
                  delimiter=";",
                  decimal=".")
 
-df["T_sp"] = point_temperature  # Set point Temperatur
+df["T_sp"] = point_temperature  # set point temperatur
 
 Q_heat = np.zeros(n)
 Q_heat_s = np.zeros(n_s)
 Q_help = np.zeros(n)
 Q_help_s = np.zeros(n_s)
 
-# BUILDING A
+# building A
 building = Building(area=158.46,
                     alpha_w=6.5,
                     alpha_s=10.75,
@@ -65,82 +64,84 @@ building = Building(area=158.46,
 while NrIt < max_count and ChgProgress >= ChgProgTol:
 
     # BASELINE CALCULATION
-    # Calling Function Building
     T_in, T_Tab = building.calculate(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
-    # Calling Function LeastSquareError for zero heat input / heat output
-    Lse_0 = lse(T_in, df["T_sp"])
-    # Calling Function Shorten Q_heat
-    Q_heat_s = convert_48_16(Q_heat, n_s)
+    Lse_0 = lse(T_in, df["T_sp"])  # calculate least square error for zero heat input / heat output
 
-    # Loop to go through the elements of the vector
+    Q_heat_s = convert_48_16(Q_heat, n_s)   # shorten Q_heat
+
+    # loop to go through the elements of the vector
     for i in range(n_s):
 
-        # NEGATIVE PERTURBATION
-        Q_help_s[i] = Q_heat_s[i] - dHeat  # negative perturbation of element i
+        # region NEGATIVE PERTURBATION
+
+        Q_help_s[i] = Q_heat_s[i] - dHeat  # negative perturbation
+
         if Q_help_s[i] <= MinHtg:  # limitation to minimum cooling power
             Q_help_s[i] = MinHtg
-        # Calling Function Expand Q_heat
-        Q_help = convert_16_48(Q_help_s, n)
-        # Calling Function Building
-        T_in, T_Tab = building.calculate(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
-        # Calling Function LeastSquareError for negative perturbation
-        Lse_m = lse(T_in, df["T_sp"])
 
-        # POSITIVE PERTURBATION
-        Q_help_s[i] = Q_heat_s[i] + dHeat  # positive perturbation of element i
+        Q_help = convert_16_48(Q_help_s, n)     # expand Q_heat
+
+        T_in, T_Tab = building.calculate(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
+        Lse_m = lse(T_in, df["T_sp"])  # least square error for negative perturbation
+
+        # endregion
+
+        # region POSITIVE PERTURBATION
+        Q_help_s[i] = Q_heat_s[i] + dHeat  # positive perturbation
+
         if Q_help_s[i] >= MaxHtg:  # limitation to maximum heating power
             Q_help_s[i] = MaxHtg
-        # Calling Function Expand Q_heat
-        Q_help = convert_16_48(Q_help_s, n)
-        # Calling Function Building
-        T_in, T_Tab = building.calculate(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
-        # Calling Function LeastSquareError for positive perturbation
-        Lse_p = lse(T_in, df["T_sp"])
 
-        # Interpretation of the perturbation Effect
-        Lse_s = [Lse_0, Lse_m, Lse_p]  # Vector with LSE possibilities
-        Best_Lse_s = min(Lse_s)  # Best LeastSquareError of the LSE possibilities
+        Q_help = convert_16_48(Q_help_s, n)     # expand Q_heat
+
+        T_in, T_Tab = building.calculate(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
+        Lse_p = lse(T_in, df["T_sp"])   # least square error for positive perturbation
+
+        # endregion
+
+        # interpretation of the perturbation effect
+        Lse_s = [Lse_0, Lse_m, Lse_p]  # vector with LSE possibilities
+        Best_Lse_s = min(Lse_s)  # best least square error of the LSE possibilities
         id_Best = Lse_s.index(
-            min(Lse_s))  # Position of best LeastSquareError of the possibilities: 0 = LSE_0, 1 = LSE_m, 2 = LSE_p
+            min(Lse_s))  # position of the best least square error of the possibilities: 0 = LSE_0, 1 = LSE_m, 2 = LSE_p
 
         if id_Best == 0:  # if Best_LSE is LSE_0
             Q_heat_s[i] = Q_heat_s[i]
 
         if id_Best == 1:  # if Best_LSE is negative perturbation
-            Q_heat_s[i] = Q_heat_s[i] - dHeat  # negative perturbation of element i
+            Q_heat_s[i] = Q_heat_s[i] - dHeat  # negative perturbation
 
         if id_Best == 2:  # if Best_LSE is positive perturbation
-            Q_heat_s[i] = Q_heat_s[i] + dHeat  # positive perturbation of element i
+            Q_heat_s[i] = Q_heat_s[i] + dHeat  # positive perturbation
 
-        # Limitations that cooling and heating in one period is not possible
-        if season == 0:  # Cooling; Limitation is max. Cooling Power
+        # limitations that cooling and heating in one period is not possible
+        if season == 0:  # cooling; limitation is max. cooling power
             if Q_heat_s[i] <= MinHtg:  # limitation to minimum cooling power
                 Q_heat_s[i] = MinHtg
-            if Q_heat_s[i] > 0:  # Exclusion of simultaneous heating and cooling in one period
+            if Q_heat_s[i] > 0:  # exclusion of simultaneous heating and cooling in one period
                 Q_heat_s[i] = 0
 
-        if season == 1:  # Heating; Limitation is max. Heating Power
+        if season == 1:  # heating; limitation is max. heating power
             if Q_heat_s[i] >= MaxHtg:  # limitation to maximum heating power
                 Q_heat_s[i] = MaxHtg
-            if Q_heat_s[i] < 0:  # Exclusion of simultaneous heating and cooling in one period
+            if Q_heat_s[i] < 0:  # exclusion of simultaneous heating and cooling in one period
                 Q_heat_s[i] = 0
 
-        Q_help_s[i] = Q_heat_s[i]  # Reset of the helping variable to not forget the value
+        Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
 
-    # Extand heating vector to prediction horizont
-    Q_heat = convert_16_48(Q_heat_s, n)
-    # Calling Function Building
+    Q_heat = convert_16_48(Q_heat_s, n)     # expand heating vector to prediction horizont
+
     T_in, T_Tab = building.calculate(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
-    # Calling Function LeastSquareError for final perturbation in this loop run   
-    Lse_neu_long = lse(T_in, df["T_sp"])
-    # Calculate termination criterion: LeastSquareError from start compared LSE with last perturbation run
+
+    Lse_neu_long = lse(T_in, df["T_sp"])    # calculate least square error for final perturbation in this loop run
+    # calculate termination criterion: least square error from start compared LSE with last perturbation run
     ChgProgress = Lse_0 - Lse_neu_long
-    # Output of final LeastSquareError
+    # output of final least square error
     print(NrIt, ". Durchgang: ", Lse_neu_long)
-    # Loop counter  
+    # loop counter
     NrIt = NrIt + 1
 
-# Graphical evaluation
+# graphical evaluation
 # fig, ax1 = plt.subplots()
 # # ax1.plot(df.index,df["T_out"], color = "blue", label = "Außentemperatur")
 # # ax1.plot(df.index,df["Q_solar"], color = "orange", label = "Solare Einstrahlung")

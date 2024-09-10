@@ -10,6 +10,7 @@ from statistics import mean
 
 
 def convert_16_48(Q_heat_s, n):
+    """todo"""
     Q_heat = np.zeros(n)
 
     Q_heat[0:6] = Q_heat_s[0:6]
@@ -28,6 +29,7 @@ def convert_16_48(Q_heat_s, n):
 
 
 def convert_48_16(Q_heat, n_s):
+    """todo"""
     Q_heat_s = np.zeros(n_s)
 
     Q_heat_s[0:6] = Q_heat[0:6]
@@ -46,5 +48,5 @@ def convert_48_16(Q_heat, n_s):
 
 
 def lse(T_in, T_sp):
-    """Calculate least square error."""
+    """Calculate least square error. todo: Variablennamen inhaltsunabhängig umbenennen (also keiner Temperaturen)"""
     return sum(pow((T_in - T_sp), 2))
