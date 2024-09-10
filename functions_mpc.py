@@ -8,38 +8,38 @@ Created on Thu Aug  3 14:22:05 2023
 import numpy as np
 
 
-def Convert_16_48(Q_heat_s, n):
+def convert_16_48(Q_heat_s, n):
     Q_heat = np.zeros(n)
 
     for i in range(n):
         if i < 6:
             Q_heat[i] = Q_heat_s[i]
-        if i >= 6 and i < 8:
+        if 6 <= i < 8:
             Q_heat[i] = Q_heat_s[6]
-        if i >= 8 and i < 10:
+        if 8 <= i < 10:
             Q_heat[i] = Q_heat_s[7]
-        if i >= 10 and i < 12:
+        if 10 <= i < 12:
             Q_heat[i] = Q_heat_s[8]
-        if i >= 12 and i < 15:
+        if 12 <= i < 15:
             Q_heat[i] = Q_heat_s[9]
-        if i >= 15 and i < 18:
+        if 15 <= i < 18:
             Q_heat[i] = Q_heat_s[10]
-        if i >= 18 and i < 21:
+        if 18 <= i < 21:
             Q_heat[i] = Q_heat_s[11]
-        if i >= 21 and i < 24:
+        if 21 <= i < 24:
             Q_heat[i] = Q_heat_s[12]
-        if i >= 24 and i < 30:
+        if 24 <= i < 30:
             Q_heat[i] = Q_heat_s[13]
-        if i >= 30 and i < 36:
+        if 30 <= i < 36:
             Q_heat[i] = Q_heat_s[14]
-        if i >= 36 and i < 48:
+        if 36 <= i < 48:
             Q_heat[i] = Q_heat_s[15]
         # print(i, Q_heat[i], Q_heat_s[i])
 
-    return (Q_heat)
+    return Q_heat
 
 
-def Convert_48_16(Q_heat, n_s):
+def convert_48_16(Q_heat, n_s):
     Q_heat_s = np.zeros(n_s)
 
     for i in range(6):
@@ -60,10 +60,9 @@ def Convert_48_16(Q_heat, n_s):
     Q_heat_s[15] = (Q_heat[36] + Q_heat[37] + Q_heat[38] + Q_heat[39] + Q_heat[40] + Q_heat[41] + Q_heat[42] + Q_heat[
         43] + Q_heat[44] + Q_heat[45] + Q_heat[46] + Q_heat[47]) / 12
 
-    return (Q_heat_s)
+    return Q_heat_s
 
 
-def LeastSquareError(T_in, T_sp):
-    LeastSQE = sum(pow((T_in - T_sp), 2))
-    # print ("LSE: ", LeastSQE)
-    return (LeastSQE)
+def lse(T_in, T_sp):
+    """Calculate least square error."""
+    return sum(pow((T_in - T_sp), 2))
