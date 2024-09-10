@@ -23,35 +23,32 @@ class Building:
 
     def calculate(self, Q_heat, Q_solar, T_out, T_start_in, T_start_TAB, season, n):
 
-        # Starting values and definition
-        Q_Loss = np.zeros(n)
-        Q_Tab = np.zeros(n)
-        T_Tab = np.zeros(n)
+        # starting values
+        Q_loss = np.zeros(n)    # prediction convection, transition and ventilation losses [kW]
+        Q_tab = np.zeros(n)
+        T_tab = np.zeros(n)
         T_in = np.zeros(n)
 
-        T_Tab[0] = T_start_TAB
+        T_tab[0] = T_start_TAB
         T_in[0] = T_start_in
 
         for i in range(n):
-            # Prediction convection, transition and ventilation losses [kW]
-            Q_Loss[i] = (T_in[i] - T_out[i]) * self.k / 1000
 
-            if season == 1:  # Heating in winter
-                # Thermal heat flow from TAB to room [kW]
-                # alpha Winter = 6.5 W/m²K
-                Q_Tab[i] = (T_Tab[i] - T_in[i]) * (self.alpha_w / 1000 * self.area)
+            Q_loss[i] = (T_in[i] - T_out[i]) * self.k / 1000
 
-            if season == 0:  # Cooling in summer
-                # Thermal heat flow from room to TAB [kW]
-                # alpha summer = 10.75 W/m²K
-                Q_Tab[i] = (T_Tab[i] - T_in[i]) * (self.alpha_s / 1000 * self.area)
+            if season:
+                # heating in winter (thermal heat flow from TAB to room [kW])
+                Q_tab[i] = (T_tab[i] - T_in[i]) * (self.alpha_w / 1000 * self.area)
+            else:
+                # cooling in summer (thermal heat flow from room to TAB [kW])
+                Q_tab[i] = (T_tab[i] - T_in[i]) * (self.alpha_s / 1000 * self.area)
 
             if i < n - 1:  # to avoid array overflow
-                # Temperature TAB [°C]; m_TAB*cp_tab = 23.45 kWh/K
-                T_Tab[i + 1] = (Q_heat[i] - Q_Tab[i]) / self.cp_tab * (self.dt / 3600) + T_Tab[i]
-                # Prediction Room Temperature [°C]; m_R*cp_r = 54.91 kWh/K
-                T_in[i + 1] = (Q_Tab[i] + Q_solar[i] - Q_Loss[i]) / self.cp_r * (self.dt / 3600) + T_in[i]
+                # temperature TAB [°C]; m_TAB*cp_tab = 23.45 kWh/K
+                T_tab[i + 1] = (Q_heat[i] - Q_tab[i]) / self.cp_tab * (self.dt / 3600) + T_tab[i]
+                # prediction room temperature [°C]; m_R*cp_r = 54.91 kWh/K
+                T_in[i + 1] = (Q_tab[i] + Q_solar[i] - Q_loss[i]) / self.cp_r * (self.dt / 3600) + T_in[i]
 
             # print ("Q_heat[",i,"]:", Q_heat[i], "Q_TAB:", Q_Tab[i], "T_Tab:", T_Tab[i], "T_in", T_in[i])
 
-        return T_in, T_Tab
+        return T_in, T_tab
