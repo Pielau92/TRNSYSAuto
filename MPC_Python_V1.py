@@ -5,7 +5,7 @@ Created on Thu Aug  3 13:08:01 2023
 @author: Magdalena
 """
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
@@ -127,18 +127,18 @@ while NrIt < max_count and ChgProgress >= ChgProgTol:
     NrIt = NrIt + 1
 
 # Graphical evaluation
-fig, ax1 = plt.subplots()
-# ax1.plot(df.index,df["T_out"], color = "blue", label = "Außentemperatur")
-# ax1.plot(df.index,df["Q_solar"], color = "orange", label = "Solare Einstrahlung")
-ax1.plot(df.index, df["T_sp"], color="red", label="Solltemperatur")
-ax1.plot(df.index, Q_heat, color="brown", label="Heizleistung")
-ax1.plot(df.index, T_in, color="green", label="Präd. Raumtemperatur")
-ax1.plot(df.index, T_Tab, color="violet", label="TAB-Temperatur")
-ax1.legend(loc="best")
-
-figure_props = {
-    "title": "Test MPC",
-    "ylabel": "Temperatur [°C] / Solar Radiation [kW]",
-    # "ylim": [15,30],
-}
-ax1.set(**figure_props)
+# fig, ax1 = plt.subplots()
+# # ax1.plot(df.index,df["T_out"], color = "blue", label = "Außentemperatur")
+# # ax1.plot(df.index,df["Q_solar"], color = "orange", label = "Solare Einstrahlung")
+# ax1.plot(df.index, df["T_sp"], color="red", label="Solltemperatur")
+# ax1.plot(df.index, Q_heat, color="brown", label="Heizleistung")
+# ax1.plot(df.index, T_in, color="green", label="Präd. Raumtemperatur")
+# ax1.plot(df.index, T_Tab, color="violet", label="TAB-Temperatur")
+# ax1.legend(loc="best")
+#
+# figure_props = {
+#     "title": "Test MPC",
+#     "ylabel": "Temperatur [°C] / Solar Radiation [kW]",
+#     # "ylim": [15,30],
+# }
+# ax1.set(**figure_props)
