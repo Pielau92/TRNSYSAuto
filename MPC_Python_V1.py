@@ -52,11 +52,13 @@ Q_heat_s = np.zeros(n_s)
 Q_help = np.zeros(n)
 Q_help_s = np.zeros(n_s)
 
+building = Building()
+
 while NrIt < max_count and ChgProgress >= ChgProgTol:
 
     # BASELINE CALCULATION
     # Calling Function Building
-    T_in, T_Tab = Building(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
+    T_in, T_Tab = building.calculate(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
     # Calling Function LeastSquareError for zero heat input / heat output
     Lse_0 = lse(T_in, df["T_sp"])
     # Calling Function Shorten Q_heat
@@ -72,7 +74,7 @@ while NrIt < max_count and ChgProgress >= ChgProgTol:
         # Calling Function Expand Q_heat
         Q_help = convert_16_48(Q_help_s, n)
         # Calling Function Building
-        T_in, T_Tab = Building(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
+        T_in, T_Tab = building.calculate(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
         # Calling Function LeastSquareError for negative perturbation
         Lse_m = lse(T_in, df["T_sp"])
 
@@ -83,7 +85,7 @@ while NrIt < max_count and ChgProgress >= ChgProgTol:
         # Calling Function Expand Q_heat
         Q_help = convert_16_48(Q_help_s, n)
         # Calling Function Building
-        T_in, T_Tab = Building(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
+        T_in, T_Tab = building.calculate(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
         # Calling Function LeastSquareError for positive perturbation
         Lse_p = lse(T_in, df["T_sp"])
 
@@ -120,7 +122,7 @@ while NrIt < max_count and ChgProgress >= ChgProgTol:
     # Extand heating vector to prediction horizont
     Q_heat = convert_16_48(Q_heat_s, n)
     # Calling Function Building
-    T_in, T_Tab = Building(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
+    T_in, T_Tab = building.calculate(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_TAB, season, n)
     # Calling Function LeastSquareError for final perturbation in this loop run   
     Lse_neu_long = lse(T_in, df["T_sp"])
     # Calculate termination criterion: LeastSquareError from start compared LSE with last perturbation run
