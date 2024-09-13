@@ -80,7 +80,7 @@ class Building:
 
         alpha = [self.alpha_s, self.alpha_w]  # cooling in summer (season = 0), heating in winter (season = 1)
 
-        for i in range(self.settings.forecast_period - 1):
+        for i in range(self.settings.pred_hor - 1):
             Q_loss.append((T_in[i] - T_out[i]) * self.k / 1000)
             Q_tab.append((T_tab[i] - T_in[i]) * (alpha[self.settings.season] / 1000 * self.area))
 
@@ -93,8 +93,8 @@ class Building:
 
     def optimize(self):
 
-        n = self.settings.forecast_period
-        n_s = self.settings.forecast_period_short
+        n = self.settings.pred_hor
+        n_s = self.settings.pred_hor_short
         dHeat = self.settings.dHeat
 
         Q_heat = np.zeros(n)
@@ -109,7 +109,7 @@ class Building:
             lse_baseline = lse(T_in, self.df["T_sp"])  # least square error for zero heat input / heat output
             Q_heat_s = convert_48_16(Q_heat, n_s)  # shorten Q_heat
 
-            # loop through hours of forecast_period
+            # loop through hours of prediction horizon
             for i in range(n_s):
 
                 # negative perturbation
@@ -161,8 +161,8 @@ class SettingsMPC:
     """Class for storing settings of SimulationSeries object."""
 
     def __init__(self):
-        self.n = 48  # prediction horizon
-        self.forecast_period_short = 16  # shortened horizon, to run the program faster [h]
+        self.pred_hor = 48  # prediction horizon [h]
+        self.pred_hor_short = 16  # shortened prediction horizon (to run the program faster) [h]
         self.dHeat = 0.5  # perturbation value [kW]
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
         self.setpoint_temperature = 20
