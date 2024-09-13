@@ -55,7 +55,7 @@ class Building:
 
         self.df["T_sp"] = self.settings.setpoint_temperature
 
-    def predict(self, Q_heat, Q_solar, T_out, T_start_in, T_start_tab, season):
+    def predict(self, Q_heat, Q_solar, T_out):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
 
         Parameters
@@ -76,14 +76,14 @@ class Building:
 
         Q_loss = []  # prediction of convection, transition and ventilation losses [kW]
         Q_tab = []  # thermal heat flow between room and TAB component [kW]
-        T_in = list([T_start_in])  # prediction of  room temperature [°C]
-        T_tab = list([T_start_tab])  # temperature TAB [°C]
+        T_in = list([self.settings.T_start_in])  # prediction of  room temperature [°C]
+        T_tab = list([self.settings.T_start_tab])  # temperature TAB [°C]
 
         alpha = [self.alpha_s, self.alpha_w]  # cooling in summer (season = 0), heating in winter (season = 1)
 
         for i in range(self.settings.forecast_period - 1):
             Q_loss.append((T_in[i] - T_out[i]) * self.k / 1000)
-            Q_tab.append((T_tab[i] - T_in[i]) * (alpha[season] / 1000 * self.area))
+            Q_tab.append((T_tab[i] - T_in[i]) * (alpha[self.settings.season] / 1000 * self.area))
 
             T_tab.append((Q_heat[i] - Q_tab[i]) / self.cp_tab * (self.dt / 3600) + T_tab[i])
             T_in.append((Q_tab[i] + Q_solar[i] - Q_loss[i]) / self.cp_r * (self.dt / 3600) + T_in[i])
@@ -95,50 +95,37 @@ class Building:
     def optimize(self):
 
         n = self.settings.forecast_period
-        counter = 0
-
-        n = 48  # prediction horizon
-        n_s = self.settings.n_s
+        n_s = self.settings.forecast_period_short
         dHeat = self.settings.dHeat
-        season = self.settings.season
-        setpoint_temperature = self.settings.setpoint_temperature
-        counter = self.settings.counter
-        max_count = self.settings.max_count
-        ChgProgTol = self.settings.ChgProgTol
-        ChgProgress = self.settings.ChgProgress
+
         MaxHtg = self.settings.MaxHtg
         MinHtg = self.settings.MinHtg
-        T_start_in = self.settings.T_start_in
-        T_start_tab = self.settings.T_start_tab
 
-        # variable initialization
         Q_heat = np.zeros(n)
-        Q_heat_s = np.zeros(n_s)
-        Q_help = np.zeros(n)
         Q_help_s = np.zeros(n_s)
 
-        while counter < max_count and ChgProgress >= ChgProgTol:
+        counter = 0
+        ChgProgress = 1  # termination criterion optimization - difference between lse_baseline and lse_neu_long
+        while counter < self.settings.max_count and ChgProgress >= self.settings.ChgProgTol:
 
             # baseline calculation
-            T_in, T_tab = self.predict(Q_heat, self.df["Q_solar"], self.df["T_out"], T_start_in, T_start_tab, season)
+            T_in, T_tab = self.predict(Q_heat, self.df["Q_solar"], self.df["T_out"])
             lse_baseline = lse(T_in, self.df["T_sp"])  # calculate least square error for zero heat input / heat output
             Q_heat_s = convert_48_16(Q_heat, n_s)  # shorten Q_heat
 
-            # loop to go through the elements of the vector
+            # loop through hours of forecast_period
             for i in range(n_s):
 
                 # negative perturbation
                 Q_help_s[i] = max(Q_heat_s[i] - dHeat, MinHtg)  # limit to minimum cooling power
                 Q_help = convert_16_48(Q_help_s, n)  # expand Q_help
-                T_in, T_tab = self.predict(Q_help, self.df["Q_solar"], self.df["T_out"], T_start_in, T_start_tab,
-                                           season)
+                T_in, T_tab = self.predict(Q_help, self.df["Q_solar"], self.df["T_out"])
                 lse_negative = lse(T_in, self.df["T_sp"])  # least square error, negative perturbation
 
                 # positive perturbation
                 Q_help_s[i] = min(Q_heat_s[i] + dHeat, MaxHtg)  # limit to maximum heating power
                 Q_help = convert_16_48(Q_help_s, n)  # expand Q_help
-                T_in, T_tab = self.predict(Q_help, self.df["Q_solar"], self.df["T_out"], T_start_in, T_start_tab,
-                                           season)
+                T_in, T_tab = self.predict(Q_help, self.df["Q_solar"], self.df["T_out"])
                 lse_positive = lse(T_in, self.df["T_sp"])  # least square error, positive perturbation
 
                 # interpretation of the perturbation effect
@@ -151,10 +138,10 @@ class Building:
                         Q_heat_s[i] += dHeat
 
                 # limitation that cooling and heating in one period is not possible
-                if season:  # heating
+                if self.settings.season:  # heating
                     min_value = 0  # no simultaneous heating and cooling in one period
                     max_value = MaxHtg  # limit to maximum heating power
-                elif not season:  # cooling
+                elif not self.settings.season:  # cooling
                     min_value = MinHtg  # limit to maximum cooling power
                     max_value = 0  # no simultaneous heating and cooling in one period
                 Q_heat_s[i] = np.clip(Q_heat_s[i], min_value, max_value)
@@ -162,7 +149,7 @@ class Building:
                 Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
 
             Q_heat = convert_16_48(Q_heat_s, n)  # expand heating vector to prediction horizon
-            T_in, T_tab = self.predict(Q_heat, self.df["Q_solar"], self.df["T_out"], T_start_in, T_start_tab, season)
+            T_in, T_tab = self.predict(Q_heat, self.df["Q_solar"], self.df["T_out"])
             lse_neu_long = lse(T_in,
                                self.df["T_sp"])  # calculate least square error for final perturbation in this loop run
 
@@ -182,15 +169,13 @@ class SettingsMPC:
     def __init__(self):
         self.n = 48  # prediction horizon
         self.forecast_period = 48  # prediction horizon
-        self.n_s = 16  # shortened horizon, to run the program faster
+        self.forecast_period_short = 16  # shortened horizon, to run the program faster
         self.dHeat = 0.5  # perturbation value
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
         self.setpoint_temperature = 20
 
-        self.counter = 0  # while loop counter
         self.max_count = 500  # max. runs of iteration possible
         self.ChgProgTol = 0.000005  # termination criterion optimization - change in least square error
-        self.ChgProgress = 1  # termination criterion optimization - difference between lse_baseline and lse_neu_long
 
         # max power [kW]
         self.MaxHtg = 13  # heating - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
