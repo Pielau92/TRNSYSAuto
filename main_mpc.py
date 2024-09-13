@@ -15,6 +15,8 @@ building = Building(area=158.46,
                     k=120.71,
                     cp_tab=23.45,
                     cp_r=54.91,
+                    max_heating=13,  # heating - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
+                    max_cooling=-10,  # cooling - both TOPS: -10 kW
                     dt=3600)
 
 # import data from csv

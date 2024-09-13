@@ -15,7 +15,7 @@ class Building:
     Building model class with a thermally activated building (TAB) component.
     """
 
-    def __init__(self, area, alpha_w, alpha_s, k, cp_tab, cp_r, dt=3600):
+    def __init__(self, area, alpha_w, alpha_s, k, cp_tab, cp_r, max_heating, max_cooling, dt=3600):
         """Initialize building model.
 
         Parameters
@@ -36,6 +36,8 @@ class Building:
         self.k = k
         self.cp_tab = cp_tab
         self.cp_r = cp_r
+        self.max_heating = max_heating
+        self.max_cooling = max_cooling
         self.dt = dt
 
         self.settings = SettingsMPC()
@@ -98,9 +100,6 @@ class Building:
         n_s = self.settings.forecast_period_short
         dHeat = self.settings.dHeat
 
-        MaxHtg = self.settings.MaxHtg
-        MinHtg = self.settings.MinHtg
-
         Q_heat = np.zeros(n)
         Q_help_s = np.zeros(n_s)
 
@@ -117,13 +116,13 @@ class Building:
             for i in range(n_s):
 
                 # negative perturbation
-                Q_help_s[i] = max(Q_heat_s[i] - dHeat, MinHtg)  # limit to minimum cooling power
+                Q_help_s[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
                 Q_help = convert_16_48(Q_help_s, n)  # expand Q_help
                 T_in, T_tab = self.predict(Q_help, self.df["Q_solar"], self.df["T_out"])
                 lse_negative = lse(T_in, self.df["T_sp"])  # least square error, negative perturbation
 
                 # positive perturbation
-                Q_help_s[i] = min(Q_heat_s[i] + dHeat, MaxHtg)  # limit to maximum heating power
+                Q_help_s[i] = min(Q_heat_s[i] + dHeat, self.max_heating)  # limit to maximum heating power
                 Q_help = convert_16_48(Q_help_s, n)  # expand Q_help
                 T_in, T_tab = self.predict(Q_help, self.df["Q_solar"], self.df["T_out"])
                 lse_positive = lse(T_in, self.df["T_sp"])  # least square error, positive perturbation
@@ -137,13 +136,12 @@ class Building:
                     case 2:  # positive perturbation has lowest least square error
                         Q_heat_s[i] += dHeat
 
-                # limitation that cooling and heating in one period is not possible
-                if self.settings.season:  # heating
-                    min_value = 0  # no simultaneous heating and cooling in one period
-                    max_value = MaxHtg  # limit to maximum heating power
-                elif not self.settings.season:  # cooling
-                    min_value = MinHtg  # limit to maximum cooling power
-                    max_value = 0  # no simultaneous heating and cooling in one period
+                # limitation that cooling and heating simultaneously in one period is not possible
+                min_value, max_value = 0, 0
+                if self.settings.season:  # limit to maximum heating power
+                    max_value = self.max_heating
+                elif not self.settings.season:  # limit to maximum cooling power
+                    min_value = self.max_cooling
                 Q_heat_s[i] = np.clip(Q_heat_s[i], min_value, max_value)
 
                 Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
@@ -176,10 +174,6 @@ class SettingsMPC:
 
         self.max_count = 500  # max. runs of iteration possible
         self.ChgProgTol = 0.000005  # termination criterion optimization - change in least square error
-
-        # max power [kW]
-        self.MaxHtg = 13  # heating - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
-        self.MinHtg = -10  # cooling - both TOPS: -10 kW
 
         # start conditions for optimization
         self.T_start_in = 22  # room temperature [°C]
