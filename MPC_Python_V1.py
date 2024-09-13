@@ -61,7 +61,7 @@ building = Building(area=158.46,
 while counter < max_count and ChgProgress >= ChgProgTol:
 
     # baseline calculation
-    T_in, T_tab = building.calculate(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_tab, season, n)
+    T_in, T_tab = building.predict(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_tab, season, n)
     lse_baseline = lse(T_in, df["T_sp"])  # calculate least square error for zero heat input / heat output
     Q_heat_s = convert_48_16(Q_heat, n_s)  # shorten Q_heat
 
@@ -71,13 +71,13 @@ while counter < max_count and ChgProgress >= ChgProgTol:
         # negative perturbation
         Q_help_s[i] = max(Q_heat_s[i] - dHeat, MinHtg)  # limit to minimum cooling power
         Q_help = convert_16_48(Q_help_s, n)  # expand Q_help
-        T_in, T_tab = building.calculate(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_tab, season, n)
+        T_in, T_tab = building.predict(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_tab, season, n)
         lse_negative = lse(T_in, df["T_sp"])  # least square error, negative perturbation
 
         # positive perturbation
         Q_help_s[i] = min(Q_heat_s[i] + dHeat, MaxHtg)  # limit to maximum heating power
         Q_help = convert_16_48(Q_help_s, n)  # expand Q_help
-        T_in, T_tab = building.calculate(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_tab, season, n)
+        T_in, T_tab = building.predict(Q_help, df["Q_solar"], df["T_out"], T_start_in, T_start_tab, season, n)
         lse_positive = lse(T_in, df["T_sp"])  # least square error, positive perturbation
 
         # interpretation of the perturbation effect
@@ -101,7 +101,7 @@ while counter < max_count and ChgProgress >= ChgProgTol:
         Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
 
     Q_heat = convert_16_48(Q_heat_s, n)  # expand heating vector to prediction horizon
-    T_in, T_tab = building.calculate(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_tab, season, n)
+    T_in, T_tab = building.predict(Q_heat, df["Q_solar"], df["T_out"], T_start_in, T_start_tab, season, n)
     lse_neu_long = lse(T_in, df["T_sp"])  # calculate least square error for final perturbation in this loop run
 
     # calculate termination criterion: least square error from start compared LSE with last perturbation run

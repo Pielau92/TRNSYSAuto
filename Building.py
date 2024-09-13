@@ -36,7 +36,7 @@ class Building:
         self.cp_r = cp_r
         self.dt = dt
 
-    def calculate(self, Q_heat, Q_solar, T_out, T_start_in, T_start_tab, season, forecast_period):
+    def predict(self, Q_heat, Q_solar, T_out, T_start_in, T_start_tab, season, forecast_period):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
 
         Parameters
@@ -56,28 +56,20 @@ class Building:
 
         """
 
-        # starting values
-        Q_loss = np.zeros(forecast_period)    # prediction of convection, transition and ventilation losses [kW]
-        Q_tab = np.zeros(forecast_period)     # thermal heat flow between room and TAB component [kW]
-        T_in = np.zeros(forecast_period)      # prediction of  room temperature [°C]
-        T_tab = np.zeros(forecast_period)     # temperature TAB [°C]
+        Q_loss = []  # prediction of convection, transition and ventilation losses [kW]
+        Q_tab = []  # thermal heat flow between room and TAB component [kW]
+        T_in = list([T_start_in])  # prediction of  room temperature [°C]
+        T_tab = list([T_start_tab])  # temperature TAB [°C]
 
-        T_tab[0] = T_start_tab
-        T_in[0] = T_start_in
+        alpha = [self.alpha_s, self.alpha_w]  # cooling in summer (season = 0), heating in winter (season = 1)
 
-        for i in range(forecast_period):
+        for i in range(forecast_period - 1):
+            Q_loss.append((T_in[i] - T_out[i]) * self.k / 1000)
+            Q_tab.append((T_tab[i] - T_in[i]) * (alpha[season] / 1000 * self.area))
 
-            Q_loss[i] = (T_in[i] - T_out[i]) * self.k / 1000
-
-            if season:  # heating in winter (heat flow from TAB to room)
-                Q_tab[i] = (T_tab[i] - T_in[i]) * (self.alpha_w / 1000 * self.area)
-            else:   # cooling in summer (heat flow from room to TAB)
-                Q_tab[i] = (T_tab[i] - T_in[i]) * (self.alpha_s / 1000 * self.area)
-
-            if i < forecast_period - 1:  # to avoid array overflow
-                T_tab[i + 1] = (Q_heat[i] - Q_tab[i]) / self.cp_tab * (self.dt / 3600) + T_tab[i]
-                T_in[i + 1] = (Q_tab[i] + Q_solar[i] - Q_loss[i]) / self.cp_r * (self.dt / 3600) + T_in[i]
+            T_tab.append((Q_heat[i] - Q_tab[i]) / self.cp_tab * (self.dt / 3600) + T_tab[i])
+            T_in.append((Q_tab[i] + Q_solar[i] - Q_loss[i]) / self.cp_r * (self.dt / 3600) + T_in[i])
 
             # print ("Q_heat[",i,"]:", Q_heat[i], "Q_TAB:", Q_Tab[i], "T_tab:", T_tab[i], "T_in", T_in[i])
 
-        return T_in, T_tab
+        return np.array(T_in), np.array(T_tab)
