@@ -65,9 +65,6 @@ class Building:
         Q_heat : heating/cooling power [kW]
         Q_solar : heat loads from solar radiation [kW]
         T_out : outside air temperature [°C]
-        T_start_in : starting room air temperature [°C]
-        T_start_tab : starting temperature of thermally activated building component [°C]
-        season : heating = 1, cooling = 0
 
         Returns
         -------
@@ -109,7 +106,7 @@ class Building:
 
             # baseline calculation
             T_in, T_tab = self.predict(Q_heat, self.df["Q_solar"], self.df["T_out"])
-            lse_baseline = lse(T_in, self.df["T_sp"])  # calculate least square error for zero heat input / heat output
+            lse_baseline = lse(T_in, self.df["T_sp"])  # least square error for zero heat input / heat output
             Q_heat_s = convert_48_16(Q_heat, n_s)  # shorten Q_heat
 
             # loop through hours of forecast_period
@@ -148,10 +145,9 @@ class Building:
 
             Q_heat = convert_16_48(Q_heat_s, n)  # expand heating vector to prediction horizon
             T_in, T_tab = self.predict(Q_heat, self.df["Q_solar"], self.df["T_out"])
-            lse_neu_long = lse(T_in,
-                               self.df["T_sp"])  # calculate least square error for final perturbation in this loop run
+            lse_neu_long = lse(T_in, self.df["T_sp"])  # least square error for final perturbation in this loop run
 
-            # calculate termination criterion: least square error from start compared LSE with last perturbation run
+            # calculate termination criterion: lse from start compared to lse from last perturbation run
             ChgProgress = lse_baseline - lse_neu_long
 
             # output of final least square error
@@ -166,9 +162,8 @@ class SettingsMPC:
 
     def __init__(self):
         self.n = 48  # prediction horizon
-        self.forecast_period = 48  # prediction horizon
-        self.forecast_period_short = 16  # shortened horizon, to run the program faster
-        self.dHeat = 0.5  # perturbation value
+        self.forecast_period_short = 16  # shortened horizon, to run the program faster [h]
+        self.dHeat = 0.5  # perturbation value [kW]
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
         self.setpoint_temperature = 20
 
