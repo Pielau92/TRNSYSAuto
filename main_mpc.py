@@ -22,7 +22,7 @@ building = Building(area=158.46,
 # import data from csv
 building.import_csv("Test_MPC_Python.csv")
 
-building.optimize()
+result = building.optimize()
 
 # graphical evaluation
 # fig, ax1 = plt.subplots()

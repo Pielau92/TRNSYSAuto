@@ -156,6 +156,9 @@ class Building:
             T_in.append((Q_tab[i] + Q_solar[i] - Q_loss[i]) / self.cp_r * (self.dt / 3600) + T_in[i])
 
             # print ("Q_heat[",i,"]:", Q_heat[i], "Q_TAB:", Q_Tab[i], "T_tab:", T_tab[i], "T_in", T_in[i])
+
+        return np.array(T_in), np.array(T_tab)
+
     def convert_16_48(self, Q_heat_s):
         """todo"""
         Q_heat = np.zeros(self.settings.pred_hor)
