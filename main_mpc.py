@@ -6,7 +6,7 @@ Created on Thu Aug  3 13:08:01 2023
 """
 
 # import matplotlib.pyplot as plt
-from Building import Building
+from classes_mpc import Building
 
 # building object
 building = Building(area=158.46,
