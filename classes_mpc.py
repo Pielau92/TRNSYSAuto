@@ -28,6 +28,8 @@ class Building:
         k : factor for convection, transition and ventilation losses [W/K]
         cp_tab : absolute heat capacity of TAB component [kWh/K]
         cp_r : absolute heat capacity of room [kWh/K]
+        max_heating : maximum heating power [kW]
+        max_cooling : maximum cooling power [kW]
         dt : time interval [s] (e.g 3600 = 1 hour)
         """
 
