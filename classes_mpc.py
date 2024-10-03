@@ -35,8 +35,8 @@ class Building:
 
         # building specific parameters
         self.area = area
-        self.alpha_w = alpha_w
-        self.alpha_s = alpha_s
+        self.alpha_w = int(alpha_w)
+        self.alpha_s = int(alpha_s)
         self.k = k
         self.cp_tab = cp_tab
         self.cp_r = cp_r
