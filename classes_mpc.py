@@ -5,7 +5,7 @@ Created on Thu Feb  6 14:55:04 2020
 @author: Magdalena
 """
 import numpy as np
-import pandas as pd
+# import pandas as pd
 
 from statistics import mean
 from functions_mpc import lse
@@ -46,25 +46,30 @@ class Building:
 
         self.settings = SettingsMPC()
 
-        self.df = None  # DataFrame with data
+        self.data = None  # DataFrame (or dictionary) with data
+        
 
-    def import_csv(self, filename):
-        """Import csv data."""
-
-        self.df = pd.read_csv(filename,
-                              encoding="latin1",
-                              header=0,
-                              names=["Stunde", "T_out", "Q_solar", "T_sp"],  # header
-                              index_col=False,
-                              delimiter=";",
-                              decimal=".")
-
-        self.df["T_sp"] = self.settings.setpoint_temperature
+    # def import_csv(self, filename):
+    #     """Import csv data."""
+    # 
+    #     self.data = pd.read_csv(filename,
+    #                           encoding="latin1",
+    #                           header=0,
+    #                           names=["Stunde", "T_out", "Q_solar", "T_sp"],  # header
+    #                           index_col=False,
+    #                           delimiter=";",
+    #                           decimal=".")
+    # 
+    #     T_sp = self.settings.setpoint_temperature
 
     def optimize(self):
         """todo"""
 
+        Q_solar = list(range(1, 49))  # DUMMY
+        T_out = list(range(2, 98, 2))  # DUMMY
+
         dHeat = self.settings.dHeat
+        T_sp = [self.settings.setpoint_temperature] * self.settings.pred_hor
 
         Q_heat = np.zeros(self.settings.pred_hor)
         Q_help_s = np.zeros(self.settings.pred_hor_short)
@@ -74,8 +79,8 @@ class Building:
         while counter < self.settings.max_count and ChgProgress >= self.settings.ChgProgTol:
 
             # baseline calculation
-            T_in, T_tab = self.predict(Q_heat, self.df["Q_solar"], self.df["T_out"])
-            lse_baseline = lse(T_in, self.df["T_sp"])  # least square error for zero heat input / heat output
+            T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
+            lse_baseline = lse(T_in, T_sp)  # least square error for zero heat input / heat output
             Q_heat_s = self.convert_48_16(Q_heat)  # shorten Q_heat
 
             # loop through hours of prediction horizon
@@ -84,14 +89,14 @@ class Building:
                 # negative perturbation
                 Q_help_s[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
                 Q_help = self.convert_16_48(Q_help_s)  # expand Q_help
-                T_in, T_tab = self.predict(Q_help, self.df["Q_solar"], self.df["T_out"])
-                lse_negative = lse(T_in, self.df["T_sp"])  # least square error, negative perturbation
+                T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
+                lse_negative = lse(T_in, T_sp)  # least square error, negative perturbation
 
                 # positive perturbation
                 Q_help_s[i] = min(Q_heat_s[i] + dHeat, self.max_heating)  # limit to maximum heating power
                 Q_help = self.convert_16_48(Q_help_s)  # expand Q_help
-                T_in, T_tab = self.predict(Q_help, self.df["Q_solar"], self.df["T_out"])
-                lse_positive = lse(T_in, self.df["T_sp"])  # least square error, positive perturbation
+                T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
+                lse_positive = lse(T_in, T_sp)  # least square error, positive perturbation
 
                 # interpretation of the perturbation effect
                 match np.argmin([lse_baseline, lse_negative, lse_positive]):
@@ -113,8 +118,8 @@ class Building:
                 Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
 
             Q_heat = self.convert_16_48(Q_heat_s)  # expand heating vector to prediction horizon
-            T_in, T_tab = self.predict(Q_heat, self.df["Q_solar"], self.df["T_out"])
-            lse_neu_long = lse(T_in, self.df["T_sp"])  # least square error for final perturbation in this loop run
+            T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
+            lse_neu_long = lse(T_in, T_sp)  # least square error for final perturbation in this loop run
 
             # calculate termination criterion: lse from start compared to lse from last perturbation run
             ChgProgress = lse_baseline - lse_neu_long

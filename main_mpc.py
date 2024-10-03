@@ -20,7 +20,7 @@ building = Building(area=158.46,
                     dt=3600)
 
 # import data from csv
-building.import_csv("Test_MPC_Python.csv")
+# building.import_csv("Test_MPC_Python.csv")
 
 result = building.optimize()
 
