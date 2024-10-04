@@ -9,7 +9,7 @@
 import numpy
 import os
 
-from classes_mpc import Building
+from main_mpc import Building
 
 thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
@@ -41,7 +41,7 @@ def StartTime(TRNData):
                         max_cooling=inputs[7],
                         dt=TRNData[thisModule]["simulation time step"])
 
-    building.settings.season = inputs[8]  # heating or cooling: heating = 1, cooling = 0
+    building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
     building.settings.setpoint_temperature = inputs[9]
     building.settings.T_start_in = inputs[10]  # room temperature [°C]
     building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
