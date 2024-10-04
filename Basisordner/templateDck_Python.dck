@@ -35,126 +35,89 @@ NOLIST 					! NOLIST statement
 SOLVER 0 1 1				! Solver statement	Minimum relaxation factor	Maximum relaxation factor
 NAN_CHECK 0				! Nan DEBUG statement
 OVERWRITE_CHECK 0			! Overwrite DEBUG statement
-TIME_REPORT 0			! disable time report
+TIME_REPORT 0				! disable time report
 EQSOLVER 0				! EQUATION SOLVER statement
 * User defined CONSTANTS 
 
-*ASSIGN "Bruckverdichtet_3Zonen31cc_PHbetstatTabs.b17" 32
-*ASSIGN "Bruckverdichtet_3Zonen31cc_NEHbetstatTabs.b17" 32
-*ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1.b17" 32
-*ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1_westbandG1.b17" 32
-*ASSIGN "Bruckverdichtet_3Zonen31cc_PHLeichtstatTabs.b17" 32
-*ASSIGN "Bruckverdichtet_3Zonen34cc_PHbetstatTabsBung.b17" 32   !Pierre, hier werden die b17, bzw. b18 files eingelesen
-*ASSIGN "Bruckverdichtet_3Zonen34cc_BestbetstatTabsBung.b17" 32 !Pierre Var2
-*ASSIGN "Bruckverdichtet_3Zonen31cc_NEHbetstatTabsBung.b17" 32
-*ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabsBung.b17" 32
-ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1_westloch_ZQ3.b17" 32
+ASSIGN "b17" 32				! hier werden die b17, bzw. b18 files eingelesen
+ASSIGN "tm2" 30				! hier werden die Wetterdatenfiles eingelesen, bevorzugt tm2
 
-*ASSIGN "Bruckverdichtet_3Zonen31cc_PHbetstatTabsBungOhneIWSpeicher.b17" 32
-*ASSIGN "Bruckverdichtet_3Zonen31cc_BestbetstatTabsBung.b17" 32
-*ASSIGN "AT-Vienna-Schwechat-Air-110360.tm2" 30
-*ASSIGN "Wien-Hohe_Warte-wien2015ergaenzt-hour.tm2" 30 
-*ASSIGN "AT-Wien-Hohe-Warte-110350.tm2" 30 !Pierre, hier werden die Wetterdatenfiles eingelesen, bevorzugt tm2
-*ASSIGN "Mannheim_DWD_warm-hour.tm2" 30 !Pierre Var2
-*ASSIGN "TRY2045_Potsdam_Stadtzentrum_523938130651_Somm.tm2" 30
-*ASSIGN "TRY2045_Mannheim_Stadtzentrum_494902084637_Somm.tm2" 30
+ASSIGN "Windetc20190804.txt" 134   	! unit 131
+ASSIGN "SzenarioAneu.txt" 135		! unit 132
 
-ASSIGN "Mannheim2-hour.tm2" 30
+assign "Qelww_CHR55025.txt" 62   	! Lasten und Elektro neu
 
-*ASSIGN "Potsdam-hour.tm2" 30
-*ASSIGN "WienBoku-WienBoku2013-hour.tm2" 30
-*ASSIGN "WienBoku2015V2-hour.tm2" 30
-*ASSIGN "WienBoku2015-hour.tmy3" 30
-*ASSIGN "WienBoku2015bis2019-hourohneSchalt.tmy3" 30   
-*ASSIGN "WienBoku2017-hour.tmy3" 30
-ASSIGN "Bruckverdichtet_3Zonen31cc_OIBbetstatTabsV1_westloch_ZQ3.b17" 32
-ASSIGN "Mannheim2-hour.tm2" 30
-
-ASSIGN "Windetc20190804.txt" 134   !unit 131
-ASSIGN "SzenarioAneu.txt" 135		!unit 132
-
-assign "Qelww_CHR55025.txt" 62   !Lasten und Elektro neu
-
-!equations 1
-!Qheizbtapy=200  !Ergebnis aus MPC
-
-Equations 9  !Varianten Arbeitshilfen, Beleuchtung, Personen
-*Persanz1=2 
-Persanz2 = 0 
-*Persanz3=2 
-*Companz1=15 !A0  5 !A2  W/m²
-*Companz2=0   !gang
-*Companz3=15 !A0  5 !A2  W/m²
-*TQ1=0.03	!gut  
-*TQ3=0.03 !gut
-*LichtLeistung=8.29	!Licht0  10 !Licht1 [W/m²]
+Equations 9  		! Varianten Arbeitshilfen, Beleuchtung, Personen
 
 Persanz1=2
+Persanz2 = 0 
 Persanz3=2 
-Companz1=15 !A0  5 !A2  W/m²
-Companz2=0   !gang
-Companz3=15 !A0  5 !A2  W/m²
-TQ1=0.03	!gut  
-TQ3=0.03 !gut
-LichtLeistung=8.29	!Licht0  10 !Licht1 [W/m²]
+Companz1=15 		! A0  5 !A2  W/m²
+Companz2=0   		! gang
+Companz3=15 		! A0  5 !A2  W/m²
+TQ1=0.03		! gut  
+TQ3=0.03 		! gut
+LichtLeistung=8.29	! Licht0  10 !Licht1 [W/m²]
 
 
-Equations 3  !Varianten Lüftung L Nachtlüftung
+Equations 3  			! Varianten Lüftung L Nachtlüftung
 
-fen1=0.4615384615384615    !0.461538461538462 gekippt oder 3 ganz geöffnet
-fen2=0   !Anzahl öffenbar Fenster Zone 2, wenn vorhanden
+fen1=0.4615384615384615    	! 0.461538461538462 gekippt oder 3 ganz geöffnet
+fen2=0   			! Anzahl öffenbar Fenster Zone 2, wenn vorhanden
 fen3=0.4615384615384615
 
-Equations 5 !Luftwechsel, Infiltration, Wirkungsgrad
 
-fugenLuft=0.14 !Simulationsrandbedingungen
-Vent1var=1.24 ! in Anlehnung an neues pdf am 9.5. von Lukas
+Equations 5 		!Luftwechsel, Infiltration, Wirkungsgrad
+
+fugenLuft=0.14 		! Simulationsrandbedingungen
+Vent1var=1.24		! in Anlehnung an neues pdf am 9.5. von Lukas
 Vent2var=0 
 Vent3var=1.24 
+waermerueckgimpuls=0	! 0.75  !gilt auch für ohne Impuls
 
-waermerueckgimpuls=0  !0.75  !gilt auch für ohne Impuls
 
-
-Equations 8  !Varianten Sonnenschutz
+Equations 8  				! Varianten Sonnenschutz
 schattschaltaussen=1
-schattzu=0.75   !S0  0 !S1 0 !S4
+schattzu=0.75   			! S0  0 !S1 0 !S4
 Schattschaltinnen=1   
-Schatti=0  !S0  0,5 !S1 Achtung, ist Transmission 0   !S4
+Schatti=0  !S0  0,5 			! S1 Achtung, ist Transmission 0   !S4
 Schatti1= Schatti*schattschaltinnen 
 Schatti2= Schatti*schattschaltinnen 
 Schatti3= Schatti*schattschaltinnen 
-strahlungsgrenze=200  !R0
+strahlungsgrenze=200  			! R0
 
 
-equations 1  !Wärmeschutz, wenn nur mittlere Einheit, dann egal, da keine erdberührten Bauteile
-terd1 = 10.4+[19,2]*(15.4-10.4)  ! Bestand: 9.9+[19,2]*(20.7-9.9) OIB:6.1+[19,2]*(19.6-6.1)  NEH:  9.6+[19,2]*(16.3-9.6) PH: 10.4+[19,2]*(15.4-10.4)  !ta+(heizperiode1*21+26*(1-heizperiode1)-ta)/2 !9.5+[19,2]*15.1  !EG, Temperaturfaktor ca. 0.5
+Equations 1  				! Wärmeschutz, wenn nur mittlere Einheit, dann egal, da keine erdberührten Bauteile
+terd1 = 10.4+[19,2]*(15.4-10.4)  	! Bestand: 9.9+[19,2]*(20.7-9.9) OIB:6.1+[19,2]*(19.6-6.1)  NEH:  9.6+[19,2]*(16.3-9.6) PH: 10.4+[19,2]*(15.4-10.4)  !ta+(heizperiode1*21+26*(1-heizperiode1)-ta)/2 !9.5+[19,2]*15.1  !EG, Temperaturfaktor ca. 0.5
 
-equations 17 !Heizen Kühlen befeuchten entfeuchten
+
+Equations 17 						! Heizen Kühlen befeuchten entfeuchten
 qheizmax=50
 qkuehlmax=40
-qbtamax=qheizmax*anutzges  !wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
-qbtamaxs=qkuehlmax*anutzges  !wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
+qbtamax=qheizmax*anutzges  				! wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
+qbtamaxs=qkuehlmax*anutzges				! wenn impuls =0, wird über Vorlauftemperaturauswahl geregelt
 
-theizsollminideal=21  !20
-theizsollmaxideal=25  !25
-tkuehlsollminideal=50  !25
-tkuehlsollmaxideal=50   !23
-humsoll=0 !0.012*(1-BTAmodellein)*0+0*BTAmodellein  !BBSR
-relmin=0  !40*(1-BTAmodellein)*0+0*BTAmodellein !BBSR
-abshumgrenzo=0.1  !0.009	! [g/kg] Grenze fur Entfeuchtung Lüftung, achtung dazu muss man dann noch abszu ändern
-abshumgrenzu=0	! [g/kg] Grenze fur Befeuchtung
-tzukuehl=50  !lt(tzuquellmin,20)*20+(1-lt(tzuquellmin,20))*tzuquellmin  Ausschalten mit hohen Temperaturen
-tzuheiz=0  !wenn kein Nachheizen, auf 0 setzen
+theizsollminideal=21  					! 20
+theizsollmaxideal=25  					! 25
+tkuehlsollminideal=50  					! 25
+tkuehlsollmaxideal=50   				! 23
+humsoll=0 !0.012*(1-BTAmodellein)*0+0*BTAmodellein	! BBSR
+relmin=0  						! 40*(1-BTAmodellein)*0+0*BTAmodellein !BBSR
+abshumgrenzo=0.1 !0.009					! [g/kg] Grenze fur Entfeuchtung Lüftung, achtung dazu muss man dann noch abszu ändern
+abshumgrenzu=0						! [g/kg] Grenze fur Befeuchtung
+tzukuehl=50  						! lt(tzuquellmin,20)*20+(1-lt(tzuquellmin,20))*tzuquellmin  Ausschalten mit hohen Temperaturen
+tzuheiz=0  						! wenn kein Nachheizen, auf 0 setzen
 
-absmax=0.1  !Grenze für ideale Entfeuchtung Raum
+absmax=0.1  						! Grenze für ideale Entfeuchtung Raum
 
-BTAmodellein=1 !BTA ein-1 und ausschalten-0
-FlagTraumsoll=0  !0 - wenn fixe Temperatur, 1 wenn nach Kat I. Achtung auf Klimadaten
+BTAmodellein=1 						! BTA ein-1 und ausschalten-0
+FlagTraumsoll=0  					! 0 - wenn fixe Temperatur, 1 wenn nach Kat I. Achtung auf Klimadaten
 
-equations 55
-tcomfneutr_MannInnSom=[3,78]   !neutrale Temperatur Mannheim Innenstadt Sommer min Temp 25°C, sonst Kat I
-tcomfneutr_PotsInnSom=[3,79]   !neutrale Temperatur Potsdam Innenstadt Sommer
-tcomfneutr_MannVorSom=[3,80]   !neutrale Temperatur Mannheim Vorort Sommer
+
+Equations 55
+tcomfneutr_MannInnSom=[3,78]   		! neutrale Temperatur Mannheim Innenstadt Sommer min Temp 25°C, sonst Kat I
+tcomfneutr_PotsInnSom=[3,79]   		! neutrale Temperatur Potsdam Innenstadt Sommer
+tcomfneutr_MannVorSom=[3,80]   		! neutrale Temperatur Mannheim Vorort Sommer
 tcomfneutr=eql(FlagTraumsoll,0)*tkuehlsollminideal+eql(FlagTraumsoll,1)*tcomfneutr_MannInnSom+eql(FlagTraumsoll,2)*tcomfneutr_PotsInnSom+eql(FlagTraumsoll,3)*tcomfneutr_MannVorSom
 *tcomfneutr=tcomfneutr_MannInnSom
 tkuehlsollminidealcomf=tcomfneutr
