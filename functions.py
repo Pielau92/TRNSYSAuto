@@ -8,70 +8,57 @@ import pickle
 from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
 
 
-def replace_parameter_value(match, parameters):
-    """Replace parameter value and remove marking from re.Match object.
-
-    Parameters
-    ----------
-    match : re.Match
-        re.Match object from the re.sub() method.
-    parameters : pandas.Series
-        Series with parameter values to be replaced, the parameter name has to be in the row index name.
-    """
-    for name, value in parameters.items():
-        if match.group(1).casefold() == '@' + name.casefold():  # find, case-insensitive
-            return match.group(1)[1:] + '=' + str(value)
-
-
-def find_and_replace_parameter_values(path_file, pattern, parameters):
+def replace_parameter_values(path_file, parameters):
     """Find and replace parameter values within a .txt file.
 
     Finds parameter values within a .txt file, replaces them and overwrites the .txt file. For this, the following must
     apply:
-    -   The parameter values must follow a marked parameter name, which follows a specific pattern in order to be found
-    -   The replacement value has to be passed in "replacements" as a pandas.Series, where the row indizes match the
-        name of the marked parameter
+    -   A parameter means in this case a name/value pair inside a txt file - specifically: a word followed by "=" and a
+        number (there may be any amount of white spaces or tabs between the word and "=" and between "=" and the number)
+    -   The replacement values have to be passed in "parameters", where the row indizes must match the name of the
+        parameter whose number value is to be replaced
 
     Example:
-        # .txt file containing "@Parameter1=1; Parameter2=2; @Parameter3=3."
+        # .txt file containing "Parameter1=1; Parameter2=2; @Parameter3=3."
         path_file = 'C:\\Users\\JohnDoe\\Desktop\\text.txt'
 
-        # @ at the start, followed by text, '=' in the middle and a number at the end
-        pattern = r'(@\w+)\s*=\s*([\d.]+)'
+        parameters = pd.Series({'Parameter1': 4, 'Parameter2': 5, 'Parameter3': 6})
 
-        replacements = pd.Series({
-            'Parameter1': 4,
-            'Parameter2': 5,
-            'Parameter3': 6
-        })
+        replace_parameter_value(path_file, parameters)
 
-        find_and_replace_parameter_values(path_file, pattern, replacements)
-
-        # .txt file now shows "Parameter1=4; Parameter2=2; Parameter3=6."
+        # .txt file now shows "Parameter1=4; Parameter2=5; Parameter3=6."
 
     Parameters
     ----------
     path_file : str
         Path of the .txt file.
-    pattern : str
-        Pattern which marks text to be replaced.
     parameters : pandas.Series
         Series with parameter values to be replaced, the parameter name has to be in the index name.
     """
 
-    # read file
+    def replacer(match):
+        parameter = match.group(1)  # parameter name
+        misc = match.group(3)  # miscellaneous characters after the number value (typically comments)
+
+        if parameter in parameters.index:
+            return f"{parameter} = {parameters[parameter]} {misc}"  # replace, if parameter name matches
+        else:
+            return match.group(0)  # return unchanged text
+
     with open(path_file, 'r') as file:
         text = file.read()
 
-        # find, then replace text values
-        text = re.sub(pattern=pattern,
-                      repl=lambda match:  # variable "match" is produced by re.sub() itself
-                      replace_parameter_value(match, parameters),  # apply replace_text() method on each matching string
-                      string=text)
+    pattern = re.compile(r'^(\w*)'  # word at beginning of line
+                         + r'[\s\t]*=[\s\t]*'  # equal sign (=), with any number of white spaces/tabs before and after
+                         + r'(\d+\.?\d*)'  # number, which any number of decimal digits using '.' as delimiter
+                         + r'(.*)$',  # any characters, until the end of the line is reached (typically comments)
+                         re.MULTILINE)
+
+    new_text = pattern.sub(replacer, text)
 
     # overwrite file
     with open(path_file, 'w') as file:
-        file.write(text)
+        file.write(new_text)
 
 
 def find_and_replace(path_file, pattern, replacement):
@@ -150,7 +137,7 @@ def to_single_column(df_input):
         header],
         axis=0)
     # single_column = single_column.drop(single_column.columns[-1], axis=1)
-    single_column = single_column.transpose().stack(future_stack=True) #, dropna=False)
+    single_column = single_column.transpose().stack(future_stack=True)  # , dropna=False)
     return single_column
 
 

@@ -10,6 +10,7 @@ import functions
 import pickle
 import openpyxl
 import settings
+import re
 
 import numpy as np
 import pandas as pd
@@ -222,17 +223,16 @@ class SimulationSeries:
             the simulation variants Excel file.
             """
 
-            # find and replace weather data file name in .dck file
+            # replace weather data file name in .dck file
             functions.find_and_replace(
                 path_dck, pattern=r'(\*ASSIGN "tm2")', replacement=r'ASSIGN "' + self.weather_series[sim] + '"')
 
-            # find and replace .b17/.b18 file name in .dck file
+            # replace .b17/.b18 file name in .dck file
             functions.find_and_replace(
                 path_dck, pattern=r'(\*ASSIGN "b17")', replacement=r'ASSIGN "' + self.b18_series[sim] + '"')
 
-            # find and replace
-            functions.find_and_replace_parameter_values(path_dck, r'(@\w+)\s*=\s*([\d.]+)', self.df_dck.loc[sim])
-            functions.find_and_replace_parameter_values(path_dck, r'(\*ASSIGN "b17")', self.df_dck.loc[sim])
+            # replace parameter values
+            functions.replace_parameter_values(path_dck, self.df_dck.loc[sim])
 
         # create new directory for the simulation series
         os.makedirs(self.path.sim_series_dir)
