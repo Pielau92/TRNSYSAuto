@@ -225,11 +225,11 @@ class SimulationSeries:
 
             # replace weather data file name in .dck file
             functions.find_and_replace(
-                path_dck, pattern=r'(\*ASSIGN "tm2")', replacement=r'ASSIGN "' + self.weather_series[sim] + '"')
+                path_dck, pattern=r'(ASSIGN "tm2")', replacement=r'ASSIGN "' + self.weather_series[sim] + '"')
 
             # replace .b17/.b18 file name in .dck file
             functions.find_and_replace(
-                path_dck, pattern=r'(\*ASSIGN "b17")', replacement=r'ASSIGN "' + self.b18_series[sim] + '"')
+                path_dck, pattern=r'(ASSIGN "b17")', replacement=r'ASSIGN "' + self.b18_series[sim] + '"')
 
             # replace parameter values
             functions.replace_parameter_values(path_dck, self.df_dck.loc[sim])
