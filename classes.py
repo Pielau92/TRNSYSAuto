@@ -436,6 +436,8 @@ class SimulationSeries:
         anyway).
         """
 
+        functions.set_env_and_paths()
+
         # initialize lock, if multiprocessing is enabled
         if self.multiprocessing_max > 1:
             lock = multiprocessing.Lock()

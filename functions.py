@@ -1,3 +1,5 @@
+import os
+import subprocess
 import win32com.client
 import pandas as pd
 import xlwings as xw
@@ -190,3 +192,46 @@ def create_date_column(year, time_increment_profiles=60):
     date_df.reset_index(inplace=True)  # reset index
 
     return date_df
+
+
+def set_env_and_paths():
+    """ Set environment variables and paths before launching TRNEXE using Calling Python From TRNSYS.
+
+    Translation and adaptation of Calling Python From TRNSYS batch file "RunTrnsysStudioWithCondaEnvironment.bat", which
+    is used to run the TRNSYS Studio and use the Python (CFFI) interface with a miniconda environment.
+    """
+    # set name of conda environment to be used (should have cffi and numpy installed at the minimum, edit if required)
+    condaenvname = "TRNSYS"
+
+    # set required environment variables for the conda environment to be found and used by the TRNSYS Python Interface
+    # add directory with python to the path (to the front of the path!)
+    username = os.getlogin()  # get os username
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\condabin;"\
+                         + os.environ["PATH"]
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname};"\
+                         + os.environ["PATH"]
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\bin;"\
+                         + os.environ["PATH"]
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\mingw-w64\\bin;"\
+                         + os.environ["PATH"]
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\bin;"\
+                         + os.environ["PATH"]
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\usr\\bin;"\
+                         + os.environ["PATH"]
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Scripts;"\
+                         + os.environ["PATH"]
+
+    # Set PYTHONHOME to the same directory
+    os.environ["PYTHONHOME"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}"
+
+    # set PYTHONPATH to the site-packages directory (which is within your environment\Lib)
+    os.environ["PYTHONPATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Lib\\site-packages"
+
+    # # launch TRNEXE
+    # trnsys_exe = r"C:\TRNSYS18\Exe\TrnEXE64.exe"
+    # try:
+    #     # subprocess.run() führt das externe Programm aus und wartet, bis es beendet ist
+    #     subprocess.run(trnsys_exe, check=True)
+    #     print("TRNSYS erfolgreich gestartet.")
+    # except subprocess.CalledProcessError as e:
+    #     print(f"Fehler beim Ausführen von TRNSYS: {e}")
