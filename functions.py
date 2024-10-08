@@ -1,5 +1,4 @@
 import os
-import subprocess
 import win32com.client
 import pandas as pd
 import xlwings as xw
@@ -226,12 +225,3 @@ def set_env_and_paths():
 
     # set PYTHONPATH to the site-packages directory (which is within your environment\Lib)
     os.environ["PYTHONPATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Lib\\site-packages"
-
-    # # launch TRNEXE
-    # trnsys_exe = r"C:\TRNSYS18\Exe\TrnEXE64.exe"
-    # try:
-    #     # subprocess.run() führt das externe Programm aus und wartet, bis es beendet ist
-    #     subprocess.run(trnsys_exe, check=True)
-    #     print("TRNSYS erfolgreich gestartet.")
-    # except subprocess.CalledProcessError as e:
-    #     print(f"Fehler beim Ausführen von TRNSYS: {e}")

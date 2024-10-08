@@ -31,7 +31,7 @@ class Settings:
             Applies the individual settings to the corresponding (name of setting and of class attribute must match).
             Automatically recognizes the type of the setting, based on the type of its corresponding class attribute.
             Raises an error if no corresponding class attribute could be found, or an unsupported type is used (str,
-            int, float, bool, list (of strings).
+            int, float, bool, list (of strings)).
             """
 
             if not hasattr(self.sim_series, setting):

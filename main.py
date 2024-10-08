@@ -12,7 +12,6 @@
 
 import multiprocessing
 import sys
-import time
 import classes
 import functions
 import os

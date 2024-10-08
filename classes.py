@@ -444,7 +444,7 @@ class SimulationSeries:
             # save progress
             self.save()
 
-    def check_sim_success(self, reset = False):
+    def check_sim_success(self, reset=False):
         """Check simulation success.
 
         Checks for each simulation inside the simulation series, if the simulation was calculated successfully. If so,
