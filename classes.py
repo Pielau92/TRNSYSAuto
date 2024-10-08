@@ -226,7 +226,7 @@ class SimulationSeries:
 
         # file name list of files to be copied into simulation subdirectories
         file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
-                     'Windetc20190804.txt', 'StrahlungBruck.txt']
+                     'Windetc20190804.txt', 'StrahlungBruck.txt', 'main_mpc.py', 'MPCModule.py']
 
         for index, sim in enumerate(self.sim_list):
             path_sim = os.path.join(self.path.sim_series_dir, sim)  # path of simulation subdirectory
