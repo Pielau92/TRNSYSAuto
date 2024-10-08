@@ -132,10 +132,8 @@ def check_cwd():
     issues a message and exits the program."""
 
     if not os.path.exists(os.path.join(os.getcwd(), 'Basisordner')):
-        message = 'main.exe file must be located in the same directory as the base directory ("Basisordnder"), ' \
-                  'program will shortly be closed.'
-        print(message)
-        time.sleep(3)
+        input('main.exe file must be located in the same directory as the base directory ("Basisordnder"). Press ENTER '
+              'to exit.')
         sys.exit()
 
 
