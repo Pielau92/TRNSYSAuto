@@ -11,21 +11,12 @@ class Settings:
         self._save_path = sim_series.path.settings
         self._settings = ConfigParser()
 
-        # https://docs.python.org/2/library/configparser.html
-        # https://www.youtube.com/watch?v=DSG6KGF4qJQ
-
     def load_settings(self):
-        # todo testen
         try:
             self._settings.read(self._save_path)
-        except:  # todo Exception einfügen
+        except:
             print("Format error in settings file, check settings.ini")
             raise SystemExit()
-
-    def save_settings(self):
-        # todo testen
-        with open(self._save_path, 'w') as f:
-            self._settings.write(f)
 
     def apply_settings(self):
         """Apply imported settings to SimulationSeries object.
@@ -67,27 +58,19 @@ class Settings:
 
         for section in self._settings.sections():
             for setting in self._settings.options(section):
-                apply_setting()
+                apply_setting()     # save setting value into corresponding class attribute, with the correct datatype
 
         if self.sim_series.multiprocessing_max == 'auto':
             self.sim_series.multiprocessing_max = multiprocessing.cpu_count()
         else:
             self.sim_series.multiprocessing_max = int(self.sim_series.multiprocessing_max)
 
+    def save_settings(self):
+        pass
+        # with open(self._save_path, 'w') as f:
+        #     self._settings.write(f)
+
     def reset_settings(self):
-        # todo
-        #  Es gibt automatisch eine Sektion DEFAULT, vielleicht lässt sich diese verwenden um ein reset elegant
-        #  durchzuführen
-
-        # self._settings.add_section('main')
-        # self._settings.set('main', 'key1', 'value1')
-        # self._settings.set('main', 'key2', 'value2')
-        # self._settings.set('main', 'key3', 'value3')
-        #
-        # for section in self._settings:
-        #     for s in self._settings[section]:
-        #         print(s)
-
         pass
 
 

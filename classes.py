@@ -10,7 +10,6 @@ import functions
 import pickle
 import openpyxl
 import settings
-import re
 
 import numpy as np
 import pandas as pd
@@ -40,16 +39,6 @@ class SimulationSeries:
             path to original simulation variants Excel file corresponding to the simulation series.
         """
 
-        self.path = settings.PathSettings(self, path_original_sim_variants_excel)
-        self.settings = settings.Settings(self)   # todo: settings hier rein speichern
-        self.settings.load_settings()
-
-        # current time when the main.exe file was executed
-        self.execution_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
-
-        self.filename_sim_variants_excel = os.path.basename(self.path.original_sim_variants_excel).split('.')[0]
-        self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
-
         # simulation series data
         self.sim_list = None  # list of simulation variant names
         self.sim_success = None  # boolean list, documenting the successful simulation of each simulation variant
@@ -58,20 +47,17 @@ class SimulationSeries:
         self.b18_series = None  # pandas series with the .b18 data file names
         self.weather_series = None  # pandas series with the weather data file names
 
-        # region EVALUATION
-
+        # evaluation
         self.date_df = functions.create_date_column(2024)
         self.variant_parameter_df = None
         self.eval_success = None
-
         self.variant_result_columns = None
         self.zone_1_with_df = None
         self.zone_1_without_df = None
         self.zone_3_with_df = None
         self.zone_3_without_df = None
 
-        # endregion
-
+        # log file
         self.logger = None
 
         # region initialize attributes belonging to settings (including datatype)
@@ -112,7 +98,17 @@ class SimulationSeries:
 
         # endregion
 
+        # paths and settings
+        self.path = settings.PathSettings(self, path_original_sim_variants_excel)
+        self.settings = settings.Settings(self)
+        self.settings.load_settings()
         self.settings.apply_settings()
+
+        # current time when the main.exe file was executed
+        self.execution_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
+
+        self.filename_sim_variants_excel = os.path.basename(self.path.original_sim_variants_excel).split('.')[0]
+        self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
 
     @property
     def cwd(self):
@@ -124,9 +120,6 @@ class SimulationSeries:
 
         Setting up the simulation series is only necessary once, continuing the simulation at a later time does not need
         an additional setup. Doing so anyway results in a reset of the simulation progress."""
-
-        # import and apply settings Excel file
-        # self.import_settings_excel()
 
         # import simulation variants Excel file
         self.import_sim_variants_excel()
@@ -251,26 +244,6 @@ class SimulationSeries:
         self.logger.addHandler(handler)
 
         self.logger.info(('Log file created successfully in {}.'.format(self.path.logfile)))
-
-    def import_settings_excel(self):
-        """Import simulation series settings from settings Excel file.
-
-        Imports simulation series settings from the settings Excel file and applies them to the corresponding attributes
-        of the SimulationSeries object. Parameter names in the settings Excel file (column "Parameter") must correspond
-        to an attribute name of the SimulationSeries class.
-        """
-
-        # read Excel data
-        excel_data = pd.ExcelFile(os.path.join(self.path.base_dir, self.filename_settings_excel))
-
-        # convert Excel data into pandas DataFrame
-        df = excel_data.parse(self.sheet_name_settings, index_col=0)
-
-        # extract values from the column "Wert"
-        self.settings = df.Wert
-
-        # apply imported settings
-        self.apply_settings()
 
     def import_sim_variants_excel(self):
         """Import simulation variants Excel file.
