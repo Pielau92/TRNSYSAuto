@@ -1,9 +1,11 @@
 import os
+import multiprocessing
 from configparser import ConfigParser
 
 
 class Settings:
     """Class for storing settings of SimulationSeries object."""
+
     def __init__(self, sim_series):
         self.sim_series = sim_series
         self._save_path = sim_series.path.settings
@@ -16,14 +18,61 @@ class Settings:
         # todo testen
         try:
             self._settings.read(self._save_path)
-        except:     # todo Exception einfügen
-            print("settings.ini format error")
+        except:  # todo Exception einfügen
+            print("Format error in settings file, check settings.ini")
             raise SystemExit()
 
     def save_settings(self):
         # todo testen
         with open(self._save_path, 'w') as f:
             self._settings.write(f)
+
+    def apply_settings(self):
+        """Apply imported settings to SimulationSeries object.
+
+        Applies the imported settings from the settings Excel file to the corresponding attributes of the
+        SimulationSeries object with the same name.
+        """
+
+        def apply_setting():
+            """Apply setting value to sim_series.
+
+            Applies the individual settings to the corresponding (name of setting and of class attribute must match).
+            Automatically recognizes the type of the setting, based on the type of its corresponding class attribute.
+            Raises an error if no corresponding class attribute could be found, or an unsupported type is used (str,
+            int, float, bool, list (of strings).
+            """
+
+            if not hasattr(self.sim_series, setting):
+                raise AttributeError(f'Unknown setting "{setting}" in settings Excel file found.')
+
+            attr = getattr(self.sim_series, setting)
+
+            if isinstance(attr, str):
+                value = self._settings.get(section, setting)
+            elif isinstance(attr, int):
+                value = self._settings.getint(section, setting)
+            elif isinstance(attr, float):
+                value = self._settings.getfloat(section, setting)
+            elif isinstance(attr, bool):
+                value = self._settings.getboolean(section, setting)
+            elif isinstance(attr, list):
+                items = self._settings.get(section, setting).split(',')  # apply comma (,) delimiter
+                value = [item.strip() for item in items]  # remove whitespaces at beginning/end of strings
+            else:
+                raise TypeError(f'Unknown type "{type(attr)}" for setting "{setting}" in settings.ini file. '
+                                f'Supported types are string, integer, float, boolean and list (of strings).')
+
+            setattr(self.sim_series, setting, value)
+
+        for section in self._settings.sections():
+            for setting in self._settings.options(section):
+                apply_setting()
+
+        if self.sim_series.multiprocessing_max == 'auto':
+            self.sim_series.multiprocessing_max = multiprocessing.cpu_count()
+        else:
+            self.sim_series.multiprocessing_max = int(self.sim_series.multiprocessing_max)
 
     def reset_settings(self):
         # todo

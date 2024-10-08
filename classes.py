@@ -42,54 +42,13 @@ class SimulationSeries:
 
         self.path = settings.PathSettings(self, path_original_sim_variants_excel)
         self.settings = settings.Settings(self)   # todo: settings hier rein speichern
+        self.settings.load_settings()
 
         # current time when the main.exe file was executed
         self.execution_time = datetime.now().strftime('%d.%m.%Y_%H.%M')
 
         self.filename_sim_variants_excel = os.path.basename(self.path.original_sim_variants_excel).split('.')[0]
         self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
-
-        # region SET NAMES
-
-        # filenames
-        self.filename_logger = 'log.log'
-        self.filename_trnsys_output = 'out5.txt'
-        self.filename_settings_excel = 'Einstellungen.xlsx'
-        self.filename_savefile = 'SimulationSeries.pickle'
-
-        # Excel sheet names
-        self.sheet_name_settings = 'Einstellungen'
-        self.sheet_name_variant_input = 'Rohdaten'
-        self.sheet_name_calculation = 'Berechn1'
-        self.sheet_name_cumulative_input = 'Rohinputs'
-        self.sheet_name_zone_1_input = 'Zusamm1'
-        self.sheet_name_zone_3_input = 'Zusamm3'
-        self.sheet_name_zone_1_with_operating_time = 'Zone1_Betrieb'
-        self.sheet_name_zone_1_without_operating_time = 'Zone1ges'
-        self.sheet_name_zone_3_with_operating_time = 'Zone3_Betrieb'
-        self.sheet_name_zone_3_without_operating_time = 'Zone3ges'
-
-        # column names
-        self.var_list_zone1 \
-            = ['Period', 'ta', 'tzone1', 'TMSURF_ZONE1', 'relh1', 'vel1', 'pmv1', 'ppd1', 'clo1', 'met1', 'work1']
-        self.var_list_zone2 \
-            = ['Period', 'ta', 'tzone1.1', 'TMSURF_ZONE1.1', 'relh2', 'vel2', 'pmv2', 'ppd2', 'clo2', 'met2', 'work2']
-        self.var_list_zone3 \
-            = ['Period', 'ta', 'tzone1.2', 'TMSURF_ZONE1.2', 'relh3', 'vel3', 'pmv3', 'ppd3', 'clo3', 'met3', 'work3']
-        self.col_headers_result_column = \
-            ['top1', 'top2', 'top3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3', 'pmv1', 'pmv2', 'pmv3']
-        self.col_headers_trnsys_output \
-            = ['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3',
-               'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1',
-               'met2', 'met3']
-        self.col_headers_sim_variant \
-            = ['ta', 'top1', 'top2', 'top3', 'tzone1', 'tzone2', 'tzone3', 'Qventfges', 'qvolgesh', 'qc1', 'qc2', 'qc3',
-               'qh1', 'qh2', 'qh3', 'pmv1', 'pmv2', 'pmv3', 'ppd1', 'ppd2', 'ppd3', 'clo1', 'clo2', 'clo3', 'met1',
-               'met2', 'met3', 'schweiker_pmv1', 'schweiker_pmv2', 'schweiker_pmv3', 'schweiker_ppd1', 'schweiker_ppd2',
-               'schweiker_ppd3', 'schweiker_clo1', 'schweiker_clo2', 'schweiker_clo3', 'schweiker_met1',
-               'schweiker_met2', 'schweiker_met3']
-
-        # endregion
 
         # simulation series data
         self.sim_list = None  # list of simulation variant names
@@ -98,17 +57,6 @@ class SimulationSeries:
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # pandas series with the .b18 data file names
         self.weather_series = None  # pandas series with the weather data file names
-
-        # settings
-        self.settings = None  # Pandas series with miscellaneous simulation settings
-        self.path_exe = None  # path to TRNSYS executable file
-        self.name_excelsheet_sim_variants = None  # name of the Excel sheet containing the simulation variants table
-        self.filename_dck_template = None  # name of the dck-File template
-        self.timeout = None  # if timeout (sec) is reached without starting another simulation, stop program
-        self.start_time_buffer = None  # time buffer (sec) between two simulations, for increased stability (optional)
-        self.multiprocessing_max = None  # maximum number of simulations that can be calculated simultaneously
-        self.filenames_redundant = None  # list of redundant TRNSYS files that are to be deleted after the simulation
-        self.eval_save_interval = None  # the evaluation progress is saved after each save interval
 
         # region EVALUATION
 
@@ -126,6 +74,46 @@ class SimulationSeries:
 
         self.logger = None
 
+        # region initialize attributes belonging to settings (including datatype)
+
+        # general
+        self.path_exe = str()  # path to TRNSYS executable file
+        self.timeout = int()  # if timeout (sec) is reached without starting another simulation, stop program
+        self.start_time_buffer = int()  # time buffer (sec) between two simulations, for increased stability (optional)
+        self.multiprocessing_max = str()  # maximum number of simulations that can be calculated simultaneously
+        self.eval_save_interval = int()  # the evaluation progress is saved after each save interval
+
+        # filenames
+        self.filename_dck_template = str()  # name of the dck-File template
+        self.filename_logger = str()
+        self.filename_trnsys_output = str()
+        self.filename_savefile = str()
+        self.filenames_redundant = list()  # list of redundant TRNSYS files that are to be deleted after the simulation
+
+        # Excel sheet names
+        self.sheet_name_sim_variants = str()  # name of the Excel sheet containing the simulation variants table
+        self.sheet_name_variant_input = str()
+        self.sheet_name_calculation = str()
+        self.sheet_name_cumulative_input = str()
+        self.sheet_name_zone_1_input = str()
+        self.sheet_name_zone_3_input = str()
+        self.sheet_name_zone_1_with_operating_time = str()
+        self.sheet_name_zone_1_without_operating_time = str()
+        self.sheet_name_zone_3_with_operating_time = str()
+        self.sheet_name_zone_3_without_operating_time = str()
+
+        # column headers
+        self.var_list_zone1 = list()
+        self.var_list_zone2 = list()
+        self.var_list_zone3 = list()
+        self.col_headers_result_column = list()
+        self.col_headers_trnsys_output = list()
+        self.col_headers_sim_variant = list()
+
+        # endregion
+
+        self.settings.apply_settings()
+
     @property
     def cwd(self):
         """Current working directory."""
@@ -138,7 +126,7 @@ class SimulationSeries:
         an additional setup. Doing so anyway results in a reset of the simulation progress."""
 
         # import and apply settings Excel file
-        self.import_settings_excel()
+        # self.import_settings_excel()
 
         # import simulation variants Excel file
         self.import_sim_variants_excel()
@@ -284,24 +272,6 @@ class SimulationSeries:
         # apply imported settings
         self.apply_settings()
 
-    def apply_settings(self):
-        """Apply imported settings to SimulationSeries object.
-
-        Applies the imported settings from the settings Excel file to the corresponding attributes of the
-        SimulationSeries object with the same name.
-        """
-
-        for index, value in enumerate(self.settings):
-            attribute_name = self.settings.index[index]
-            if not hasattr(self, attribute_name):
-                raise AttributeError(f'Unknown setting "{attribute_name}" in settings Excel file found.')
-            setattr(self, attribute_name, value)
-
-        if self.multiprocessing_max == 'auto':
-            self.multiprocessing_max = multiprocessing.cpu_count()
-
-        self.filenames_redundant = self.filenames_redundant.split(', ')
-
     def import_sim_variants_excel(self):
         """Import simulation variants Excel file.
 
@@ -318,7 +288,7 @@ class SimulationSeries:
         excel_data = pd.ExcelFile(self.path.original_sim_variants_excel)
 
         # convert Excel data into pandas DataFrame
-        df = excel_data.parse(self.name_excelsheet_sim_variants, index_col=0)
+        df = excel_data.parse(self.sheet_name_sim_variants, index_col=0)
 
         # transpose data
         df_weather = df[df.index == 'Wetterdaten'].transpose()
