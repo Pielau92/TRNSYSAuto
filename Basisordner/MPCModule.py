@@ -48,6 +48,11 @@ def StartTime(TRNData):
 
     building.read_weather_data(TRNData[thisModule]["TRNSYS input file path"])
 
+    # write TRNSYS predefined variables into log file
+    for var_name in TRNData[thisModule]:
+        building.logFile.write(f'{var_name}:  {str(TRNData[thisModule][var_name])} \n')
+    building.logFile.write('\n')
+
     return
 
 
@@ -66,7 +71,10 @@ def Iteration(TRNData):
 # EndOfTimeStep: function called at the end of each time step, after iteration and before moving on to next time step
 # ----------------------------------------------------------------------------------------------------------------------
 def EndOfTimeStep(TRNData):
-    # This model has nothing to do during the end-of-step call
+    
+    # log into logfile
+    building.logFile.write(f'time: {str(TRNData[thisModule]["time"])}\n')
+    building.logFile.write(f'time step: {str(TRNData[thisModule]["current time step number"])}\n\n')
 
     return
 

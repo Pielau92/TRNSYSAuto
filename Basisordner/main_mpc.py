@@ -71,7 +71,7 @@ class Building:
 
         self.settings = SettingsMPC()
 
-        self.data = None  # DataFrame (or dictionary) with data
+        self.logFile = open("PythonLog.log", "w")
 
     def read_weather_data(self, path_trnsys_input_file, filename_weather_data='Windetc20190804.txt'):
         """Read weather data for TRNSYS simulation.
