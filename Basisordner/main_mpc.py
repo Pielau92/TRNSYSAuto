@@ -5,6 +5,10 @@ Created on Thu Aug  3 13:08:01 2023
 @author: Magdalena
 """
 import numpy as np
+import csv
+import os
+
+from pathlib import Path
 from statistics import mean
 
 
@@ -63,18 +67,39 @@ class Building:
 
         self.data = None  # DataFrame (or dictionary) with data
 
-    # def import_csv(self, filename):
-    #     """Import csv data."""
-    #
-    #     self.data = pd.read_csv(filename,
-    #                           encoding="latin1",
-    #                           header=0,
-    #                           names=["Stunde", "T_out", "Q_solar", "T_sp"],  # header
-    #                           index_col=False,
-    #                           delimiter=";",
-    #                           decimal=".")
-    #
-    #     T_sp = self.settings.setpoint_temperature
+    def read_weather_data(self, path_trnsys_input_file, filename_weather_data='Windetc20190804.txt'):
+        """Read weather data for TRNSYS simulation.
+
+        Parameters
+        ----------
+        path_trnsys_input_file : path to trnsys input file (dck file)
+        filename_weather_data : filename of the csv file with weather data
+
+        """
+
+        path_sim_dir = os.path.dirname(path_trnsys_input_file)
+        path_weather_data = os.path.join(path_sim_dir, filename_weather_data)
+        # path_weather_data =\
+        #     Path('C:/Users/pierre/PycharmProjects/BBSR Sommerlicher Komfort/Basisordner/Windetc20190804.txt')
+
+        lines = Path(path_weather_data).read_text().splitlines()
+        reader = csv.reader(lines, delimiter='\t')
+        # todo: offset und col_index_* in settings verstauen
+        offset = 5
+
+        # column index of specific rows
+        col_index_ta = 25
+        col_index_igs = 26
+        col_index_ign = 27
+
+        self.ta, self.igs, self.ign = [], [], []
+        for index, row in enumerate(reader):
+            if index < offset:
+                continue  # apply offset by skipping the first rows
+
+            self.ta.append(float(row[col_index_ta]))
+            self.igs.append(float(row[col_index_igs]))
+            self.ign.append(float(row[col_index_ign]))
 
     def optimize(self):
         """todo"""
