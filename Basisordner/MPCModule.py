@@ -46,12 +46,16 @@ def StartTime(TRNData):
     building.settings.T_start_in = inputs[10]  # room temperature [°C]
     building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
 
+    building.read_weather_data(TRNData[thisModule]["TRNSYS input file path"])
+
     return
 
 
 # Iteration: function called at each TRNSYS iteration within a time step
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
+
+    building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
     # python output
     TRNData[thisModule]["outputs"][0] = building.optimize()[0]     # first value of Q_heat

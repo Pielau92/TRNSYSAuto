@@ -63,6 +63,12 @@ class Building:
         self.max_cooling = max_cooling
         self.dt = dt
 
+        # weather data
+        self.ta = None
+        self.igs = None
+        self.ign = None
+        self.time_step_nr = 0
+
         self.settings = SettingsMPC()
 
         self.data = None  # DataFrame (or dictionary) with data
@@ -104,8 +110,8 @@ class Building:
     def optimize(self):
         """todo"""
 
-        Q_solar = list(range(1, 49))  # DUMMY
-        T_out = list(range(2, 98, 2))  # DUMMY
+        Q_solar = self.igs[self.time_step_nr:self.time_step_nr + self.settings.pred_hor - 1]
+        T_out = self.ta[self.time_step_nr:self.time_step_nr + self.settings.pred_hor - 1]
 
         dHeat = self.settings.dHeat
         T_sp = [self.settings.setpoint_temperature] * self.settings.pred_hor
@@ -164,7 +170,7 @@ class Building:
             ChgProgress = lse_baseline - lse_neu_long
 
             # output of final least square error
-            print(counter, ". Durchgang: ", lse_neu_long)
+            # print(counter, ". Durchgang: ", lse_neu_long)
 
             # loop counter
             counter += 1
