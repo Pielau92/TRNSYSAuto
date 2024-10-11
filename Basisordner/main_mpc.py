@@ -135,14 +135,14 @@ class Building:
     def optimize(self):
         """todo"""
 
-        Q_solar = self.igs[self.time_step_nr:self.time_step_nr + self.settings.pred_hor - 1]
-        T_out = self.ta[self.time_step_nr:self.time_step_nr + self.settings.pred_hor - 1]
+        Q_solar = self.igs[self.time_step_nr:self.time_step_nr + self.settings.pred_hor - 1]    # W/m²
+        T_out = self.ta[self.time_step_nr:self.time_step_nr + self.settings.pred_hor - 1]   # °C
 
-        dHeat = self.settings.dHeat
-        T_sp = [self.settings.setpoint_temperature] * self.settings.pred_hor
+        dHeat = self.settings.dHeat     # kW
+        T_sp = [self.settings.setpoint_temperature] * self.settings.pred_hor    # °C
 
-        Q_heat = np.zeros(self.settings.pred_hor)
-        Q_help_s = np.zeros(self.settings.pred_hor_short)
+        Q_heat = np.zeros(self.settings.pred_hor)   # kW
+        Q_help_s = np.zeros(self.settings.pred_hor_short)   # kW
 
         counter = 0
         ChgProgress = 1  # termination criterion optimization - difference between lse_baseline and lse_neu_long
