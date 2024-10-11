@@ -135,14 +135,20 @@ class Building:
     def optimize(self):
         """todo"""
 
-        Q_solar = self.igs[self.time_step_nr:self.time_step_nr + self.settings.pred_hor - 1]    # W/m²
-        T_out = self.ta[self.time_step_nr:self.time_step_nr + self.settings.pred_hor - 1]   # °C
+        # prediction horizon in terms of time steps, instead of hours
+        pred_hor_time_steps = self.settings.pred_hor * 3600/self.dt
+        pred_hor_short_time_steps = self.settings.pred_hor * 3600 / self.dt
+
+        index_range = list(range(self.time_step_nr, self.time_step_nr + pred_hor_time_steps))
+
+        Q_solar = self.igs[index_range]     # W/m²
+        T_out = self.ta[index_range]   # °C
 
         dHeat = self.settings.dHeat     # kW
-        T_sp = [self.settings.setpoint_temperature] * self.settings.pred_hor    # °C
+        T_sp = [self.settings.setpoint_temperature] * pred_hor_time_steps    # °C
 
-        Q_heat = np.zeros(self.settings.pred_hor)   # kW
-        Q_help_s = np.zeros(self.settings.pred_hor_short)   # kW
+        Q_heat = np.zeros(pred_hor_time_steps)   # kW
+        Q_help_s = np.zeros(pred_hor_short_time_steps)   # kW
 
         counter = 0
         ChgProgress = 1  # termination criterion optimization - difference between lse_baseline and lse_neu_long
@@ -154,7 +160,7 @@ class Building:
             Q_heat_s = self.convert_48_16(Q_heat)  # shorten Q_heat
 
             # loop through hours of prediction horizon
-            for i in range(self.settings.pred_hor_short):
+            for i in range(pred_hor_short_time_steps):
 
                 # negative perturbation
                 Q_help_s[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
@@ -218,6 +224,8 @@ class Building:
 
         """
 
+        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt)
+
         Q_loss = []  # prediction of convection, transition and ventilation losses [kW]
         Q_tab = []  # thermal heat flow between room and TAB component [kW]
         T_in = list([self.settings.T_start_in])  # prediction of  room temperature [°C]
@@ -225,7 +233,7 @@ class Building:
 
         alpha = [self.alpha_s, self.alpha_w]  # cooling in summer (season = 0), heating in winter (season = 1)
 
-        for i in range(self.settings.pred_hor - 1):
+        for i in range(pred_hor_time_steps):
             Q_loss.append((T_in[i] - T_out[i]) * self.k / 1000)
             Q_tab.append((T_tab[i] - T_in[i]) * (alpha[self.settings.season] / 1000 * self.area))
 
