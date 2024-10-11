@@ -107,6 +107,31 @@ class Building:
             self.igs.append(float(row[col_index_igs]))
             self.ign.append(float(row[col_index_ign]))
 
+        if not self.dt == 3600:
+            self.interpolate_weather_data()
+
+    def interpolate_weather_data(self):
+        """Interpolate weather data to right length."""
+
+        def interpolate(y, factor):
+            """Change length of a given array by a certain factor using interpolation.
+
+            Parameters
+            ----------
+            y : y values of array
+            factor : factor by which the length of the array is to be multiplied
+            """
+
+            x = range(0, len(y))
+            x_interp = [val/factor for val in range(0, int(len(y)*factor))]
+            y_interp = np.interp(x_interp, x, y)
+
+            return y_interp
+
+        self.ta = interpolate(self.ta, 3600/self.dt)
+        self.igs = interpolate(self.igs, 3600/self.dt)
+        self.ign = interpolate(self.ign, 3600/self.dt)
+
     def optimize(self):
         """todo"""
 
