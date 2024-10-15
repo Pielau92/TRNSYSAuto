@@ -313,3 +313,22 @@ class SettingsMPC:
 def lse(T_in, T_sp):
     """Calculate least square error. todo: Variablennamen inhalts-unabhängig umbenennen (also keiner Temperaturen)"""
     return sum(pow((T_in - T_sp), 2))
+
+
+def multiply_nested_list(nested_list, factor):
+    """Multiply each value inside a nested list of numbers with a factor.
+
+    Parameters
+    ----------
+    nested_list : list[list]
+        nested list of numbers to be multiplied
+    factor : int
+        factor by which each number is multiplied
+    """
+    
+    new_nested_list = []
+    for list in nested_list:
+        new_list = []
+        for value in list:
+            new_list.append(value * factor)
+        new_nested_list.append(new_list)
