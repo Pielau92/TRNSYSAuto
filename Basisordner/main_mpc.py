@@ -123,7 +123,7 @@ class Building:
             """
 
             x = range(0, len(y))
-            x_interp = [val/factor for val in range(0, int(len(y)*factor))]
+            x_interp = [val / factor for val in range(0, int(len(y) * factor))]
             y_interp = np.interp(x_interp, x, y)
 
             return y_interp
@@ -136,8 +136,8 @@ class Building:
         """todo"""
 
         # prediction horizon in terms of time steps, instead of hours
-        pred_hor_time_steps = self.settings.pred_hor * 3600/self.dt
-        pred_hor_short_time_steps = self.settings.pred_hor * 3600 / self.dt
+        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt)
+        pred_hor_short_time_steps = int(self.settings.pred_hor_short * 3600 / self.dt)
 
         index_range = list(range(self.time_step_nr, self.time_step_nr + pred_hor_time_steps))
 
@@ -242,7 +242,7 @@ class Building:
 
             # print ("Q_heat[",i,"]:", Q_heat[i], "Q_TAB:", Q_Tab[i], "T_tab:", T_tab[i], "T_in", T_in[i])
 
-        return np.array(T_in), np.array(T_tab)
+        return np.array(T_in[:-1]), np.array(T_tab[:-1])
 
     def convert_16_48(self, Q_heat_s):
         """todo"""
