@@ -382,15 +382,17 @@ def multiply_nested_list(nested_list, factor):
 
     Parameters
     ----------
-    nested_list : list[list]
+    nested_list : list[list[int]]
         nested list of numbers to be multiplied
     factor : int
         factor by which each number is multiplied
     """
-    
+
     new_nested_list = []
     for list in nested_list:
         new_list = []
         for value in list:
-            new_list.append(value * factor)
+            new_list.append(int(value * factor))
         new_nested_list.append(new_list)
+
+    return new_nested_list
