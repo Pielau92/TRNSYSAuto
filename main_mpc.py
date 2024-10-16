@@ -128,9 +128,9 @@ class Building:
 
             return y_interp
 
-        self.ta = interpolate(self.ta, 3600/self.dt)
-        self.igs = interpolate(self.igs, 3600/self.dt)
-        self.ign = interpolate(self.ign, 3600/self.dt)
+        self.ta = interpolate(self.ta, 3600 / self.dt)
+        self.igs = interpolate(self.igs, 3600 / self.dt)
+        self.ign = interpolate(self.ign, 3600 / self.dt)
 
     def optimize(self):
         """todo"""
@@ -141,14 +141,14 @@ class Building:
 
         index_range = list(range(self.time_step_nr, self.time_step_nr + pred_hor_time_steps))
 
-        Q_solar = self.igs[index_range]     # W/m²
-        T_out = self.ta[index_range]   # °C
+        Q_solar = self.igs[index_range]  # W/m²
+        T_out = self.ta[index_range]  # °C
 
-        dHeat = self.settings.dHeat     # kW
-        T_sp = [self.settings.setpoint_temperature] * pred_hor_time_steps    # °C
+        dHeat = self.settings.dHeat  # kW
+        T_sp = [self.settings.setpoint_temperature] * pred_hor_time_steps  # °C
 
-        Q_heat = np.zeros(pred_hor_time_steps)   # kW
-        Q_help_s = np.zeros(pred_hor_short_time_steps)   # kW
+        Q_heat = np.zeros(pred_hor_time_steps)  # kW
+        Q_help_s = np.zeros(pred_hor_short_time_steps)  # kW
 
         counter = 0
         ChgProgress = 1  # termination criterion optimization - difference between lse_baseline and lse_neu_long
