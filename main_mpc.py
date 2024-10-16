@@ -231,12 +231,71 @@ class Building:
 
     def convert_pred_hor(self, array, mode):
 
+        def adapt_hour_indices(hour_indices):
+            """Adapt hour indices to new time step."""
+
+            if steps_per_hour == 1:
+                return hour_indices
+
+            # adapt indices to new time step
+            adapted = multiply_nested_list(hour_indices, steps_per_hour)
+
+            # single indices are now multiple indices
+            for i, indices in enumerate(adapted):
+                if len(indices) == 1:
+                    adapted[i] = [indices[0], indices[0] + steps_per_hour]
+
+            return adapted
+
+        def conditional_conversion(indices_to, indices_from):
+            """Perform conversion depending on the passed indices.
+
+            Parameters
+            ----------
+            indices_to : list[int]
+                contains start and end of index range, for the receiving array.
+            indices_from : list[int]
+                contains start and end of index range, for the source array.
+            """
+
+            def range2indices(range_list):
+                """Turn list with range (e.g. [0,4]) into list of actual values (e.g. [0, 1, 2, 3]."""
+                if len(range_list) > 1:
+                    return list(range(range_list[0], range_list[1]))
+                else:
+                    return range_list
+
+            # turn index range into actual index list
+            indices_to = range2indices(indices_to)
+            indices_from = range2indices(indices_from)
+
+            # length of index lists
+            len_to = len(indices_to)
+            len_from = len(indices_from)
+
+            # conversion, method depends on the passed index ranges
+            if len_from == 1 or len_to == len_from:
+                result[indices_to] = array[indices_from]
+            elif len_to > len_from:
+                # interpolate
+                indices_from = np.floor(interpolate(indices_from, steps_per_hour)).astype(int).tolist()
+                result[indices_to] = array[indices_from]
+            elif len_to < len_from:
+                # averaging downsampling
+                a = list(range(0, len_from, int(len_from/len_to))) + [len_from]
+                for i in range(len_to):
+                    result[indices_to[i]] = np.mean(array[indices_from[a[i]:a[i + 1]]])
+
         # region HARD CODED HOUR INDICES FOR CONVERSION
 
-        # follows the following logic:
-        #   long_array[0, 6] = short_array[0, 6]
-        #   long_array[6, 8] = short_array[6]
-        #   ...
+        """follows the following logic:
+          long_array[0, 6] = short_array[0, 6]
+          long_array[6, 8] = short_array[6]
+          ...
+          
+          If there are more than one time steps per hour, the indices have to be adapted accordingly. See (complicated)
+          code further below.
+          """
 
         long = [
             [0, 6],
@@ -270,26 +329,19 @@ class Building:
 
         steps_per_hour = int(3600 / self.dt)
 
-        def adapt_hour_indices(hour_indices):
-            """Adapt hour indices to new time step."""
-
-            if steps_per_hour == 1:
-                return hour_indices
-
-            # adapt indices to new time step
-            adapted = multiply_nested_list(hour_indices, steps_per_hour)
-
-            # single indices are now multiple indices
-            for i, indices in enumerate(adapted):
-                if len(indices) == 1:
-                    adapted[i] = [indices[0], indices[0] + steps_per_hour]
-
-            return adapted
-
         long = adapt_hour_indices(long)
         short = adapt_hour_indices(short)
 
-        pass
+        if mode == 'long2short':
+            result = np.zeros(self.settings.pred_hor_short * steps_per_hour)
+            for i in range(len(long)):
+                conditional_conversion(short[i], long[i])
+        elif mode == 'short2long':
+            result = np.zeros(self.settings.pred_hor * steps_per_hour)
+            for i in range(len(long)):
+                conditional_conversion(long[i], short[i])
+
+        return result.astype(int)
 
     def convert_16_48(self, Q_heat_s):
         """todo"""
