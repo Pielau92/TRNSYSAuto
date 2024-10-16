@@ -244,6 +244,68 @@ class Building:
 
         return np.array(T_in[:-1]), np.array(T_tab[:-1])
 
+    def convert_pred_hor(self, array, mode):
+
+        # region HARD CODED HOUR INDICES FOR CONVERSION
+
+        # follows the following logic:
+        #   long_array[0, 6] = short_array[0, 6]
+        #   long_array[6, 8] = short_array[6]
+        #   ...
+
+        long = [
+            [0, 6],
+            [6, 8],
+            [8, 10],
+            [10, 12],
+            [12, 15],
+            [15, 18],
+            [18, 21],
+            [21, 24],
+            [24, 30],
+            [30, 36],
+            [36, 48],
+        ]
+
+        short = [
+            [0, 6],
+            [6],
+            [7],
+            [8],
+            [9],
+            [10],
+            [11],
+            [12],
+            [13],
+            [14],
+            [15],
+        ]
+
+        # endregion
+
+        steps_per_hour = int(3600 / self.dt)
+
+        def adapt_hour_indices(hour_indices):
+            """Adapt hour indices to new time step."""
+
+            if steps_per_hour == 1:
+                return hour_indices
+
+            # adapt indices to new time step
+            adapted = multiply_nested_list(hour_indices, steps_per_hour)
+
+            # single indices are now multiple indices
+            for i, indices in enumerate(adapted):
+                if len(indices) == 1:
+                    adapted[i] = [indices[0], indices[0] + steps_per_hour]
+
+            return adapted
+
+        long = adapt_hour_indices(long)
+        short = adapt_hour_indices(short)
+
+        pass
+
     def convert_16_48(self, Q_heat_s):
         """todo"""
         Q_heat = np.zeros(self.settings.pred_hor)
