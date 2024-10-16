@@ -277,8 +277,8 @@ class Building:
             if len_from == 1 or len_to == len_from:
                 result[indices_to] = array[indices_from]
             elif len_to > len_from:
-                # interpolate
-                indices_from = np.floor(interpolate(indices_from, steps_per_hour)).astype(int).tolist()
+                # interpolate and floor
+                indices_from = np.floor(interpolate(indices_from, int(len_to/len_from))).astype(int).tolist()
                 result[indices_to] = array[indices_from]
             elif len_to < len_from:
                 # averaging downsampling
@@ -341,7 +341,7 @@ class Building:
             for i in range(len(long)):
                 conditional_conversion(long[i], short[i])
 
-        return result.astype(int)
+        return result
 
     def convert_16_48(self, Q_heat_s):
         """todo"""
