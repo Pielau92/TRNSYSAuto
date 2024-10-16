@@ -142,20 +142,20 @@ class Building:
             # baseline calculation
             T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
             lse_baseline = lse(T_in, T_sp)  # least square error for zero heat input / heat output
-            Q_heat_s = self.convert_48_16(Q_heat)  # shorten Q_heat
+            Q_heat_s = self.convert_pred_hor(Q_heat, 'long2short')  # shorten Q_heat
 
             # loop through hours of prediction horizon
             for i in range(pred_hor_short_time_steps):
 
                 # negative perturbation
                 Q_help_s[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
-                Q_help = self.convert_16_48(Q_help_s)  # expand Q_help
+                Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand Q_help
                 T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
                 lse_negative = lse(T_in, T_sp)  # least square error, negative perturbation
 
                 # positive perturbation
                 Q_help_s[i] = min(Q_heat_s[i] + dHeat, self.max_heating)  # limit to maximum heating power
-                Q_help = self.convert_16_48(Q_help_s)  # expand Q_help
+                Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand Q_help
                 T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
                 lse_positive = lse(T_in, T_sp)  # least square error, positive perturbation
 
@@ -178,7 +178,7 @@ class Building:
 
                 Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
 
-            Q_heat = self.convert_16_48(Q_heat_s)  # expand heating vector to prediction horizon
+            Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand heating vector to prediction horizon
             T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
             lse_neu_long = lse(T_in, T_sp)  # least square error for final perturbation in this loop run
 
@@ -278,11 +278,11 @@ class Building:
                 result[indices_to] = array[indices_from]
             elif len_to > len_from:
                 # interpolate and floor
-                indices_from = np.floor(interpolate(indices_from, int(len_to/len_from))).astype(int).tolist()
+                indices_from = np.floor(interpolate(indices_from, int(len_to / len_from))).astype(int).tolist()
                 result[indices_to] = array[indices_from]
             elif len_to < len_from:
                 # averaging downsampling
-                a = list(range(0, len_from, int(len_from/len_to))) + [len_from]
+                a = list(range(0, len_from, int(len_from / len_to))) + [len_from]
                 for i in range(len_to):
                     result[indices_to[i]] = np.mean(array[indices_from[a[i]:a[i + 1]]])
 
@@ -342,42 +342,6 @@ class Building:
                 conditional_conversion(long[i], short[i])
 
         return result
-
-    def convert_16_48(self, Q_heat_s):
-        """todo"""
-        Q_heat = np.zeros(self.settings.pred_hor)
-
-        Q_heat[0:6] = Q_heat_s[0:6]
-        Q_heat[6:8] = Q_heat_s[6]
-        Q_heat[8:10] = Q_heat_s[7]
-        Q_heat[10:12] = Q_heat_s[8]
-        Q_heat[12:15] = Q_heat_s[9]
-        Q_heat[15:18] = Q_heat_s[10]
-        Q_heat[18:21] = Q_heat_s[11]
-        Q_heat[21:24] = Q_heat_s[12]
-        Q_heat[24:30] = Q_heat_s[13]
-        Q_heat[30:36] = Q_heat_s[14]
-        Q_heat[36:48] = Q_heat_s[15]
-
-        return Q_heat
-
-    def convert_48_16(self, Q_heat):
-        """todo"""
-        Q_heat_s = np.zeros(self.settings.pred_hor_short)
-
-        Q_heat_s[0:6] = Q_heat[0:6]
-        Q_heat_s[6] = mean(Q_heat[6:7])
-        Q_heat_s[7] = mean(Q_heat[8:9])
-        Q_heat_s[8] = mean(Q_heat[10:11])
-        Q_heat_s[9] = mean(Q_heat[12:14])
-        Q_heat_s[10] = mean(Q_heat[15:17])
-        Q_heat_s[11] = mean(Q_heat[18:20])
-        Q_heat_s[12] = mean(Q_heat[21:23])
-        Q_heat_s[13] = mean(Q_heat[24:29])
-        Q_heat_s[14] = mean(Q_heat[30:35])
-        Q_heat_s[15] = mean(Q_heat[36:47])
-
-        return Q_heat_s
 
 
 class SettingsMPC:
