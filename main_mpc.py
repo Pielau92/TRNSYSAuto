@@ -85,8 +85,8 @@ class Building:
 
         path_sim_dir = os.path.dirname(path_trnsys_input_file)
         path_weather_data = os.path.join(path_sim_dir, filename_weather_data)
-        path_weather_data =\
-            Path('C:/Users/pierre/PycharmProjects/BBSR Sommerlicher Komfort/Basisordner/Windetc20190804.txt')
+        # path_weather_data = \
+        #     Path('C:/Users/pierre/PycharmProjects/BBSR Sommerlicher Komfort/Basisordner/Windetc20190804.txt')
 
         lines = Path(path_weather_data).read_text().splitlines()
         reader = csv.reader(lines, delimiter='\t')
@@ -142,20 +142,20 @@ class Building:
             # baseline calculation
             T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
             lse_baseline = lse(T_in, T_sp)  # least square error for zero heat input / heat output
-            Q_heat_s = self.convert_192_64(Q_heat)  # shorten Q_heat
+            Q_heat_s = self.convert_pred_hor(Q_heat, 'long2short')  # shorten Q_heat
 
             # loop through hours of prediction horizon
             for i in range(pred_hor_short_time_steps):
 
                 # negative perturbation
                 Q_help_s[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
-                Q_help = self.convert_64_192(Q_help_s)  # expand Q_help
+                Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand Q_help
                 T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
                 lse_negative = lse(T_in, T_sp)  # least square error, negative perturbation
 
                 # positive perturbation
                 Q_help_s[i] = min(Q_heat_s[i] + dHeat, self.max_heating)  # limit to maximum heating power
-                Q_help = self.convert_64_192(Q_help_s)  # expand Q_help
+                Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand Q_help
                 T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
                 lse_positive = lse(T_in, T_sp)  # least square error, positive perturbation
 
@@ -178,7 +178,7 @@ class Building:
 
                 Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
 
-            Q_heat = self.convert_64_192(Q_heat_s)  # expand heating vector to prediction horizon
+            Q_heat = self.convert_pred_hor(Q_heat_s, 'short2long')  # expand heating vector to prediction horizon
             T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
             lse_neu_long = lse(T_in, T_sp)  # least square error for final perturbation in this loop run
 
@@ -229,7 +229,55 @@ class Building:
 
         return np.array(T_in[:-1]), np.array(T_tab[:-1])
 
-    def convert_pred_hor(self, array, mode):
+    # region PREDICTION HORIZON CONVERSION METHODS
+
+    def convert_pred_hor(self, array, mode, dynamic=False):
+        """Convert array from one prediction horizon to another.
+
+        Parameters
+        ----------
+        array : numpy.array
+            array to be converted
+        mode : str
+            conversion mode (from longer to shorter prediction horizon, or from shorter to longer)
+        dynamic : bool
+            dynamic conversion flag (takes longer, but works with any time step - otherwise only 1 hour or 15 min)
+        """
+
+        if dynamic:
+            return self._convert_dynamic(array, mode)
+
+        if self.dt not in [3600, 3600 / 4]:
+            raise ValueError(
+                'Hard coded conversion methods only work with a time step of 1 hour or 15 min. Add additional hard coded'
+                ' conversion method of use convert_pred_hor with dynamic=True instead.')
+
+        elif self.dt == 3600:  # time step is 1 hour
+            if mode == 'long2short':
+                return self._convert_48_16(array)
+            elif mode == 'short2long':
+                return self._convert_16_48(array)
+
+        elif self.dt == 3600 / 4:  # time step is 15 min
+            if mode == 'long2short':
+                return self._convert_192_64(array)
+            elif mode == 'short2long':
+                return self._convert_64_192(array)
+
+    def _convert_dynamic(self, array, mode):
+        """Dynamic converter.
+
+        Alternative to the hard coded converters, which converts an array automatically based on the time step. Although
+        this method is more versatile, it also needs more resources/time to run. If that is an issue, use hard coded
+        converters instead.
+
+        Parameters
+        ----------
+        array : numpy.array
+            array to be converted
+        mode : str
+            conversion mode ('long2short' or 'short2long')
+        """
 
         def adapt_hour_indices(hour_indices):
             """Adapt hour indices to new time step."""
@@ -343,8 +391,8 @@ class Building:
 
         return result
 
-    def convert_16_48(self, Q_heat_s):
-        """todo"""
+    def _convert_16_48(self, Q_heat_s):
+        """Hard coded converter from 16 to 48 values"""
         Q_heat = np.zeros(self.settings.pred_hor)
 
         Q_heat[0:6] = Q_heat_s[0:6]
@@ -361,8 +409,8 @@ class Building:
 
         return Q_heat
 
-    def convert_48_16(self, Q_heat):
-        """todo"""
+    def _convert_48_16(self, Q_heat):
+        """Hard coded converter from 48 to 16 values"""
         Q_heat_s = np.zeros(self.settings.pred_hor_short)
 
         Q_heat_s[0:6] = Q_heat[0:6]
@@ -379,9 +427,9 @@ class Building:
 
         return Q_heat_s
 
-    def convert_64_192(self, Q_heat_s):
-        """todo"""
-        Q_heat = np.zeros(int(self.settings.pred_hor*3600/self.dt))
+    def _convert_64_192(self, Q_heat_s):
+        """Hard coded converter from 64 to 192 values"""
+        Q_heat = np.zeros(int(self.settings.pred_hor * 3600 / self.dt))
 
         Q_heat[0:24] = Q_heat_s[0:24]
         Q_heat[24:32] = Q_heat_s[[24, 24, 25, 25, 26, 26, 27, 27]]
@@ -401,9 +449,9 @@ class Building:
 
         return Q_heat
 
-    def convert_192_64(self, Q_heat):
-        """todo"""
-        Q_heat_s = np.zeros(int(self.settings.pred_hor_short*3600/self.dt))
+    def _convert_192_64(self, Q_heat):
+        """Hard coded converter from 192 to 64 values"""
+        Q_heat_s = np.zeros(int(self.settings.pred_hor_short * 3600 / self.dt))
 
         Q_heat_s[0:24] = Q_heat[0:24]
         Q_heat_s[24] = np.mean(Q_heat[24:26])
@@ -448,6 +496,8 @@ class Building:
         Q_heat_s[63] = np.mean(Q_heat[180:192])
 
         return Q_heat_s
+
+    # endregion
 
 
 class SettingsMPC:
