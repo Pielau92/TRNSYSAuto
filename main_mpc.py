@@ -85,8 +85,8 @@ class Building:
 
         path_sim_dir = os.path.dirname(path_trnsys_input_file)
         path_weather_data = os.path.join(path_sim_dir, filename_weather_data)
-        # path_weather_data =\
-        #     Path('C:/Users/pierre/PycharmProjects/BBSR Sommerlicher Komfort/Basisordner/Windetc20190804.txt')
+        path_weather_data =\
+            Path('C:/Users/pierre/PycharmProjects/BBSR Sommerlicher Komfort/Basisordner/Windetc20190804.txt')
 
         lines = Path(path_weather_data).read_text().splitlines()
         reader = csv.reader(lines, delimiter='\t')
@@ -142,20 +142,20 @@ class Building:
             # baseline calculation
             T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
             lse_baseline = lse(T_in, T_sp)  # least square error for zero heat input / heat output
-            Q_heat_s = self.convert_pred_hor(Q_heat, 'long2short')  # shorten Q_heat
+            Q_heat_s = self.convert_192_64(Q_heat)  # shorten Q_heat
 
             # loop through hours of prediction horizon
             for i in range(pred_hor_short_time_steps):
 
                 # negative perturbation
                 Q_help_s[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
-                Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand Q_help
+                Q_help = self.convert_64_192(Q_help_s)  # expand Q_help
                 T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
                 lse_negative = lse(T_in, T_sp)  # least square error, negative perturbation
 
                 # positive perturbation
                 Q_help_s[i] = min(Q_heat_s[i] + dHeat, self.max_heating)  # limit to maximum heating power
-                Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand Q_help
+                Q_help = self.convert_64_192(Q_help_s)  # expand Q_help
                 T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
                 lse_positive = lse(T_in, T_sp)  # least square error, positive perturbation
 
@@ -178,7 +178,7 @@ class Building:
 
                 Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
 
-            Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand heating vector to prediction horizon
+            Q_heat = self.convert_64_192(Q_heat_s)  # expand heating vector to prediction horizon
             T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
             lse_neu_long = lse(T_in, T_sp)  # least square error for final perturbation in this loop run
 
@@ -342,6 +342,112 @@ class Building:
                 conditional_conversion(long[i], short[i])
 
         return result
+
+    def convert_16_48(self, Q_heat_s):
+        """todo"""
+        Q_heat = np.zeros(self.settings.pred_hor)
+
+        Q_heat[0:6] = Q_heat_s[0:6]
+        Q_heat[6:8] = Q_heat_s[6]
+        Q_heat[8:10] = Q_heat_s[7]
+        Q_heat[10:12] = Q_heat_s[8]
+        Q_heat[12:15] = Q_heat_s[9]
+        Q_heat[15:18] = Q_heat_s[10]
+        Q_heat[18:21] = Q_heat_s[11]
+        Q_heat[21:24] = Q_heat_s[12]
+        Q_heat[24:30] = Q_heat_s[13]
+        Q_heat[30:36] = Q_heat_s[14]
+        Q_heat[36:48] = Q_heat_s[15]
+
+        return Q_heat
+
+    def convert_48_16(self, Q_heat):
+        """todo"""
+        Q_heat_s = np.zeros(self.settings.pred_hor_short)
+
+        Q_heat_s[0:6] = Q_heat[0:6]
+        Q_heat_s[6] = mean(Q_heat[6:7])
+        Q_heat_s[7] = mean(Q_heat[8:9])
+        Q_heat_s[8] = mean(Q_heat[10:11])
+        Q_heat_s[9] = mean(Q_heat[12:14])
+        Q_heat_s[10] = mean(Q_heat[15:17])
+        Q_heat_s[11] = mean(Q_heat[18:20])
+        Q_heat_s[12] = mean(Q_heat[21:23])
+        Q_heat_s[13] = mean(Q_heat[24:29])
+        Q_heat_s[14] = mean(Q_heat[30:35])
+        Q_heat_s[15] = mean(Q_heat[36:47])
+
+        return Q_heat_s
+
+    def convert_64_192(self, Q_heat_s):
+        """todo"""
+        Q_heat = np.zeros(int(self.settings.pred_hor*3600/self.dt))
+
+        Q_heat[0:24] = Q_heat_s[0:24]
+        Q_heat[24:32] = Q_heat_s[[24, 24, 25, 25, 26, 26, 27, 27]]
+        Q_heat[32:40] = Q_heat_s[[28, 28, 29, 29, 30, 30, 31, 31]]
+        Q_heat[40:48] = Q_heat_s[[32, 32, 33, 33, 34, 34, 35, 35]]
+        Q_heat[48:60] = Q_heat_s[[36, 36, 36, 37, 37, 37, 38, 38, 38, 39, 39, 39]]
+        Q_heat[60:72] = Q_heat_s[[40, 40, 40, 41, 41, 41, 42, 42, 42, 43, 43, 43]]
+        Q_heat[72:84] = Q_heat_s[[44, 44, 44, 45, 45, 45, 46, 46, 46, 47, 47, 47]]
+        Q_heat[84:96] = Q_heat_s[[48, 48, 48, 49, 49, 49, 50, 50, 50, 51, 51, 51]]
+        Q_heat[96:120] = Q_heat_s[[
+            52, 52, 52, 52, 52, 52, 53, 53, 53, 53, 53, 53, 54, 54, 54, 54, 54, 54, 55, 55, 55, 55, 55, 55]]
+        Q_heat[120:144] = Q_heat_s[[
+            56, 56, 56, 56, 56, 56, 57, 57, 57, 57, 57, 57, 58, 58, 58, 58, 58, 58, 59, 59, 59, 59, 59, 59]]
+        Q_heat[144:192] = Q_heat_s[[
+            60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 62, 62, 62,
+            62, 62, 62, 62, 62, 62, 62, 62, 62, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63]]
+
+        return Q_heat
+
+    def convert_192_64(self, Q_heat):
+        """todo"""
+        Q_heat_s = np.zeros(int(self.settings.pred_hor_short*3600/self.dt))
+
+        Q_heat_s[0:24] = Q_heat[0:24]
+        Q_heat_s[24] = np.mean(Q_heat[24:26])
+        Q_heat_s[25] = np.mean(Q_heat[26:28])
+        Q_heat_s[26] = np.mean(Q_heat[28:30])
+        Q_heat_s[27] = np.mean(Q_heat[30:32])
+        Q_heat_s[28] = np.mean(Q_heat[32:34])
+        Q_heat_s[29] = np.mean(Q_heat[34:36])
+        Q_heat_s[30] = np.mean(Q_heat[36:38])
+        Q_heat_s[31] = np.mean(Q_heat[38:40])
+        Q_heat_s[32] = np.mean(Q_heat[40:42])
+        Q_heat_s[33] = np.mean(Q_heat[42:44])
+        Q_heat_s[34] = np.mean(Q_heat[44:46])
+        Q_heat_s[35] = np.mean(Q_heat[46:48])
+        Q_heat_s[36] = np.mean(Q_heat[48:51])
+        Q_heat_s[37] = np.mean(Q_heat[51:54])
+        Q_heat_s[38] = np.mean(Q_heat[54:57])
+        Q_heat_s[39] = np.mean(Q_heat[57:60])
+        Q_heat_s[40] = np.mean(Q_heat[60:63])
+        Q_heat_s[41] = np.mean(Q_heat[63:66])
+        Q_heat_s[42] = np.mean(Q_heat[66:69])
+        Q_heat_s[43] = np.mean(Q_heat[69:72])
+        Q_heat_s[44] = np.mean(Q_heat[72:75])
+        Q_heat_s[45] = np.mean(Q_heat[75:78])
+        Q_heat_s[46] = np.mean(Q_heat[78:81])
+        Q_heat_s[47] = np.mean(Q_heat[81:84])
+        Q_heat_s[48] = np.mean(Q_heat[84:87])
+        Q_heat_s[49] = np.mean(Q_heat[87:90])
+        Q_heat_s[50] = np.mean(Q_heat[90:93])
+        Q_heat_s[51] = np.mean(Q_heat[93:96])
+        Q_heat_s[52] = np.mean(Q_heat[96:102])
+        Q_heat_s[53] = np.mean(Q_heat[102:108])
+        Q_heat_s[54] = np.mean(Q_heat[108:114])
+        Q_heat_s[55] = np.mean(Q_heat[114:120])
+        Q_heat_s[56] = np.mean(Q_heat[120:126])
+        Q_heat_s[57] = np.mean(Q_heat[126:132])
+        Q_heat_s[58] = np.mean(Q_heat[132:138])
+        Q_heat_s[59] = np.mean(Q_heat[138:144])
+        Q_heat_s[60] = np.mean(Q_heat[144:156])
+        Q_heat_s[61] = np.mean(Q_heat[156:168])
+        Q_heat_s[62] = np.mean(Q_heat[168:180])
+        Q_heat_s[63] = np.mean(Q_heat[180:192])
+
+        return Q_heat_s
 
 
 class SettingsMPC:
