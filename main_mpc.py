@@ -60,7 +60,7 @@ class Building:
         self.cp_tab = cp_tab
         self.cp_r = cp_r
         self.max_heating = max_heating
-        self.max_cooling = max_cooling
+        self.max_cooling = max_cooling * -1
         self.dt = dt
 
         # weather data
