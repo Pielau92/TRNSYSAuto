@@ -216,7 +216,11 @@ class SimulationSeries:
             functions.replace_parameter_values(path_dck, self.df_dck.loc[sim])
 
         # create new directory for the simulation series
-        os.makedirs(self.path.sim_series_dir)
+        try:
+            os.makedirs(self.path.sim_series_dir)
+        except FileExistsError:     # if directory already exists, delete and create new one
+            shutil.rmtree(self.path.sim_series_dir)
+            os.makedirs(self.path.sim_series_dir)
 
         # initialize logging file
         self.initialize_logging()
