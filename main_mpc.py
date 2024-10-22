@@ -107,6 +107,11 @@ class Building:
             self.igs.append(float(row[col_index_igs]))
             self.ign.append(float(row[col_index_ign]))
 
+        # save as numpy array
+        self.ta = np.array(self.ta)
+        self.igs = np.array(self.igs)
+        self.ign = np.array(self.ign)
+
         if not self.dt == 3600:
             self.interpolate_weather_data()
 
