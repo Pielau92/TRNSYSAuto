@@ -108,8 +108,6 @@ def main():
     label = tk.Label(text="Aktion auswählen")
     label.pack()
 
-    check_cwd()  # check if base directory is located in current working directory, otherwise exit
-
     button_dict = {"Simulate and evaluate": simulate_and_evaluate,
                    "Simulate only": simulate,
                    "Evaluate only": evaluate,
@@ -121,19 +119,6 @@ def main():
         add_button(text, command)
 
     window.mainloop()
-
-
-def check_cwd():
-    """Check if base directory is located in current working directory.
-
-    Checks if current working directory (directory where the used main.exe file is located) is located in
-    the same directory as the base directory ("Basisordner"), as it is a requirement to perform simulations. If not,
-    issues a message and exits the program."""
-
-    if not os.path.exists(os.path.join(os.path.dirname(os.getcwd()), 'assets')):
-        input('main.exe file must be located in the same directory as the directory "assets". Press ENTER '
-              'to exit.')
-        sys.exit()
 
 
 def create_sim_queue():
