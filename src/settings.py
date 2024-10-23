@@ -85,6 +85,11 @@ class PathSettings:
         self.original_sim_variants_excel = path_original_sim_variants_excel
 
     @property
+    def root(self):
+        """Path to root directory."""
+        return os.path.dirname(os.getcwd())
+
+    @property
     def settings(self, filename='settings.ini'):
         """Path to settings.ini file."""
         return os.path.join(self.base_dir, filename)
@@ -95,9 +100,9 @@ class PathSettings:
         return os.path.abspath(self.sim_series.dirname_sim_series)
 
     @property
-    def base_dir(self, base_name='Basisordner'):
+    def base_dir(self, dir_name='Basisordner'):
         """Path to base directory "Basisordner"."""
-        return os.path.join(os.path.dirname(os.getcwd()), base_name)
+        return os.path.join(os.path.dirname(self.root), dir_name)
 
     @property
     def sim_variants_excel(self):
