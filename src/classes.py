@@ -286,6 +286,13 @@ class SimulationSeries:
         # list of simulation variants
         self.sim_list = df.columns[1:].astype(str).tolist()
 
+        # in case there is only 1 simulation variant, make sure those attributes are still pandas.Series
+        if len(self.sim_list) == 1:
+            self.weather_series = pd.Series(self.weather_series)
+            self.weather_series.index = [self.sim_list[0]]
+            self.b18_series = pd.Series(self.b18_series)
+            self.b18_series.index = [self.sim_list[0]]
+
         # convert index into string (for stability reasons)
         self.weather_series.index = self.weather_series.index.map(str)
         self.b18_series.index = self.b18_series.index.map(str)
