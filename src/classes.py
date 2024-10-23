@@ -6,13 +6,13 @@ import time
 import csv
 import logging
 import math
-import src.functions as functions
 import pickle
 import openpyxl
-import src.settings as settings
 
 import numpy as np
 import pandas as pd
+import src.functions as functions
+import src.settings as settings
 
 from pywinauto.application import Application
 from datetime import datetime
@@ -220,7 +220,7 @@ class SimulationSeries:
         # create new directory for the simulation series
         try:
             os.makedirs(self.path.sim_series_dir)
-        except FileExistsError:     # if directory already exists, delete and create new one
+        except FileExistsError:  # if directory already exists, delete and create new one
             shutil.rmtree(self.path.sim_series_dir)
             os.makedirs(self.path.sim_series_dir)
 
@@ -230,7 +230,8 @@ class SimulationSeries:
         # copy simulation variants Excel file into simulation series directory
         shutil.copy(os.path.join(self.path.original_sim_variants_excel), self.path.sim_variants_excel)
 
-        # file name list of files to be copied into simulation subdirectories   todo: braucht Überarbeitung, da verwirrend. Vieleicht gleich alles hardgecodete ins settings.ini
+        # todo: braucht Überarbeitung, da verwirrend. Vieleicht gleich alles hardgecodete ins settings.ini
+        # file name list of files to be copied into simulation subdirectories
         file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
                      'Windetc20190804.txt', 'StrahlungBruck.txt']
 

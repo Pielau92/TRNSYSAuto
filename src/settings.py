@@ -58,7 +58,7 @@ class Settings:
 
         for section in self._settings.sections():
             for setting in self._settings.options(section):
-                apply_setting()     # save setting value into corresponding class attribute, with the correct datatype
+                apply_setting()  # save setting value into corresponding class attribute, with the correct datatype
 
         if self.sim_series.multiprocessing_max == 'auto':
             self.sim_series.multiprocessing_max = multiprocessing.cpu_count()

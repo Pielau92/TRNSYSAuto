@@ -11,17 +11,17 @@
 # endregion
 
 import multiprocessing
-import sys
-import src.classes as classes
-import src.functions as functions
 import os
 import tkinter as tk
+import src.classes as classes
+import src.functions as functions
 
 """For some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
 directory/file is asked multiple times), freeze_support() prevents this."""
 multiprocessing.freeze_support()
 
 root_dir = os.path.dirname(os.getcwd())
+
 
 def main():
     """Main method.
@@ -34,9 +34,9 @@ def main():
         # for each simulation series...
         for sim_series in create_sim_queue():
             sim_series.setup_simulation()  # set simulation up
-            sim_series.start_sim_series()   # start simulation series
+            sim_series.start_sim_series()  # start simulation series
 
-            sim_series.setup_evaluation()   # set evaluation up
+            sim_series.setup_evaluation()  # set evaluation up
             sim_series.start_evaluation()  # start evaluation
 
         window.quit()
@@ -62,7 +62,7 @@ def main():
         sim_series.initialize_logging()
 
         # start evaluation
-        sim_series.setup_evaluation()   # set evaluation up
+        sim_series.setup_evaluation()  # set evaluation up
         sim_series.start_evaluation()  # start evaluation
 
         window.quit()
@@ -118,7 +118,7 @@ def main():
                    "Continue incomplete simulation": continue_simulation,
                    "Continue incomplete evaluation": continue_evaluation,
                    }
-    
+
     for text, command in button_dict.items():
         add_button(text, command)
 

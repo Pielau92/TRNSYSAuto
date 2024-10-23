@@ -217,19 +217,19 @@ def set_env_and_paths():
     # set required environment variables for the conda environment to be found and used by the TRNSYS Python Interface
     # add directory with python to the path (to the front of the path!)
     username = os.getlogin()  # get os username
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\condabin;"\
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\condabin;" \
                          + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname};"\
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname};" \
                          + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\bin;"\
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\bin;" \
                          + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\mingw-w64\\bin;"\
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\mingw-w64\\bin;" \
                          + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\bin;"\
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\bin;" \
                          + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\usr\\bin;"\
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Library\\usr\\bin;" \
                          + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Scripts;"\
+    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Scripts;" \
                          + os.environ["PATH"]
 
     # Set PYTHONHOME to the same directory
