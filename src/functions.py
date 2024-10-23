@@ -153,16 +153,28 @@ def load(savefile_path):
         return pickle.load(file)
 
 
-def ask_filenames():
+def ask_filenames(initialdir=None):
     root = tk.Tk()
     root.withdraw()
-    return [path.replace("/", "\\") for path in filedialog.askopenfilenames()]
+
+    if initialdir:
+        filenames = filedialog.askopenfilenames(initialdir=initialdir)
+    else:
+        filenames = filedialog.askopenfilenames()
+
+    return [path.replace("/", "\\") for path in filenames]
 
 
-def ask_filename():
+def ask_filename(initialdir=None):
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askopenfilename().replace("/", "\\")
+
+    if initialdir:
+        filename = filedialog.askopenfilename(initialdir=initialdir)
+    else:
+        filename = filedialog.askopenfilename()
+
+    return filename.replace("/", "\\")
 
 
 def ask_dir():

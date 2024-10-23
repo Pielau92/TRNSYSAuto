@@ -21,6 +21,7 @@ import tkinter as tk
 directory/file is asked multiple times), freeze_support() prevents this."""
 multiprocessing.freeze_support()
 
+root_dir = os.path.dirname(os.getcwd())
 
 def main():
     """Main method.
@@ -127,7 +128,9 @@ def create_sim_queue():
     Opens the explorer and asks for one or multiple simulation variants Excel files. For each selected Excel file, an
     additional SimulationSeries object is created and added a list."""
 
-    return [classes.SimulationSeries(path) for path in functions.ask_filenames()]
+    initialdir = os.path.join(root_dir, 'data', 'input')
+
+    return [classes.SimulationSeries(path) for path in functions.ask_filenames(initialdir=initialdir)]
 
 
 if __name__ == '__main__':
