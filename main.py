@@ -54,7 +54,8 @@ def main():
     def evaluate():
         window.destroy()  # close GUI window
 
-        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        initialdir = os.path.join(root_dir, 'data', 'results')
+        path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
         # initialize logging file
@@ -69,7 +70,8 @@ def main():
     def continue_simulation():
         window.destroy()  # close GUI window
 
-        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        initialdir = os.path.join(root_dir, 'data', 'results')
+        path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
         # initialize logging file
@@ -83,7 +85,8 @@ def main():
     def continue_evaluation():
         window.destroy()  # close GUI window
 
-        path_savefile = functions.ask_filename()  # ask for pickle savefile
+        initialdir = os.path.join(root_dir, 'data', 'results')
+        path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
         # initialize logging file
