@@ -97,7 +97,7 @@ class PathSettings:
     @property
     def base_dir(self, base_name='Basisordner'):
         """Path to base directory "Basisordner"."""
-        return os.path.abspath(base_name)
+        return os.path.join(os.path.dirname(os.getcwd()), base_name)
 
     @property
     def sim_variants_excel(self):

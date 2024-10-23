@@ -6,10 +6,10 @@ import time
 import csv
 import logging
 import math
-import functions
+import src.functions as functions
 import pickle
 import openpyxl
-import settings
+import src.settings as settings
 
 import numpy as np
 import pandas as pd
