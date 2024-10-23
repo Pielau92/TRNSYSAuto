@@ -90,19 +90,36 @@ class PathSettings:
         return os.path.dirname(os.getcwd())
 
     @property
+    def data_dir(self, dir_name='data'):
+        """Path to data directory (contains input directory and results directory)."""
+        return os.path.join(self.root, dir_name)
+
+    @property
+    def input_dir(self, dir_name='input'):
+        """Path to input directory (optional storage location for simulation variants Excel files, default initial
+        directory when asking to select a simulation variants Excel file)."""
+        return os.path.join(self.data_dir, dir_name)
+
+    @property
+    def results_dir(self, dir_name='results'):
+        """Path to results directory (contains all simulation series folders, containing in turn all simulation and
+        evaluation results)."""
+        return os.path.join(self.data_dir, dir_name)
+
+    @property
+    def assets_dir(self, dir_name='assets'):
+        """Path to assets directory (contains all files directly needed by TRNSYS)."""
+        return os.path.join(self.root, dir_name)
+
+    @property
     def settings(self, filename='settings.ini'):
         """Path to settings.ini file."""
-        return os.path.join(self.base_dir, filename)
+        return os.path.join(self.root, filename)
 
     @property
     def sim_series_dir(self):
         """Path to simulation series directory."""
-        return os.path.abspath(self.sim_series.dirname_sim_series)
-
-    @property
-    def base_dir(self, dir_name='Basisordner'):
-        """Path to base directory "Basisordner"."""
-        return os.path.join(os.path.dirname(self.root), dir_name)
+        return os.path.join(self.results_dir, self.sim_series.dirname_sim_series)
 
     @property
     def sim_variants_excel(self):
@@ -127,12 +144,12 @@ class PathSettings:
     @property
     def cumulative_evaluation_template(self, filename='Auswertung_Gesamt.xlsx'):
         """Path to cumulative evaluation template file."""
-        return os.path.join(self.base_dir, filename)
+        return os.path.join(self.assets_dir, filename)
 
     @property
     def variant_evaluation_template(self, filename='Auswertung_Variante.xlsx'):
         """Path to variant evaluation template file."""
-        return os.path.join(self.base_dir, filename)
+        return os.path.join(self.assets_dir, filename)
 
     @property
     def savefile(self):

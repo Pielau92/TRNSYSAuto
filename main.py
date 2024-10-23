@@ -130,8 +130,8 @@ def check_cwd():
     the same directory as the base directory ("Basisordner"), as it is a requirement to perform simulations. If not,
     issues a message and exits the program."""
 
-    if not os.path.exists(os.path.join(os.path.dirname(os.getcwd()), 'Basisordner')):
-        input('main.exe file must be located in the same directory as the base directory ("Basisordnder"). Press ENTER '
+    if not os.path.exists(os.path.join(os.path.dirname(os.getcwd()), 'assets')):
+        input('main.exe file must be located in the same directory as the directory "assets". Press ENTER '
               'to exit.')
         sys.exit()
 

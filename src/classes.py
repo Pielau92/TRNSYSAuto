@@ -187,10 +187,10 @@ class SimulationSeries:
             for file_index in range(len(src_file_list)):
                 try:
                     shutil.copy(
-                        os.path.join(self.path.base_dir, src_file_list[file_index]),
+                        os.path.join(self.path.assets_dir, src_file_list[file_index]),
                         os.path.join(path_sim, dst_file_list[file_index]))
                 except FileNotFoundError:
-                    message = 'File ' + os.path.join(self.path.base_dir, src_file_list[file_index] +
+                    message = 'File ' + os.path.join(self.path.assets_dir, src_file_list[file_index] +
                                                      ' could not be found, simulation variant added to ignore' 'list.')
                     self.logger.error(message)
                     print(message)
