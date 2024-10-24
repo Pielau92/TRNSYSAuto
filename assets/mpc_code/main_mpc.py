@@ -216,21 +216,33 @@ class Building:
 
         pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt)
 
-        Q_loss = []  # prediction of convection, transition and ventilation losses [kW]
-        Q_tab = []  # thermal heat flow between room and TAB component [kW]
-        T_in = list([self.settings.T_start_in])  # prediction of  room temperature [°C]
-        T_tab = list([self.settings.T_start_tab])  # temperature TAB [°C]
+        T_in = [self.settings.T_start_in] + [0] * pred_hor_time_steps
+        T_tab = [self.settings.T_start_in] + [0] * pred_hor_time_steps
 
-        alpha = [self.alpha_s, self.alpha_w]  # cooling in summer (season = 0), heating in winter (season = 1)
+        # Q_loss = [0] * pred_hor_time_steps  # prediction of convection, transition and ventilation losses [kW]
+        # Q_tab = [0] * pred_hor_time_steps  # prediction of thermal heat flow between room and TAB component [kW]
 
-        for i in range(pred_hor_time_steps):
-            Q_loss.append((T_in[i] - T_out[i]) * self.k / 1000)
-            Q_tab.append((T_tab[i] - T_in[i]) * (alpha[self.settings.season] / 1000 * self.area))
+        # heat transfer coefficient depending on the current season, convert from [W/m²K] to [kW/m²K]
+        alpha = [self.alpha_s, self.alpha_w][self.settings.season] / 1000
 
-            T_tab.append((Q_heat[i] - Q_tab[i]) / self.cp_tab * (self.dt / 3600) + T_tab[i])
-            T_in.append((Q_tab[i] + Q_solar[i] - Q_loss[i]) / self.cp_r * (self.dt / 3600) + T_in[i])
+        # factor for convection, transition and ventilation losses, convert from [W/K] to [kW/K]
+        k = self.k / 1000
 
-            # print ("Q_heat[",i,"]:", Q_heat[i], "Q_TAB:", Q_Tab[i], "T_tab:", T_tab[i], "T_in", T_in[i])
+        # absolute heat capacity of TAB component [kWh/K], adapted to time step
+        cp_tab = self.cp_tab * (self.dt / 3600)
+
+        # absolute heat capacity of room[kWh/K], adapted to time step
+        cp_r = self.cp_r * (self.dt / 3600)
+
+        for t in range(pred_hor_time_steps):
+
+            Q_loss = (T_in[t] - T_out[t]) * k
+            Q_tab = (T_tab[t] - T_in[t]) * alpha * self.area
+
+            T_tab[t+1] = (Q_heat[t] - Q_tab) / cp_tab + T_tab[t]
+            T_in[t+1] = (Q_tab + Q_solar[t] - Q_loss) / cp_r + T_in[t]
+
+            # print(f'{t}: Q_heat: {Q_heat} Q_tab: {Q_tab}   T_tab: {T_tab}   T_in: {T_in')
 
         return np.array(T_in[:-1]), np.array(T_tab[:-1])
 
