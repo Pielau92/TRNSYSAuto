@@ -39,7 +39,7 @@ def StartTime(TRNData):
                         cp_r=inputs[5],
                         max_heating=inputs[6],
                         max_cooling=inputs[7],
-                        # dt=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS
+                        dt=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS
                         )
 
     building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
