@@ -20,8 +20,8 @@ def main():
                         k=120.71,
                         cp_tab=23.45,
                         cp_r=54.91,
-                        max_heating=13,  # heating - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
-                        max_cooling=-10,  # cooling - both TOPS: -10 kW
+                        max_heating=13000,  # heating - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
+                        max_cooling=-10000,  # cooling - both TOPS: -10 kW
                         dt=3600)
 
     # import data from csv
@@ -45,10 +45,10 @@ class Building:
         alpha_w : heat transfer coefficient (winter) [W/m²K]
         alpha_s : heat transfer coefficient (sommer) [W/m²K]
         k : factor for convection, transition and ventilation losses [W/K]
-        cp_tab : absolute heat capacity of TAB component [kWh/K]
-        cp_r : absolute heat capacity of room [kWh/K]
-        max_heating : maximum heating power [kW]
-        max_cooling : maximum cooling power [kW]
+        cp_tab : absolute heat capacity of TAB component [Wh/K]
+        cp_r : absolute heat capacity of room [Wh/K]
+        max_heating : maximum heating power [W]
+        max_cooling : maximum cooling power [W]
         dt : time interval [s] (e.g 3600 = 1 hour)
         """
 
@@ -64,9 +64,9 @@ class Building:
         self.dt = dt
 
         # weather data
-        self.ta = None
-        self.igs = None
-        self.ign = None
+        self.ta = None      # outside temperature [°C]
+        self.igs = None     # global radiation, south [W/m²]
+        self.ign = None     # global radiation, north [W/m²]
         self.time_step_nr = 0
 
         self.settings = SettingsMPC()
@@ -134,11 +134,11 @@ class Building:
         Q_solar = self.igs[index_range]  # W/m²
         T_out = self.ta[index_range]  # °C
 
-        dHeat = self.settings.dHeat  # kW
+        dHeat = self.settings.dHeat  # W
         T_sp = [self.settings.setpoint_temperature] * pred_hor_time_steps  # °C
 
-        Q_heat = np.zeros(pred_hor_time_steps)  # kW
-        Q_help_s = np.zeros(pred_hor_short_time_steps)  # kW
+        Q_heat = np.zeros(pred_hor_time_steps)  # W
+        Q_help_s = np.zeros(pred_hor_short_time_steps)  # W
 
         counter = 0
         ChgProgress = 1  # termination criterion optimization - difference between lse_baseline and lse_neu_long
@@ -203,8 +203,8 @@ class Building:
 
         Parameters
         ----------
-        Q_heat : heating/cooling power [kW]
-        Q_solar : heat loads from solar radiation [kW]
+        Q_heat : heating/cooling power [W]
+        Q_solar : heat loads from solar radiation [W]
         T_out : outside air temperature [°C]
 
         Returns
@@ -219,30 +219,26 @@ class Building:
         T_in = [self.settings.T_start_in] + [0] * pred_hor_time_steps
         T_tab = [self.settings.T_start_in] + [0] * pred_hor_time_steps
 
-        # Q_loss = [0] * pred_hor_time_steps  # prediction of convection, transition and ventilation losses [kW]
-        # Q_tab = [0] * pred_hor_time_steps  # prediction of thermal heat flow between room and TAB component [kW]
+        # Q_loss = [0] * pred_hor_time_steps  # prediction of convection, transition and ventilation losses [W]
+        # Q_tab = [0] * pred_hor_time_steps  # prediction of thermal heat flow between room and TAB component [W]
 
-        # heat transfer coefficient depending on the current season, convert from [W/m²K] to [kW/m²K]
-        alpha = [self.alpha_s, self.alpha_w][self.settings.season] / 1000
-
-        # factor for convection, transition and ventilation losses, convert from [W/K] to [kW/K]
-        k = self.k / 1000
-
-        # absolute heat capacity of TAB component [kWh/K], adapted to time step
-        cp_tab = self.cp_tab * (self.dt / 3600)
-
-        # absolute heat capacity of room[kWh/K], adapted to time step
-        cp_r = self.cp_r * (self.dt / 3600)
+        # heat transfer coefficient depending on the current season to [W/m²K]
+        alpha = [self.alpha_s, self.alpha_w][self.settings.season]
 
         for t in range(pred_hor_time_steps):
 
-            Q_loss = (T_in[t] - T_out[t]) * k
+            Q_loss = (T_in[t] - T_out[t]) * self.k
             Q_tab = (T_tab[t] - T_in[t]) * alpha * self.area
 
-            T_tab[t+1] = (Q_heat[t] - Q_tab) / cp_tab + T_tab[t]
-            T_in[t+1] = (Q_tab + Q_solar[t] - Q_loss) / cp_r + T_in[t]
+            T_tab[t+1] = (Q_heat[t] - Q_tab) * (self.dt / 3600) / self.cp_tab + T_tab[t]
+            T_in[t+1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt / 3600) / self.cp_r + T_in[t]
 
-            # print(f'{t}: Q_heat: {Q_heat} Q_tab: {Q_tab}   T_tab: {T_tab}   T_in: {T_in')
+            # print(f'{t}: '
+            #       f'Q_heat: {Q_heat[t]:.2f}    '
+            #       f'Q_tab: {Q_tab:.2f}  '
+            #       f'Q_loss: {Q_loss:.2f}    '
+            #       f'T_tab: {T_tab[t]:.2f}   '
+            #       f'T_in: {T_in[t]:.2f}')
 
         return np.array(T_in[:-1]), np.array(T_tab[:-1])
 
@@ -523,7 +519,7 @@ class SettingsMPC:
     def __init__(self):
         self.pred_hor = 48  # prediction horizon [h]
         self.pred_hor_short = 16  # shortened prediction horizon (to run the program faster) [h]
-        self.dHeat = 0.5  # perturbation value [kW]
+        self.dHeat = 500  # perturbation value [W]
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
         self.setpoint_temperature = 20
 
