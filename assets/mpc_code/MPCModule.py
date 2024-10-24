@@ -61,6 +61,14 @@ def StartTime(TRNData):
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
 
+    inputs = TRNData[thisModule]["inputs"]
+
+    # update values
+    building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
+    building.settings.setpoint_temperature = inputs[9]
+    building.settings.T_start_in = inputs[10]  # room temperature [°C]
+    building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
+
     building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
     # python output
