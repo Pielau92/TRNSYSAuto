@@ -165,11 +165,11 @@ class Building:
 
                 # negative perturbation
                 Q_help[i] = max(Q_heat[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
-                lse_negative = get_lse(Q_help, convert=True)[0]  # least square error, negative perturbation
+                lse_negative = get_lse(Q_help, convert=convert_Q)[0]  # least square error, negative perturbation
 
                 # positive perturbation
                 Q_help[i] = min(Q_heat[i] + dHeat, self.max_heating)  # limit to maximum heating power
-                lse_positive = get_lse(Q_help, convert=True)[0]  # least square error, positive perturbation
+                lse_positive = get_lse(Q_help, convert=convert_Q)[0]  # least square error, positive perturbation
 
                 # interpretation of the perturbation effect
                 match np.argmin([lse_baseline, lse_negative, lse_positive]):
