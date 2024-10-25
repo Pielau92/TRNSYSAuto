@@ -125,6 +125,16 @@ class Building:
     def optimize(self):
         """todo"""
 
+        convert_Q = True
+
+        def get_lse(Q, convert=False):
+
+            if convert:
+                Q = self.convert_pred_hor(Q, 'short2long')  # expand
+            T_in, T_tab = self.predict(Q, Q_solar, T_out)
+
+            return lse(T_in, T_sp), T_in
+
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt)
         pred_hor_short_time_steps = int(self.settings.pred_hor_short * 3600 / self.dt)
@@ -138,31 +148,27 @@ class Building:
         T_sp = [self.settings.setpoint_temperature] * pred_hor_time_steps  # °C
 
         Q_heat = np.zeros(pred_hor_time_steps)  # W
-        Q_help_s = np.zeros(pred_hor_short_time_steps)  # W
+        Q_help = np.zeros(pred_hor_short_time_steps)  # W
 
         counter = 0
         ChgProgress = 1  # termination criterion optimization - difference between lse_baseline and lse_neu_long
         while counter < self.settings.max_count and ChgProgress >= self.settings.ChgProgTol:
 
             # baseline calculation
-            T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
-            lse_baseline = lse(T_in, T_sp)  # least square error for zero heat input / heat output
+            lse_baseline = get_lse(Q_heat)[0]  # least square error for zero heat input / heat output
+
             Q_heat_s = self.convert_pred_hor(Q_heat, 'long2short')  # shorten Q_heat
 
             # loop through hours of prediction horizon
             for i in range(pred_hor_short_time_steps):
 
                 # negative perturbation
-                Q_help_s[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
-                Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand Q_help
-                T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
-                lse_negative = lse(T_in, T_sp)  # least square error, negative perturbation
+                Q_help[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
+                lse_negative = get_lse(Q_help, convert=True)[0]  # least square error, negative perturbation
 
                 # positive perturbation
-                Q_help_s[i] = min(Q_heat_s[i] + dHeat, self.max_heating)  # limit to maximum heating power
-                Q_help = self.convert_pred_hor(Q_help_s, 'short2long')  # expand Q_help
-                T_in, T_tab = self.predict(Q_help, Q_solar, T_out)
-                lse_positive = lse(T_in, T_sp)  # least square error, positive perturbation
+                Q_help[i] = min(Q_heat_s[i] + dHeat, self.max_heating)  # limit to maximum heating power
+                lse_positive = get_lse(Q_help, convert=True)[0]  # least square error, positive perturbation
 
                 # interpretation of the perturbation effect
                 match np.argmin([lse_baseline, lse_negative, lse_positive]):
@@ -181,11 +187,10 @@ class Building:
                     min_value = self.max_cooling
                 Q_heat_s[i] = np.clip(Q_heat_s[i], min_value, max_value)
 
-                Q_help_s[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
+                Q_help[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
 
+            lse_neu_long, T_in = get_lse(Q_heat_s, convert=True)  # least square error for final perturbation in this loop run
             Q_heat = self.convert_pred_hor(Q_heat_s, 'short2long')  # expand heating vector to prediction horizon
-            T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
-            lse_neu_long = lse(T_in, T_sp)  # least square error for final perturbation in this loop run
 
             # calculate termination criterion: lse from start compared to lse from last perturbation run
             ChgProgress = lse_baseline - lse_neu_long
@@ -196,7 +201,9 @@ class Building:
             # loop counter
             counter += 1
 
-        return Q_heat
+
+
+        return Q_heat, T_in
 
     def predict(self, Q_heat, Q_solar, T_out):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
