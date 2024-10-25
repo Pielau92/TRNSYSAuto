@@ -157,17 +157,18 @@ class Building:
             # baseline calculation
             lse_baseline = get_lse(Q_heat)[0]  # least square error for zero heat input / heat output
 
-            Q_heat_s = self.convert_pred_hor(Q_heat, 'long2short')  # shorten Q_heat
+            if convert_Q:
+                Q_heat = self.convert_pred_hor(Q_heat, 'long2short')  # shorten Q_heat
 
             # loop through hours of prediction horizon
             for i in range(pred_hor_short_time_steps):
 
                 # negative perturbation
-                Q_help[i] = max(Q_heat_s[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
+                Q_help[i] = max(Q_heat[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
                 lse_negative = get_lse(Q_help, convert=True)[0]  # least square error, negative perturbation
 
                 # positive perturbation
-                Q_help[i] = min(Q_heat_s[i] + dHeat, self.max_heating)  # limit to maximum heating power
+                Q_help[i] = min(Q_heat[i] + dHeat, self.max_heating)  # limit to maximum heating power
                 lse_positive = get_lse(Q_help, convert=True)[0]  # least square error, positive perturbation
 
                 # interpretation of the perturbation effect
@@ -175,9 +176,9 @@ class Building:
                     case 0:  # baseline calculation has lowest least square error
                         pass
                     case 1:  # negative perturbation has lowest least square error
-                        Q_heat_s[i] -= dHeat
+                        Q_heat[i] -= dHeat
                     case 2:  # positive perturbation has lowest least square error
-                        Q_heat_s[i] += dHeat
+                        Q_heat[i] += dHeat
 
                 # limitation that cooling and heating simultaneously in one period is not possible
                 min_value, max_value = 0, 0
@@ -185,12 +186,14 @@ class Building:
                     max_value = self.max_heating
                 elif not self.settings.season:  # limit to maximum cooling power
                     min_value = self.max_cooling
-                Q_heat_s[i] = np.clip(Q_heat_s[i], min_value, max_value)
+                Q_heat[i] = np.clip(Q_heat[i], min_value, max_value)
 
-                Q_help[i] = Q_heat_s[i]  # reset of the helping variable to not forget the value
+                Q_help[i] = Q_heat[i]  # reset of the helping variable to not forget the value
 
-            lse_neu_long, T_in = get_lse(Q_heat_s, convert=True)  # least square error for final perturbation in this loop run
-            Q_heat = self.convert_pred_hor(Q_heat_s, 'short2long')  # expand heating vector to prediction horizon
+            if convert_Q:
+                Q_heat = self.convert_pred_hor(Q_heat, 'short2long')  # expand heating vector to prediction horizon
+
+            lse_neu_long, T_in = get_lse(Q_heat)  # least square error for final perturbation in this loop run
 
             # calculate termination criterion: lse from start compared to lse from last perturbation run
             ChgProgress = lse_baseline - lse_neu_long
