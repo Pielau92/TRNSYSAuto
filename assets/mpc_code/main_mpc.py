@@ -125,7 +125,7 @@ class Building:
     def optimize(self):
         """todo"""
 
-        convert_Q = True
+        convert_Q = self.settings.pred_hor_conversion
 
         def get_lse(Q, convert=False):
 
@@ -532,6 +532,7 @@ class SettingsMPC:
         self.dHeat = 500  # perturbation value [W]
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
         self.setpoint_temperature = 20
+        self.pred_hor_conversion = True
 
         self.max_count = 500  # max. runs of iteration possible
         self.ChgProgTol = 0.000005  # termination criterion optimization - change in least square error
