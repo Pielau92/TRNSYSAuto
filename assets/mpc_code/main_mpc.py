@@ -22,7 +22,7 @@ def main():
                         cp_r=54.91,
                         max_heating=13000,  # heating - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
                         max_cooling=-10000,  # cooling - both TOPS: -10 kW
-                        dt=3600)
+                        dt_trnsys=3600)
 
     # import data from csv
     # building.import_csv("Test_MPC_Python.csv")
@@ -36,7 +36,7 @@ class Building:
     Building model class with a thermally activated building (TAB) component.
     """
 
-    def __init__(self, area, alpha_w, alpha_s, k, cp_tab, cp_r, max_heating, max_cooling, dt=3600):
+    def __init__(self, area, alpha_w, alpha_s, k, cp_tab, cp_r, max_heating, max_cooling, dt_trnsys=3600):
         """Initialize building model.
 
         Parameters
@@ -49,7 +49,7 @@ class Building:
         cp_r : absolute heat capacity of room [Wh/K]
         max_heating : maximum heating power [W]
         max_cooling : maximum cooling power [W]
-        dt : time interval [s] (e.g 3600 = 1 hour)
+        dt_trnsys : time interval of trnsys simulation [s] (e.g 3600 = 1 hour)
         """
 
         # building specific parameters
@@ -61,7 +61,7 @@ class Building:
         self.cp_r = cp_r
         self.max_heating = max_heating
         self.max_cooling = max_cooling * -1
-        self.dt = dt
+        self.dt_trnsys = dt_trnsys
 
         # weather data
         self.ta = None      # outside temperature [°C]
@@ -112,15 +112,15 @@ class Building:
         self.igs = np.array(self.igs)
         self.ign = np.array(self.ign)
 
-        if not self.dt == 3600:
+        if not self.dt_trnsys == 3600:
             self.interpolate_weather_data()
 
     def interpolate_weather_data(self):
         """Interpolate weather data to right length."""
 
-        self.ta = interpolate(self.ta, 3600 / self.dt)
-        self.igs = interpolate(self.igs, 3600 / self.dt)
-        self.ign = interpolate(self.ign, 3600 / self.dt)
+        self.ta = interpolate(self.ta, 3600 / self.dt_trnsys)
+        self.igs = interpolate(self.igs, 3600 / self.dt_trnsys)
+        self.ign = interpolate(self.ign, 3600 / self.dt_trnsys)
 
     def optimize(self):
         """todo"""
@@ -133,13 +133,17 @@ class Building:
                 Q = self.convert_pred_hor(Q, 'short2long')  # expand
             T_in, T_tab = self.predict(Q, Q_solar, T_out)
 
-            return lse(T_in, T_sp), T_in
+            if self.settings.dt_pred > self.dt_trnsys:
+                T_in = interpolate(T_in, self.settings.dt_pred / self.dt_trnsys)
+
+            return lse(T_in, T_sp)
 
         # prediction horizon in terms of time steps, instead of hours
-        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt)
-        pred_hor_short_time_steps = int(self.settings.pred_hor_short * 3600 / self.dt)
+        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
+        pred_hor_short_time_steps = int(self.settings.pred_hor_short * 3600 / self.dt_trnsys)
 
-        index_range = list(range(self.time_step_nr, self.time_step_nr + pred_hor_time_steps))
+        index_range = list(range(
+            self.time_step_nr, self.time_step_nr + pred_hor_time_steps, int(self.settings.dt_pred / self.dt_trnsys)))
 
         Q_solar = self.igs[index_range]  # W/m²
         T_out = self.ta[index_range]  # °C
@@ -155,7 +159,7 @@ class Building:
         while counter < self.settings.max_count and ChgProgress >= self.settings.ChgProgTol:
 
             # baseline calculation
-            lse_baseline = get_lse(Q_heat)[0]  # least square error for zero heat input / heat output
+            lse_baseline = get_lse(Q_heat)  # least square error for zero heat input / heat output
 
             if convert_Q:
                 Q_heat = self.convert_pred_hor(Q_heat, 'long2short')  # shorten Q_heat
@@ -165,11 +169,11 @@ class Building:
 
                 # negative perturbation
                 Q_help[i] = max(Q_heat[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
-                lse_negative = get_lse(Q_help, convert=convert_Q)[0]  # least square error, negative perturbation
+                lse_negative = get_lse(Q_help, convert=convert_Q)  # least square error, negative perturbation
 
                 # positive perturbation
                 Q_help[i] = min(Q_heat[i] + dHeat, self.max_heating)  # limit to maximum heating power
-                lse_positive = get_lse(Q_help, convert=convert_Q)[0]  # least square error, positive perturbation
+                lse_positive = get_lse(Q_help, convert=convert_Q)  # least square error, positive perturbation
 
                 # interpretation of perturbation effect
                 match np.argmin([lse_baseline, lse_negative, lse_positive]):
@@ -193,11 +197,11 @@ class Building:
             if convert_Q:
                 Q_heat = self.convert_pred_hor(Q_heat, 'short2long')  # expand back to prediction horizon
 
-            lse_final, T_in = get_lse(Q_heat)  # least square error, final perturbation
+            lse_final = get_lse(Q_heat)  # least square error, final perturbation
             ChgProgress = lse_baseline - lse_final
             counter += 1
 
-        return Q_heat, T_in
+        return Q_heat
 
     def predict(self, Q_heat, Q_solar, T_out):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
@@ -215,7 +219,7 @@ class Building:
 
         """
 
-        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt)
+        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.settings.dt_pred)
 
         T_in = [self.settings.T_start_in] + [0] * pred_hor_time_steps
         T_tab = [self.settings.T_start_in] + [0] * pred_hor_time_steps
@@ -231,8 +235,8 @@ class Building:
             Q_loss = (T_in[t] - T_out[t]) * self.k
             Q_tab = (T_tab[t] - T_in[t]) * alpha * self.area
 
-            T_tab[t+1] = (Q_heat[t] - Q_tab) * (self.dt / 3600) / self.cp_tab + T_tab[t]
-            T_in[t+1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt / 3600) / self.cp_r + T_in[t]
+            T_tab[t+1] = (Q_heat[t] - Q_tab) * (self.dt_trnsys / 3600) / self.cp_tab + T_tab[t]
+            T_in[t+1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt_trnsys / 3600) / self.cp_r + T_in[t]
 
             # print(f'{t}: '
             #       f'Q_heat: {Q_heat[t]:.2f}    '
@@ -261,18 +265,18 @@ class Building:
         if dynamic:
             return self._convert_dynamic(array, mode)
 
-        if self.dt not in [3600, 3600 / 4]:
+        if self.dt_trnsys not in [3600, 3600 / 4]:
             raise ValueError(
                 'Hard coded conversion methods only work with a time step of 1 hour or 15 min. Add additional hard coded'
                 ' conversion method of use convert_pred_hor with dynamic=True instead.')
 
-        elif self.dt == 3600:  # time step is 1 hour
+        elif self.dt_trnsys == 3600:  # time step is 1 hour
             if mode == 'long2short':
                 return self._convert_48_16(array)
             elif mode == 'short2long':
                 return self._convert_16_48(array)
 
-        elif self.dt == 3600 / 4:  # time step is 15 min
+        elif self.dt_trnsys == 3600 / 4:  # time step is 15 min
             if mode == 'long2short':
                 return self._convert_192_64(array)
             elif mode == 'short2long':
@@ -389,7 +393,7 @@ class Building:
 
         # endregion
 
-        steps_per_hour = int(3600 / self.dt)
+        steps_per_hour = int(3600 / self.dt_trnsys)
 
         long = adapt_hour_indices(long)
         short = adapt_hour_indices(short)
@@ -443,7 +447,7 @@ class Building:
 
     def _convert_64_192(self, Q_heat_s):
         """Hard coded converter from 64 to 192 values"""
-        Q_heat = np.zeros(int(self.settings.pred_hor * 3600 / self.dt))
+        Q_heat = np.zeros(int(self.settings.pred_hor * 3600 / self.dt_trnsys))
 
         Q_heat[0:24] = Q_heat_s[0:24]
         Q_heat[24:32] = Q_heat_s[[24, 24, 25, 25, 26, 26, 27, 27]]
@@ -465,7 +469,7 @@ class Building:
 
     def _convert_192_64(self, Q_heat):
         """Hard coded converter from 192 to 64 values"""
-        Q_heat_s = np.zeros(int(self.settings.pred_hor_short * 3600 / self.dt))
+        Q_heat_s = np.zeros(int(self.settings.pred_hor_short * 3600 / self.dt_trnsys))
 
         Q_heat_s[0:24] = Q_heat[0:24]
         Q_heat_s[24] = np.mean(Q_heat[24:26])
@@ -524,6 +528,7 @@ class SettingsMPC:
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
         self.setpoint_temperature = 20
         self.pred_hor_conversion = True
+        self.dt_pred = 3600   # time step of the prediction [s]
 
         self.max_count = 500  # max. runs of iteration possible
         self.ChgProgTol = 0.000005  # termination criterion optimization - change in least square error

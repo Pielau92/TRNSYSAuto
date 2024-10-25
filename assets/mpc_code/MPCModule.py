@@ -39,13 +39,14 @@ def StartTime(TRNData):
                         cp_r=inputs[5],
                         max_heating=inputs[6],
                         max_cooling=inputs[7],
-                        dt=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS
+                        dt_trnsys=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS
                         )
 
     building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
     building.settings.setpoint_temperature = inputs[9]
     building.settings.T_start_in = inputs[10]  # room temperature [°C]
     building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
+    building.settings.dt_pred = 3600
 
     building.read_weather_data(TRNData[thisModule]["TRNSYS input file path"])
 
