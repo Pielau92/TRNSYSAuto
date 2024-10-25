@@ -151,7 +151,7 @@ class Building:
         Q_help = np.zeros(pred_hor_short_time_steps)  # W
 
         counter = 0
-        ChgProgress = 1  # termination criterion optimization - difference between lse_baseline and lse_neu_long
+        ChgProgress = 1
         while counter < self.settings.max_count and ChgProgress >= self.settings.ChgProgTol:
 
             # baseline calculation
@@ -171,7 +171,7 @@ class Building:
                 Q_help[i] = min(Q_heat[i] + dHeat, self.max_heating)  # limit to maximum heating power
                 lse_positive = get_lse(Q_help, convert=convert_Q)[0]  # least square error, positive perturbation
 
-                # interpretation of the perturbation effect
+                # interpretation of perturbation effect
                 match np.argmin([lse_baseline, lse_negative, lse_positive]):
                     case 0:  # baseline calculation has lowest least square error
                         pass
@@ -182,29 +182,20 @@ class Building:
 
                 # limitation that cooling and heating simultaneously in one period is not possible
                 min_value, max_value = 0, 0
-                if self.settings.season:  # limit to maximum heating power
-                    max_value = self.max_heating
-                elif not self.settings.season:  # limit to maximum cooling power
-                    min_value = self.max_cooling
+                if self.settings.season:
+                    max_value = self.max_heating  # limit to maximum heating power
+                elif not self.settings.season:
+                    min_value = self.max_cooling  # limit to maximum cooling power
                 Q_heat[i] = np.clip(Q_heat[i], min_value, max_value)
 
-                Q_help[i] = Q_heat[i]  # reset of the helping variable to not forget the value
+                Q_help[i] = Q_heat[i]
 
             if convert_Q:
-                Q_heat = self.convert_pred_hor(Q_heat, 'short2long')  # expand heating vector to prediction horizon
+                Q_heat = self.convert_pred_hor(Q_heat, 'short2long')  # expand back to prediction horizon
 
-            lse_neu_long, T_in = get_lse(Q_heat)  # least square error for final perturbation in this loop run
-
-            # calculate termination criterion: lse from start compared to lse from last perturbation run
-            ChgProgress = lse_baseline - lse_neu_long
-
-            # output of final least square error
-            # print(counter, ". Durchgang: ", lse_neu_long)
-
-            # loop counter
+            lse_final, T_in = get_lse(Q_heat)  # least square error, final perturbation
+            ChgProgress = lse_baseline - lse_final
             counter += 1
-
-
 
         return Q_heat, T_in
 
