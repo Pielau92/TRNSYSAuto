@@ -133,9 +133,6 @@ class Building:
                 Q = self.convert_pred_hor(Q, 'short2long')  # expand
             T_in, T_tab = self.predict(Q, Q_solar, T_out)
 
-            if self.settings.dt_pred > self.dt_trnsys:
-                T_in = interpolate(T_in, self.settings.dt_pred / self.dt_trnsys)
-
             return lse(T_in, T_sp)
 
         # prediction horizon in terms of time steps, instead of hours
@@ -149,10 +146,14 @@ class Building:
         T_out = self.ta[index_range]  # °C
 
         dHeat = self.settings.dHeat  # W
-        T_sp = [self.settings.setpoint_temperature] * pred_hor_time_steps  # °C
+        T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)    # °C
 
         Q_heat = np.zeros(pred_hor_time_steps)  # W
-        Q_help = np.zeros(pred_hor_short_time_steps)  # W
+
+        if convert_Q:
+            Q_help = np.zeros(pred_hor_short_time_steps)  # W
+        else:
+            Q_help = np.zeros(pred_hor_time_steps)  # W
 
         counter = 0
         ChgProgress = 1
@@ -165,7 +166,7 @@ class Building:
                 Q_heat = self.convert_pred_hor(Q_heat, 'long2short')  # shorten Q_heat
 
             # loop through hours of prediction horizon
-            for i in range(pred_hor_short_time_steps):
+            for i in range(len(Q_help)):
 
                 # negative perturbation
                 Q_help[i] = max(Q_heat[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
