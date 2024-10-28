@@ -35,18 +35,18 @@ class Settings:
             """
 
             if not hasattr(self.sim_series, setting):
-                raise AttributeError(f'Unknown setting "{setting}" in settings Excel file found.')
+                raise AttributeError(f'Unknown setting "{setting}" in settings.ini file found.')
 
             attr = getattr(self.sim_series, setting)
 
-            if isinstance(attr, str):
+            if isinstance(attr, bool):
+                value = self._settings.getboolean(section, setting)
+            elif isinstance(attr, str):
                 value = self._settings.get(section, setting)
             elif isinstance(attr, int):
                 value = self._settings.getint(section, setting)
             elif isinstance(attr, float):
                 value = self._settings.getfloat(section, setting)
-            elif isinstance(attr, bool):
-                value = self._settings.getboolean(section, setting)
             elif isinstance(attr, list):
                 items = self._settings.get(section, setting).split(',')  # apply comma (,) delimiter
                 value = [item.strip() for item in items]  # remove whitespaces at beginning/end of strings
@@ -60,10 +60,8 @@ class Settings:
             for setting in self._settings.options(section):
                 apply_setting()  # save setting value into corresponding class attribute, with the correct datatype
 
-        if self.sim_series.multiprocessing_max == 'auto':
+        if self.sim_series.multiprocessing_autodetect:
             self.sim_series.multiprocessing_max = multiprocessing.cpu_count()
-        else:
-            self.sim_series.multiprocessing_max = int(self.sim_series.multiprocessing_max)
 
     def save_settings(self):
         pass

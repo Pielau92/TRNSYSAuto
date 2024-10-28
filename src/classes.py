@@ -66,7 +66,8 @@ class SimulationSeries:
         self.path_exe = str()  # path to TRNSYS executable file
         self.timeout = int()  # if timeout (sec) is reached without starting another simulation, stop program
         self.start_time_buffer = int()  # time buffer (sec) between two simulations, for increased stability (optional)
-        self.multiprocessing_max = str()  # maximum number of simulations that can be calculated simultaneously
+        self.multiprocessing_max = int()  # maximum number of simulations that can be calculated simultaneously
+        self.multiprocessing_autodetect = bool()  # if true, override multiprocessing_max with number of cpu cores
         self.eval_save_interval = int()  # the evaluation progress is saved after each save interval
 
         # filenames
