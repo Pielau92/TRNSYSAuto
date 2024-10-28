@@ -47,6 +47,7 @@ def StartTime(TRNData):
     building.settings.T_start_in = inputs[10]  # room temperature [°C]
     building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
     building.settings.dt_pred = 3600
+    building.settings.pred_hor_conversion = True
 
     building.read_weather_data(TRNData[thisModule]["TRNSYS input file path"])
 
