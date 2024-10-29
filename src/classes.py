@@ -246,8 +246,10 @@ class SimulationSeries:
     def initialize_logging(self):
         """Initialize logging file."""
 
+        logging_file_path = os.path.join(self.path.sim_series_dir, self.filename_logger)
+
         self.logger = logging.getLogger(__name__)
-        logging.basicConfig(level=logging.DEBUG, filemode='w', filename=self.filename_logger)
+        logging.basicConfig(level=logging.DEBUG, filemode='w', filename=logging_file_path)
         handler = logging.FileHandler(self.path.logfile)
         self.logger.addHandler(handler)
 
