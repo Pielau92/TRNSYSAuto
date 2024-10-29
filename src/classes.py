@@ -24,7 +24,7 @@ class SimulationSeries:
     A Simulation series is a series of TRNSYS simulations, which can be computed using multiprocessing.
     """
 
-    def __init__(self, path_original_sim_variants_excel):
+    def __init__(self, path_original_sim_variants_excel, root_dir):
         """ Initialize simulation series object.
 
         A simulation series is saved in a directory in the same directory as the base folder (which contains templates,
@@ -100,7 +100,7 @@ class SimulationSeries:
         # endregion
 
         # paths and settings
-        self.path = settings.PathSettings(self, path_original_sim_variants_excel)
+        self.path = settings.PathSettings(self, path_original_sim_variants_excel, root_dir)
         self.settings = settings.Settings(self)
         self.settings.load_settings()
         self.settings.apply_settings()
@@ -111,10 +111,10 @@ class SimulationSeries:
         self.filename_sim_variants_excel = os.path.basename(self.path.original_sim_variants_excel).split('.')[0]
         self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
 
-    @property
-    def cwd(self):
-        """Current working directory."""
-        return os.getcwd()
+    # @property
+    # def cwd(self):
+    #     """Current working directory."""
+    #     return os.getcwd()
 
     def setup_simulation(self):
         """Set simulation series up.

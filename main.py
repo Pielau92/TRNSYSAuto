@@ -12,6 +12,7 @@
 
 import multiprocessing
 import os
+import sys
 import tkinter as tk
 import src.classes as classes
 import src.functions as functions
@@ -20,7 +21,17 @@ import src.functions as functions
 directory/file is asked multiple times), freeze_support() prevents this."""
 multiprocessing.freeze_support()
 
-root_dir = os.path.dirname(os.getcwd())
+
+def get_root_dir():
+    """Get root directory path."""
+
+    if getattr(sys, 'frozen', False):  # if program is run from an executable .exe file
+        return os.path.dirname(sys.executable)
+    else:  # if program is run from IDE or command window
+        return os.path.dirname(os.path.abspath(__file__))
+
+
+root_dir = get_root_dir()
 
 
 def main():
@@ -133,7 +144,7 @@ def create_sim_queue():
 
     initialdir = os.path.join(root_dir, 'data', 'input')
 
-    return [classes.SimulationSeries(path) for path in functions.ask_filenames(initialdir=initialdir)]
+    return [classes.SimulationSeries(path, root_dir) for path in functions.ask_filenames(initialdir=initialdir)]
 
 
 if __name__ == '__main__':

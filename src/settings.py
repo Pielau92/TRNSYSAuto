@@ -76,16 +76,17 @@ class PathSettings:
     """todo: docstring schreiben + zu PathConfig umbenennen (settings stehen dem User zur Verfügung, paths aber nicht
         deshalb config)"""
 
-    def __init__(self, sim_series, path_original_sim_variants_excel):
+    def __init__(self, sim_series, path_original_sim_variants_excel, root_dir):
         self.sim_series = sim_series
 
         # original simulation variants within base directory
         self.original_sim_variants_excel = path_original_sim_variants_excel
+        self.root = root_dir
 
-    @property
-    def root(self):
-        """Path to root directory."""
-        return os.path.dirname(os.getcwd())
+    # @property
+    # def root(self):
+    #     """Path to root directory."""
+    #     return os.path.dirname(os.getcwd())
 
     @property
     def data_dir(self, dir_name='data'):
