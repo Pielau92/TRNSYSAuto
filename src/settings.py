@@ -82,6 +82,7 @@ class PathSettings:
         # original simulation variants within base directory
         self.original_sim_variants_excel = path_original_sim_variants_excel
         self.root = root_dir
+        self.results_dir = os.path.join(os.path.expanduser('~'), 'documents', 'TRNSYSAuto')
 
     # @property
     # def root(self):
@@ -99,11 +100,11 @@ class PathSettings:
         directory when asking to select a simulation variants Excel file)."""
         return os.path.join(self.data_dir, dir_name)
 
-    @property
-    def results_dir(self, dir_name='results'):
-        """Path to results directory (contains all simulation series folders, containing in turn all simulation and
-        evaluation results)."""
-        return os.path.join(self.data_dir, dir_name)
+    # @property
+    # def results_dir(self, dir_name='results'):
+    #     """Path to results directory (contains all simulation series folders, containing in turn all simulation and
+    #     evaluation results)."""
+        # return os.path.join(self.data_dir, dir_name)
 
     @property
     def assets_dir(self, dir_name='assets'):
