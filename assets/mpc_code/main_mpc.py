@@ -135,15 +135,33 @@ class Building:
 
             return lse(T_in, T_sp)
 
+        def get_indices():
+            """Get list of indices from current time step, time step durations (of TRNSYS and prediction) and prediction
+            horizon."""
+
+            index_list = list(range(
+                self.time_step_nr, self.time_step_nr + pred_hor_time_steps,
+                int(self.settings.dt_pred / self.dt_trnsys)))
+
+            time_steps_per_year = int(365 * 24 * 3600 / self.dt_trnsys)
+
+            # if prediction horizon reaches the following year, reset to beginning of year to form a cycle
+            for i, val in enumerate(index_list):
+                if val < time_steps_per_year:
+                    continue
+                else:
+                    index_list[i] -= time_steps_per_year
+
+            return index_list
+
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
         pred_hor_short_time_steps = int(self.settings.pred_hor_short * 3600 / self.dt_trnsys)
 
-        index_range = list(range(
-            self.time_step_nr, self.time_step_nr + pred_hor_time_steps, int(self.settings.dt_pred / self.dt_trnsys)))
+        indices = get_indices()
 
-        Q_solar = self.igs[index_range]  # W/m²
-        T_out = self.ta[index_range]  # °C
+        Q_solar = self.igs[indices]  # W/m²
+        T_out = self.ta[indices]  # °C
 
         dHeat = self.settings.dHeat  # W
         T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)    # °C
