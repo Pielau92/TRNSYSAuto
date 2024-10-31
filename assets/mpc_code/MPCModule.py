@@ -13,9 +13,11 @@ from main_mpc import Building
 
 thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
-global building
+global building # building class
+global temp     # temporary value holder
+global n        # "Iteration" triggers every n time steps (1 = every time step, 2 = every second time step, and so on)
 
-
+n = 4
 # Initialization: function called at TRNSYS initialization
 # ----------------------------------------------------------------------------------------------------------------------
 def Initialization(TRNData):
@@ -63,18 +65,23 @@ def StartTime(TRNData):
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
 
-    inputs = TRNData[thisModule]["inputs"]
+    global temp, n
 
-    # update values
-    building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
-    building.settings.setpoint_temperature = inputs[9]
-    building.settings.T_start_in = inputs[10]  # room temperature [°C]
-    building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
+    inputs = TRNData[thisModule]["inputs"]
 
     building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
-    # python output
-    TRNData[thisModule]["outputs"][0] = building.optimize()[0]     # first value of Q_heat
+    if not building.time_step_nr % n:
+
+        # update values
+        building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
+        building.settings.setpoint_temperature = inputs[9]
+        building.settings.T_start_in = inputs[10]  # room temperature [°C]
+        building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
+
+        temp = building.optimize()[0]     # python output, first value of Q_heat
+
+    TRNData[thisModule]["outputs"][0] = temp
 
     return
 
