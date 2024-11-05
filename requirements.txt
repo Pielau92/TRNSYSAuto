@@ -1,13 +1,28 @@
-Bottleneck @ file:///C:/b/abs_f05kqh7yvj/croot/bottleneck_1707864273291/work
-cffi @ file:///C:/b/abs_78eb1_vq6z/croot/cffi_1714483206096/work
+altgraph==0.17.3
+Bottleneck==1.3.7
+cffi==1.16.0
+comtypes==1.1.14
+et-xmlfile==1.1.0
+mkl_fft==1.3.10
+mkl_random==1.2.7
 mkl-service==2.4.0
-mkl_fft @ file:///C:/b/abs_f55mv94vyg/croot/mkl_fft_1725370278455/work
-mkl_random @ file:///C:/b/abs_21ydbzdu8d/croot/mkl_random_1725370276095/work
-numexpr @ file:///C:/b/abs_5fucrty5dc/croot/numexpr_1696515448831/work
-numpy @ file:///C:/b/abs_dais_85b0_/croot/numpy_and_numpy_base_1715092429136/work
-pandas @ file:///C:/b/abs_81b3npjrl8/croot/pandas_1697477219064/work/dist/pandas-2.1.1-cp310-cp310-win_amd64.whl#sha256=f5efc0086b0ee45b0ebca3e44e872d36cff14a3242807897e41b9165b5625901
-pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
-python-dateutil @ file:///C:/b/abs_3au_koqnbs/croot/python-dateutil_1716495777160/work
-pytz @ file:///C:/b/abs_6ap4tsz1ox/croot/pytz_1713974360290/work
-six @ file:///tmp/build/80754af9/six_1644875935023/work
-tzdata @ file:///croot/python-tzdata_1690578112552/work
+numexpr==2.8.7
+numpy==1.22.4
+openpyxl==3.1.5
+packaging==24.1
+pandas==2.1.1
+pefile==2023.2.7
+pip==24.2
+pycparser==2.21
+pyinstaller==5.13.2
+pyinstaller-hooks-contrib==2024.7
+python-dateutil==2.9.0.post0
+pytz==2024.1
+pywin32==305.1
+pywin32-ctypes==0.2.2
+pywinauto==0.6.8
+setuptools==75.1.0
+six==1.16.0
+tzdata==2023.3
+wheel==0.44.0
+xlwings==0.32.1
