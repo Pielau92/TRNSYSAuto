@@ -13,14 +13,13 @@ from main_mpc import Building
 
 thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
-global building # building class
-global temp     # temporary value holder
+global building  # building class
+global temp  # temporary value holder
 
 
 # Initialization: function called at TRNSYS initialization
 # ----------------------------------------------------------------------------------------------------------------------
 def Initialization(TRNData):
-
     return
 
 
@@ -69,7 +68,6 @@ def StartTime(TRNData):
 # Iteration: function called at each TRNSYS iteration within a time step
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
-
     global temp
 
     inputs = TRNData[thisModule]["inputs"]
@@ -79,14 +77,13 @@ def Iteration(TRNData):
     # "Iteration" triggers every n time steps
     # (mpc_trigger = 1 => every time step, 2 = every second time step, and so on)
     if not building.time_step_nr % building.settings.mpc_trigger:
-
         # update values
         building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
         building.settings.setpoint_temperature = inputs[9]
         building.settings.T_start_in = inputs[10]  # room temperature [°C]
         building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
 
-        temp = building.optimize()[0]     # python output, first value of Q_heat
+        temp = building.optimize()[0]  # python output, first value of Q_heat
 
     TRNData[thisModule]["outputs"][0] = temp
 
@@ -96,7 +93,6 @@ def Iteration(TRNData):
 # EndOfTimeStep: function called at the end of each time step, after iteration and before moving on to next time step
 # ----------------------------------------------------------------------------------------------------------------------
 def EndOfTimeStep(TRNData):
-
     # log into logfile
     building.logFile.write(f'time: {str(TRNData[thisModule]["time"])}\n')
     building.logFile.write(f'time step: {str(TRNData[thisModule]["current time step number"])}\n\n')

@@ -65,9 +65,9 @@ class Building:
         self.dt_trnsys = dt_trnsys
 
         # weather data
-        self.ta = None      # outside temperature [°C]
-        self.igs = None     # global radiation, south [W/m²]
-        self.ign = None     # global radiation, north [W/m²]
+        self.ta = None  # outside temperature [°C]
+        self.igs = None  # global radiation, south [W/m²]
+        self.ign = None  # global radiation, north [W/m²]
         self.time_step_nr = 0
 
         self.settings = SettingsMPC()
@@ -165,7 +165,7 @@ class Building:
         T_out = self.ta[indices]  # °C
 
         dHeat = self.settings.dHeat  # W
-        T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)    # °C
+        T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
 
         Q_heat = np.zeros(pred_hor_time_steps)  # W
 
@@ -251,12 +251,11 @@ class Building:
         alpha = [self.alpha_s, self.alpha_w][self.settings.season]
 
         for t in range(pred_hor_time_steps):
-
             Q_loss = (T_in[t] - T_out[t]) * self.k
             Q_tab = (T_tab[t] - T_in[t]) * alpha * self.area
 
-            T_tab[t+1] = (Q_heat[t] - Q_tab) * (self.dt_trnsys / 3600) / self.cp_tab + T_tab[t]
-            T_in[t+1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt_trnsys / 3600) / self.cp_r + T_in[t]
+            T_tab[t + 1] = (Q_heat[t] - Q_tab) * (self.dt_trnsys / 3600) / self.cp_tab + T_tab[t]
+            T_in[t + 1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt_trnsys / 3600) / self.cp_r + T_in[t]
 
             # print(f'{t}: '
             #       f'Q_heat: {Q_heat[t]:.2f}    '
@@ -548,13 +547,13 @@ class SettingsMPC:
         self._settings.optionxform = str  # keeps capital letters when reading .ini file
 
         self.dHeat = int()  # perturbation value [W]
-        self.dt_pred = int()   # time step of the prediction [s]
+        self.dt_pred = int()  # time step of the prediction [s]
         self.max_count = int()  # max. runs of iteration possible
         self.ChgProgTol = float()  # termination criterion optimization - change in least square error
         self.pred_hor = int()  # prediction horizon [h]
         self.pred_hor_conversion = bool()  # perform BOKU conversion of prediction (to run the program faster)
         self.pred_hor_short = int()  # shortened prediction horizon (to run the program faster) [h]
-        self.mpc_trigger = int()    # how often the mpc controller is triggered (1=every time step, 4=every 4th, etc.)
+        self.mpc_trigger = int()  # how often the mpc controller is triggered (1=every time step, 4=every 4th, etc.)
 
         # TRNSYS specific simulation parameters
         self.season = 0  # heating or cooling: heating = 1, cooling = 0

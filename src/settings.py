@@ -105,7 +105,7 @@ class PathSettings:
     # def results_dir(self, dir_name='results'):
     #     """Path to results directory (contains all simulation series folders, containing in turn all simulation and
     #     evaluation results)."""
-        # return os.path.join(self.data_dir, dir_name)
+    #     return os.path.join(self.data_dir, dir_name)
 
     @property
     def assets_dir(self, dir_name='assets'):
