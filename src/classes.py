@@ -182,9 +182,11 @@ class SimulationSeries:
             src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
                                          os.path.join('Wetterdaten', self.weather_series[sim]),
                                          os.path.join('mpc_code', 'main_mpc.py'),
-                                         os.path.join('mpc_code', 'MPCModule.py')]
+                                         os.path.join('mpc_code', 'MPCModule.py'),
+                                         os.path.join('mpc_code', 'settingsMPC.ini')]
             # destination paths
-            dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim], 'main_mpc.py', 'MPCModule.py']
+            dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim], 'main_mpc.py', 'MPCModule.py',
+                                         'settingsMPC.ini']
 
             # copy specified files into simulation subdirectory
             for file_index in range(len(src_file_list)):

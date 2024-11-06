@@ -10,6 +10,7 @@ import os
 
 from pathlib import Path
 from statistics import mean
+from configparser import ConfigParser
 
 
 def main():
@@ -541,31 +542,84 @@ class SettingsMPC:
     """Class for storing settings of SimulationSeries object."""
 
     def __init__(self):
-        self.pred_hor = 48  # prediction horizon [h]
-        self.pred_hor_short = 16  # shortened prediction horizon (to run the program faster) [h]
-        self.dHeat = 500  # perturbation value [W]
+
+        self.filename = "settingsMPC.ini"
+        self._settings = ConfigParser()
+        self._settings.optionxform = str  # keeps capital letters when reading .ini file
+
+        self.dHeat = int()  # perturbation value [W]
+        self.dt_pred = int()   # time step of the prediction [s]
+        self.max_count = int()  # max. runs of iteration possible
+        self.ChgProgTol = float()  # termination criterion optimization - change in least square error
+        self.pred_hor = int()  # prediction horizon [h]
+        self.pred_hor_conversion = bool()  # perform BOKU conversion of prediction (to run the program faster)
+        self.pred_hor_short = int()  # shortened prediction horizon (to run the program faster) [h]
+        self.mpc_trigger = int()    # how often the mpc controller is triggered (1=every time step, 4=every 4th, etc.)
+
+        # TRNSYS specific simulation parameters
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
         self.setpoint_temperature = 20
-        self.pred_hor_conversion = True
-        self.dt_pred = 3600   # time step of the prediction [s]
-
-        self.max_count = 500  # max. runs of iteration possible
-        self.ChgProgTol = 0.000005  # termination criterion optimization - change in least square error
-
-        # start conditions for optimization
-        self.T_start_in = 22  # room temperature [°C]
-        self.T_start_tab = 22  # thermally activated building [°C]
+        self.T_start_in = 22  # starting room temperature [°C]
+        self.T_start_tab = 22  # starting temperature of thermally activated building component [°C]
 
         self.header = ["Stunde", "T_out", "Q_solar", "T_sp"]
 
-    def load_settings(self):
-        pass
+    def load_settings(self, path_dir):
+        """Load settings from settings.ini file.
 
-    def save_settings(self):
-        pass
+        Parameters
+        ----------
+        path_dir : Path to directory containing settings.ini file.
+        """
 
-    def reset_settings(self):
-        pass
+        path_settings_file = os.path.join(path_dir, self.filename)
+        try:
+            self._settings.read(path_settings_file)
+        except:
+            print(f"Format error in settings file, check {self._save_path}")
+            raise SystemExit()
+
+    def apply_settings(self):
+        """Apply loaded settings.
+
+        Applies the loaded settings from the settings ini file to the corresponding attributes of the
+        SimulationSeries object with the same name.
+        """
+
+        def apply_setting():
+            """Apply setting value to sim_series.
+
+            Applies the individual settings to the corresponding (name of setting and of class attribute must match).
+            Automatically recognizes the type of the setting, based on the type of its corresponding class attribute.
+            Raises an error if no corresponding class attribute could be found, or an unsupported type is used (str,
+            int, float, bool, list (of strings)).
+            """
+
+            if not hasattr(self, setting):
+                raise AttributeError(f'Unknown setting "{setting}" in settings.ini file found.')
+
+            attr = getattr(self, setting)
+
+            if isinstance(attr, bool):
+                value = self._settings.getboolean(section, setting)
+            elif isinstance(attr, str):
+                value = self._settings.get(section, setting)
+            elif isinstance(attr, int):
+                value = self._settings.getint(section, setting)
+            elif isinstance(attr, float):
+                value = self._settings.getfloat(section, setting)
+            elif isinstance(attr, list):
+                items = self._settings.get(section, setting).split(',')  # apply comma (,) delimiter
+                value = [item.strip() for item in items]  # remove whitespaces at beginning/end of strings
+            else:
+                raise TypeError(f'Unknown type "{type(attr)}" for setting "{setting}" in settings.ini file. '
+                                f'Supported types are string, integer, float, boolean and list (of strings).')
+
+            setattr(self, setting, value)
+
+        for section in self._settings.sections():
+            for setting in self._settings.options(section):
+                apply_setting()  # save setting value into corresponding class attribute, with the correct datatype
 
 
 def lse(T_in, T_sp):

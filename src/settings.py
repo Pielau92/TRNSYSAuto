@@ -10,6 +10,7 @@ class Settings:
         self.sim_series = sim_series
         self._save_path = sim_series.path.settings
         self._settings = ConfigParser()
+        self._settings.optionxform = str  # keeps capital letters when reading .ini file
 
     def load_settings(self):
         try:

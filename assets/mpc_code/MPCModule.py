@@ -15,9 +15,8 @@ thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
 global building # building class
 global temp     # temporary value holder
-global n        # "Iteration" triggers every n time steps (1 = every time step, 2 = every second time step, and so on)
 
-n = 4
+
 # Initialization: function called at TRNSYS initialization
 # ----------------------------------------------------------------------------------------------------------------------
 def Initialization(TRNData):
@@ -32,6 +31,9 @@ def StartTime(TRNData):
 
     inputs = TRNData[thisModule]["inputs"]
 
+    path_trnsys_input_file = TRNData[thisModule]["TRNSYS input file path"]
+    path_settings_file = os.path.dirname(path_trnsys_input_file)
+
     # TRNSYS input
     building = Building(area=inputs[0],
                         alpha_w=inputs[1],
@@ -44,6 +46,9 @@ def StartTime(TRNData):
                         dt_trnsys=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS
                         )
 
+    building.settings.load_settings(path_settings_file)
+    building.settings.apply_settings()
+
     building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
     building.settings.setpoint_temperature = inputs[9]
     building.settings.T_start_in = inputs[10]  # room temperature [°C]
@@ -51,7 +56,7 @@ def StartTime(TRNData):
     building.settings.dt_pred = 3600
     building.settings.pred_hor_conversion = True
 
-    building.read_weather_data(TRNData[thisModule]["TRNSYS input file path"])
+    building.read_weather_data(path_trnsys_input_file)
 
     # write TRNSYS predefined variables into log file
     for var_name in TRNData[thisModule]:
@@ -65,13 +70,15 @@ def StartTime(TRNData):
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
 
-    global temp, n
+    global temp
 
     inputs = TRNData[thisModule]["inputs"]
 
     building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
-    if not building.time_step_nr % n:
+    # "Iteration" triggers every n time steps
+    # (mpc_trigger = 1 => every time step, 2 = every second time step, and so on)
+    if not building.time_step_nr % building.settings.mpc_trigger:
 
         # update values
         building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
@@ -89,7 +96,7 @@ def Iteration(TRNData):
 # EndOfTimeStep: function called at the end of each time step, after iteration and before moving on to next time step
 # ----------------------------------------------------------------------------------------------------------------------
 def EndOfTimeStep(TRNData):
-    
+
     # log into logfile
     building.logFile.write(f'time: {str(TRNData[thisModule]["time"])}\n')
     building.logFile.write(f'time step: {str(TRNData[thisModule]["current time step number"])}\n\n')
