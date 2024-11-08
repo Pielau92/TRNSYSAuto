@@ -15,7 +15,9 @@ thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
 global building  # building class
 global temp  # temporary value holder
-
+global value_loggers
+global delimiter
+global filename_logger
 
 # Initialization: function called at TRNSYS initialization
 # ----------------------------------------------------------------------------------------------------------------------
@@ -27,6 +29,9 @@ def Initialization(TRNData):
 # ----------------------------------------------------------------------------------------------------------------------
 def StartTime(TRNData):
     global building
+    global value_loggers
+    global delimiter
+    global filename_logger
 
     inputs = TRNData[thisModule]["inputs"]
 
@@ -58,9 +63,24 @@ def StartTime(TRNData):
     building.read_weather_data(path_trnsys_input_file)
 
     # write TRNSYS predefined variables into log file
-    for var_name in TRNData[thisModule]:
-        building.logFile.write(f'{var_name}:  {str(TRNData[thisModule][var_name])} \n')
-    building.logFile.write('\n')
+    with open(building.path_logFile, 'w') as f:
+        for var_name in TRNData[thisModule]:
+            f.write(f'{var_name}:  {str(TRNData[thisModule][var_name])} \n')
+        f.write('\n')
+
+    # determine values logger filename
+    zone_nr = int(inputs[12])
+    filename_logger = f'log_values_zone{str(zone_nr)}.log'
+
+    # create header row
+    delimiter = '\t'
+    headers = ['index', 'area_BTA', 'alpha_w', 'alpha_s', 'k_heatloss', 'cbta', 'cr', 'qheizmax', 'qkuehlmax',
+              'heizperiode', 'theizsollminideal', 'tzone', 'tnodeo', 'Zone', 'Qheat']
+    headers = delimiter.join(headers)
+
+    # write header row into values logger
+    with open(filename_logger, 'w') as f:
+        f.write(headers)
 
     return
 
@@ -85,7 +105,18 @@ def Iteration(TRNData):
 
         temp = building.optimize()[0]  # python output, first value of Q_heat
 
-    TRNData[thisModule]["outputs"][0] = temp
+    TRNData[thisModule]["outputs"][0] = temp    # store Python output value inside temporary variable
+
+    # write to values logger
+    zone_nr = int(inputs[12])
+    filename_logger = f'log_values_zone{str(zone_nr)}.log'
+    with open(filename_logger, 'a') as f:
+        # f.write(f'\n{row}')
+        f.write(f'\n{building.time_step_nr}')
+
+        for value in inputs:
+            f.write(f'{delimiter}{round(value, 2)}'.replace('.', ','))
+        f.write(f'{delimiter}{temp}'.replace('.', ','))
 
     return
 
@@ -93,9 +124,6 @@ def Iteration(TRNData):
 # EndOfTimeStep: function called at the end of each time step, after iteration and before moving on to next time step
 # ----------------------------------------------------------------------------------------------------------------------
 def EndOfTimeStep(TRNData):
-    # log into logfile
-    building.logFile.write(f'time: {str(TRNData[thisModule]["time"])}\n')
-    building.logFile.write(f'time step: {str(TRNData[thisModule]["current time step number"])}\n\n')
 
     return
 
