@@ -9,7 +9,10 @@
 import numpy
 import os
 
-from main_mpc import Building
+try:
+    from main_mpc import Building
+except ModuleNotFoundError:
+    from assets.mpc_code.main_mpc import Building   # for debugging purposes
 
 thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
