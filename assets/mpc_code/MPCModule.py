@@ -97,6 +97,13 @@ def Iteration(TRNData):
 
     building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
+    # region FOR DEBUGGING PURPOSES
+    # skipto = 365*24*3600/building.dt_trnsys - 100   # skip optimization algorithm until this time step
+    # if building.time_step_nr < skipto:
+    #     TRNData[thisModule]["outputs"][0] = 10  # store Python output value inside temporary variable
+    #     return
+    # endregion
+
     # "Iteration" triggers every n time steps
     # (mpc_trigger = 1 => every time step, 2 = every second time step, and so on)
     if not building.time_step_nr % building.settings.mpc_trigger:
