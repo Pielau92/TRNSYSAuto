@@ -376,6 +376,7 @@ class SimulationSeries:
             lock.release()
 
         window_title = 'TRNSYS: ' + path_dck_file
+        window_title = window_title.replace('documents', 'Documents')   # workaround, as search is case sensitive
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
         try:
