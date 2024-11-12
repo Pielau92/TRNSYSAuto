@@ -42,15 +42,24 @@ class Building:
 
         Parameters
         ----------
-        area : activated building area [m²]
-        alpha_w : heat transfer coefficient (winter) [W/m²K]
-        alpha_s : heat transfer coefficient (sommer) [W/m²K]
-        k : factor for convection, transition and ventilation losses [W/K]
-        cp_tab : absolute heat capacity of TAB component [Wh/K]
-        cp_r : absolute heat capacity of room [Wh/K]
-        max_heating : maximum heating power [W]
-        max_cooling : maximum cooling power [W]
-        dt_trnsys : time interval of trnsys simulation [s] (e.g 3600 = 1 hour)
+        area : float
+            activated building area [m²]
+        alpha_w : float
+            heat transfer coefficient (winter) [W/m²K]
+        alpha_s : float
+            heat transfer coefficient (sommer) [W/m²K]
+        k : float
+            factor for convection, transition and ventilation losses [W/K]
+        cp_tab : float
+            absolute heat capacity of TAB component [Wh/K]
+        cp_r : float
+            absolute heat capacity of room [Wh/K]
+        max_heating : float
+            maximum heating power [W]
+        max_cooling : float
+            maximum cooling power [W]
+        dt_trnsys : int
+            time interval of trnsys simulation [s] (e.g 3600 = 1 hour)
         """
 
         # building specific parameters
@@ -84,9 +93,10 @@ class Building:
 
         Parameters
         ----------
-        path_trnsys_input_file : path to trnsys input file (dck file)
-        filename_weather_data : filename of the csv file with weather data
-
+        path_trnsys_input_file : str
+            Path to trnsys input file (dck file)
+        filename_weather_data : str
+            Filename of the csv file with weather data
         """
 
         path_sim_dir = os.path.dirname(path_trnsys_input_file)
@@ -233,15 +243,19 @@ class Building:
 
         Parameters
         ----------
-        Q_heat : heating/cooling power [W]
-        Q_solar : heat loads from solar radiation [W]
-        T_out : outside air temperature [°C]
+        Q_heat : list[float]
+            Heating/cooling power [W]
+        Q_solar : list[float]
+            Heat loads from solar radiation [W]
+        T_out : list[float]
+            Outside air temperature [°C]
 
         Returns
         -------
-        T_in : room air temperature [°C]
-        T_tab : temperature of thermally activated building component [°C]
-
+        T_in : list[float]
+            Room air temperature [°C]
+        T_tab : list[float]
+            Temperature of thermally activated building component [°C]
         """
 
         pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.settings.dt_pred)
@@ -249,22 +263,12 @@ class Building:
         T_in = [self.settings.T_start_in] + [0] * pred_hor_time_steps
         T_tab = [self.settings.T_start_in] + [0] * pred_hor_time_steps
 
-        # Q_loss = [0] * pred_hor_time_steps  # prediction of convection, transition and ventilation losses [W]
-        # Q_tab = [0] * pred_hor_time_steps  # prediction of thermal heat flow between room and TAB component [W]
-
         for t in range(pred_hor_time_steps):
-            Q_loss = (T_in[t] - T_out[t]) * self.k
-            Q_tab = (T_tab[t] - T_in[t]) * self.alpha * self.area
+            Q_loss = (T_in[t] - T_out[t]) * self.k  # convection, transition and ventilation losses [W]
+            Q_tab = (T_tab[t] - T_in[t]) * self.alpha * self.area   # thermal heat flow between room and TAB [W]
 
             T_tab[t + 1] = (Q_heat[t] - Q_tab) * (self.dt_trnsys / 3600) / self.cp_tab + T_tab[t]
             T_in[t + 1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt_trnsys / 3600) / self.cp_r + T_in[t]
-
-            # print(f'{t}: '
-            #       f'Q_heat: {Q_heat[t]:.2f}    '
-            #       f'Q_tab: {Q_tab:.2f}  '
-            #       f'Q_loss: {Q_loss:.2f}    '
-            #       f'T_tab: {T_tab[t]:.2f}   '
-            #       f'T_in: {T_in[t]:.2f}')
 
         return np.array(T_in[:-1]), np.array(T_tab[:-1])
 
@@ -276,11 +280,11 @@ class Building:
         Parameters
         ----------
         array : numpy.array
-            array to be converted
+            Array to be converted
         mode : str
-            conversion mode (from longer to shorter prediction horizon, or from shorter to longer)
+            Conversion mode (from longer to shorter prediction horizon, or from shorter to longer)
         dynamic : bool
-            dynamic conversion flag (takes longer, but works with any time step - otherwise only 1 hour or 15 min)
+            Dynamic conversion flag (takes longer, but works with any time step - otherwise only 1 hour or 15 min)
         """
 
         if dynamic:
@@ -313,9 +317,9 @@ class Building:
         Parameters
         ----------
         array : numpy.array
-            array to be converted
+            Array to be converted
         mode : str
-            conversion mode ('long2short' or 'short2long')
+            Conversion mode ('long2short' or 'short2long')
         """
 
         def adapt_hour_indices(hour_indices):
@@ -340,9 +344,9 @@ class Building:
             Parameters
             ----------
             indices_to : list[int]
-                contains start and end of index range, for the receiving array.
+                Contains start and end of index range, for the receiving array.
             indices_from : list[int]
-                contains start and end of index range, for the source array.
+                Contains start and end of index range, for the source array.
             """
 
             def range2indices(range_list):
@@ -570,7 +574,8 @@ class SettingsMPC:
 
         Parameters
         ----------
-        path_dir : Path to directory containing settings.ini file.
+        path_dir : str
+            Path to directory containing settings.ini file.
         """
 
         path_settings_file = os.path.join(path_dir, self.filename)
@@ -634,9 +639,9 @@ def multiply_nested_list(nested_list, factor):
     Parameters
     ----------
     nested_list : list[list[int]]
-        nested list of numbers to be multiplied
+        Nested list of numbers to be multiplied
     factor : int
-        factor by which each number is multiplied
+        Factor by which each number is multiplied
     """
 
     new_nested_list = []
@@ -654,8 +659,10 @@ def interpolate(y, factor):
 
     Parameters
     ----------
-    y : y values of array
-    factor : factor by which the length of the array is to be multiplied
+    y : list
+        y values of array
+    factor : int
+        Factor by which the length of the array is to be multiplied
     """
 
     x = range(0, len(y))
