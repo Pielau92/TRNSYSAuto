@@ -74,6 +74,11 @@ class Building:
 
         self.path_logFile = "PythonLog.log"
 
+    @property
+    def alpha(self):
+        """Heat transfer coefficient [W/m²K], depending on the current season."""
+        return [self.alpha_s, self.alpha_w][self.settings.season]
+
     def read_weather_data(self, path_trnsys_input_file, filename_weather_data='Windetc20190804.txt'):
         """Read weather data for TRNSYS simulation.
 
@@ -247,12 +252,9 @@ class Building:
         # Q_loss = [0] * pred_hor_time_steps  # prediction of convection, transition and ventilation losses [W]
         # Q_tab = [0] * pred_hor_time_steps  # prediction of thermal heat flow between room and TAB component [W]
 
-        # heat transfer coefficient depending on the current season to [W/m²K]
-        alpha = [self.alpha_s, self.alpha_w][self.settings.season]
-
         for t in range(pred_hor_time_steps):
             Q_loss = (T_in[t] - T_out[t]) * self.k
-            Q_tab = (T_tab[t] - T_in[t]) * alpha * self.area
+            Q_tab = (T_tab[t] - T_in[t]) * self.alpha * self.area
 
             T_tab[t + 1] = (Q_heat[t] - Q_tab) * (self.dt_trnsys / 3600) / self.cp_tab + T_tab[t]
             T_in[t + 1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt_trnsys / 3600) / self.cp_r + T_in[t]
