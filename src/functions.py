@@ -5,6 +5,7 @@ import xlwings as xw
 import tkinter as tk
 import re
 import pickle
+import shutil
 
 from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
 
@@ -237,3 +238,37 @@ def set_env_and_paths():
 
     # set PYTHONPATH to the site-packages directory (which is within your environment\Lib)
     os.environ["PYTHONPATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{condaenvname}\\Lib\\site-packages"
+
+
+def copy_files(source_path, destination_path):
+    """Copy file(s) from source path(s) to destination path(s).
+
+    The number of source paths must match the number of destination paths.
+
+    Parameters
+    ----------
+    source_path : str | list(str)
+        path (or list of paths) of file to be copied.
+    destination_path : str | list(str)
+        path (or list of paths) where source file is to be copied.
+
+    Returns
+    -------
+    files_not_found list
+        Returns the path of the file that caused the function to raise a FileNotFoundError exception, returns None on
+        success.
+    """
+
+    files_not_found = []
+    if isinstance(source_path, str) & isinstance(destination_path, str):
+        source_path = [source_path]
+        destination_path = [destination_path]
+
+    for file_index in range(len(source_path)):
+        try:
+            shutil.copy(source_path[file_index], destination_path[file_index])
+        except FileNotFoundError:
+            files_not_found.append(source_path[file_index])
+
+    if files_not_found:
+        return files_not_found
