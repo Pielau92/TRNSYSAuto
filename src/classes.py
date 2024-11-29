@@ -178,6 +178,11 @@ class SimulationSeries:
 
             os.makedirs(path_sim)  # create new empty simulation subdirectory
 
+            # todo: braucht Überarbeitung, da verwirrend. Vieleicht gleich alles hardgecodete ins settings.ini
+            # file name list of files to be copied into simulation subdirectories
+            file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
+                         'Windetc20190804.txt', 'StrahlungBruck.txt']
+
             # source paths
             src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
                                          os.path.join('Wetterdaten', self.weather_series[sim]),
@@ -195,8 +200,7 @@ class SimulationSeries:
                         os.path.join(self.path.assets_dir, src_file_list[file_index]),
                         os.path.join(path_sim, dst_file_list[file_index]))
                 except FileNotFoundError:
-                    message = 'File ' + os.path.join(self.path.assets_dir, src_file_list[file_index] +
-                                                     ' could not be found, simulation variant added to ignore list.')
+                    message = f'File does not exist: {os.path.join(self.path.assets_dir, src_file_list[file_index])}.'
                     self.logger.error(message)
                     print(message)
 
@@ -232,11 +236,6 @@ class SimulationSeries:
 
         # copy simulation variants Excel file into simulation series directory
         shutil.copy(os.path.join(self.path.original_sim_variants_excel), self.path.sim_variants_excel)
-
-        # todo: braucht Überarbeitung, da verwirrend. Vieleicht gleich alles hardgecodete ins settings.ini
-        # file name list of files to be copied into simulation subdirectories
-        file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
-                     'Windetc20190804.txt', 'StrahlungBruck.txt']
 
         for index, sim in enumerate(self.sim_list):
             path_sim = os.path.join(self.path.sim_series_dir, sim)  # path of simulation subdirectory
