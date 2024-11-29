@@ -170,9 +170,20 @@ class Building:
 
             return index_list
 
+        def get_costs(Q):
+
+            # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
+            f = [self.settings.eer, self.settings.cop][self.settings.season]
+
+            costs = (Q / f) * (3600 / self.dt_trnsys) * cost_pred
+
+            return sum(costs)
+
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
         pred_hor_short_time_steps = int(self.settings.pred_hor_short * 3600 / self.dt_trnsys)
+
+        cost_pred = np.array([0.1] * pred_hor_time_steps)  # [€/kWh] todo DUMMY
 
         indices = get_indices()
 
@@ -560,6 +571,9 @@ class SettingsMPC:
         self.pred_hor_conversion = bool()  # perform BOKU conversion of prediction (to run the program faster)
         self.pred_hor_short = int()  # shortened prediction horizon (to run the program faster) [h]
         self.mpc_trigger = int()  # how often the mpc controller is triggered (1=every time step, 4=every 4th, etc.)
+        self.cop = float()  # coefficient of performance (COP) of heat pump for heating
+        self.eer = float()  # energy efficiency ratio (EER) of heat pump for cooling
+        self.cost_optimization = bool()  # cost optimization flag
 
         # TRNSYS specific simulation parameters
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
