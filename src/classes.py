@@ -200,9 +200,8 @@ class SimulationSeries:
                         os.path.join(self.path.assets_dir, src_file_list[file_index]),
                         os.path.join(path_sim, dst_file_list[file_index]))
                 except FileNotFoundError:
-                    message = f'File does not exist: {os.path.join(self.path.assets_dir, src_file_list[file_index])}.'
-                    self.logger.error(message)
-                    print(message)
+                    self.logger.error(
+                        f'File does not exist: {os.path.join(self.path.assets_dir, src_file_list[file_index])}.')
 
                     self.sim_ignore[index] = True  # simulation variant will be ignored
 
@@ -247,12 +246,25 @@ class SimulationSeries:
     def initialize_logging(self):
         """Initialize logging file."""
 
-        logging_file_path = os.path.join(self.path.sim_series_dir, self.filename_logger)
-
+        # create logger
         self.logger = logging.getLogger(__name__)
-        logging.basicConfig(level=logging.DEBUG, filemode='w', filename=logging_file_path)
-        handler = logging.FileHandler(self.path.logfile)
-        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
+
+        # create file handler
+        f_handler = logging.FileHandler(self.path.logfile, mode='w')
+
+        # create stream handler (outputs messages in the console additionally)
+        s_handler = logging.StreamHandler(sys.stdout)   # sys.stdout prevents messages to be formatted like errors (red)
+        s_handler.setLevel(logging.INFO)
+
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        f_handler.setFormatter(formatter)
+        s_handler.setFormatter(formatter)
+
+        # add the handlers to the logger
+        self.logger.addHandler(f_handler)
+        self.logger.addHandler(s_handler)
 
         self.logger.info(('Log file created successfully in {}.'.format(self.path.logfile)))
 
@@ -358,10 +370,7 @@ class SimulationSeries:
             app.Öffnen.wait_not('visible', timeout=10)
 
         except Exception:  # TimeoutError:  todo: Add specific exceptions
-
-            message = 'Unknown error occured during simulation of {}.'.format(path_dck_file)
-            self.logger.error(message)
-            print(message)
+            self.logger.error(f'Unknown error occured during simulation of {path_dck_file}.')
 
             # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
             app.kill()
@@ -411,9 +420,7 @@ class SimulationSeries:
             total = len(self.sim_list) - sum(np.logical_or(self.sim_success, self.sim_ignore))
             functions.progress_bar(progress, total)
 
-            message = 'Starting simulation series from "{}"'.format(self.filename_sim_variants_excel)
-            self.logger.info(message)
-            print(message)
+            self.logger.info(f'Starting simulation series from "{self.filename_sim_variants_excel}"')
 
             for index in range(len(self.sim_list)):
 
@@ -444,9 +451,7 @@ class SimulationSeries:
 
                     except Exception:
 
-                        message = 'Error occurred during simulation of {}.'.format(sim)
-                        self.logger.error(message)
-                        print(message)
+                        self.logger.error(f'Error occurred during simulation of {sim}.')
 
                     progress += 1
                     functions.progress_bar(progress, total)
@@ -477,15 +482,11 @@ class SimulationSeries:
         """
 
         if reset:
-            message = 'Resetting simulation success flags'
-            self.logger.info(message)
-            print(message)
+            self.logger.info('Resetting simulation success flags')
 
             self.sim_success = [False] * len(self.sim_list)
 
-        message = 'Checking for failed simulations'
-        self.logger.info(message)
-        print(message)
+        self.logger.info('Checking for failed simulations')
 
         for index in range(len(self.sim_list)):
             # path of output file
@@ -503,14 +504,9 @@ class SimulationSeries:
 
         # log simulation success status
         if all(self.sim_success):
-            message = '"{}" completed successfully'.format(self.filename_sim_variants_excel)
-            self.logger.info(message)
-            print(message)
+            self.logger.info(f'"{self.filename_sim_variants_excel}" completed successfully')
         else:
-            message = \
-                '{} out of {} simulations completed successfully'.format(sum(self.sim_success), len(self.sim_success))
-            self.logger.info(message)
-            print(message)
+            self.logger.info(f'{sum(self.sim_success)} out of {len(self.sim_success)} simulations completed successfully')
 
     def start_evaluation(self):
         """Start evaluation.
@@ -526,9 +522,7 @@ class SimulationSeries:
             functions.progress_bar(progress, total)
 
             # logger entry "start"
-            message = 'Starting evaluation for {}'.format(self.filename_sim_variants_excel)
-            self.logger.info(message)
-            print(message)
+            self.logger.info(f'Starting evaluation for {self.filename_sim_variants_excel}')
 
             # evaluate variants
             for variant_index, variant_name in enumerate(self.sim_list):
@@ -547,9 +541,7 @@ class SimulationSeries:
         self.cumulative_evaluation()
 
         # logger entry "finish"
-        message = 'Evaluation done.'
-        self.logger.info(message)
-        print(message)
+        self.logger.info('Evaluation done.')
 
     def evaluate_variant(self, variant_name, variant_index):
         """Evaluate simulation variant.
@@ -609,16 +601,12 @@ class SimulationSeries:
 
         # ...the trnsys output file is actually there
         if not os.path.exists(path_variant_file):
-            message = f'File {path_variant_file} does not exist!'
-            self.logger.error(message)
-            print(message)
+            self.logger.error(f'File {path_variant_file} does not exist!')
             return
 
         # ...the variant has a corresponding directory
         if variant_name not in self.sim_list:
-            message = f'Did not find {variant_name} in {self.path.sim_variants_excel}'
-            self.logger.error(message)
-            print(message)
+            self.logger.error(f'Did not find {variant_name} in {self.path.sim_variants_excel}')
             return
 
         # endregion
@@ -655,9 +643,7 @@ class SimulationSeries:
 
         self.eval_success[variant_index] = True
 
-        # message = 'Finished evaluation for variant {}'.format(variant_name)
-        # self.logger.info(message)
-        # print(message)
+        # self.logger.info(f'Finished evaluation for variant {variant_name}')
 
     def cumulative_evaluation(self):
         """Perform cumulative evaluation.
@@ -676,9 +662,7 @@ class SimulationSeries:
         functions.progress_bar(progress, total)
 
         # logger entry "start"
-        message = 'Reading variant evaluation files for the cumulative evaluation.'
-        self.logger.info(message)
-        print(message)
+        self.logger.info('Reading variant evaluation files for the cumulative evaluation.')
 
         for variant_index, variant_name in enumerate(self.sim_list):
             save_path_variant_output = os.path.join(self.path.evaluation_save_dir, variant_name + '.xlsx')
@@ -694,9 +678,7 @@ class SimulationSeries:
             functions.progress_bar(progress, total)
 
         # logger entry "export"
-        message = 'Exporting cumulative evaluation results.'
-        self.logger.info(message)
-        print(message)
+        self.logger.info('Exporting cumulative evaluation results.')
 
         # copy into cumulative evaluation excel file
         self.excel_export_cumulative_evaluation()
