@@ -69,6 +69,7 @@ class SimulationSeries:
         self.multiprocessing_max = int()  # maximum number of simulations that can be calculated simultaneously
         self.multiprocessing_autodetect = bool()  # if true, override multiprocessing_max with number of cpu cores
         self.eval_save_interval = int()  # the evaluation progress is saved after each save interval
+        self.conda_venv_name = str()  # Name of the conda virtual environment (venv) to be used
 
         # filenames
         self.filename_dck_template = str()  # name of the dck-File template
@@ -313,7 +314,7 @@ class SimulationSeries:
         anyway).
         """
 
-        functions.set_env_and_paths()
+        functions.set_env_and_paths(self.conda_venv_name)
 
         # initialize lock, if multiprocessing is enabled
         if self.multiprocessing_max > 1:
