@@ -159,6 +159,8 @@ class SimulationSeries:
         an additional setup. Doing so anyway results in a reset of the simulation progress.
         """
 
+        self.logger.info('Setting up simulation.')
+
         # import simulation variants Excel file
         self.import_sim_variants_excel()
 
@@ -176,6 +178,8 @@ class SimulationSeries:
 
         Imports the simulation variants Excel file and applies the data to the SimulationSeries object.
         """
+
+        self.logger.info(f'Importing simulation variants Excel file from {self.path.original_sim_variants_excel}.')
 
         # todo: hier wird zwei mal der Inhalt des Simulationsvariantenfiles importiert, auf 1 mal reduzieren
         # read simulation variant parameters
@@ -228,6 +232,8 @@ class SimulationSeries:
         After the simulation is complete, the simulation results from TRNSYS are also saved inside its respective
         subdirectory.
         """
+
+        self.logger.info('Setting up simulation subdirectories.')
 
         def create_sim_subdir():
             """Create simulation subdirectory within simulation series directory.
@@ -292,6 +298,8 @@ class SimulationSeries:
     def save(self):
         """Save SimulationSeries object in simulation series directory."""
 
+        self.logger.info(f'Saving progress in {self.path.savefile}.')
+
         with open(self.path.savefile, 'wb') as file:
             pickle.dump(self, file)
 
@@ -318,7 +326,7 @@ class SimulationSeries:
             total = len(self.sim_list) - sum(np.logical_or(self.sim_success, self.sim_ignore))
             functions.progress_bar(progress, total)
 
-            self.logger.info(f'Starting simulation series from "{self.filename_sim_variants_excel}"')
+            self.logger.info(f'Starting simulation series "{self.filename_sim_variants_excel}".')
 
             for index in range(len(self.sim_list)):
 
@@ -454,11 +462,11 @@ class SimulationSeries:
         """
 
         if reset:
-            self.logger.info('Resetting simulation success flags')
+            self.logger.info('Resetting simulation success flags.')
 
             self.sim_success = [False] * len(self.sim_list)
 
-        self.logger.info('Checking for failed simulations')
+        self.logger.info('Checking for failed simulations.')
 
         for index in range(len(self.sim_list)):
             # path of output file
@@ -476,9 +484,10 @@ class SimulationSeries:
 
         # log simulation success status
         if all(self.sim_success):
-            self.logger.info(f'"{self.filename_sim_variants_excel}" completed successfully')
+            self.logger.info(f'"Simulation of {self.filename_sim_variants_excel}" completed successfully.')
         else:
-            self.logger.info(f'{sum(self.sim_success)} out of {len(self.sim_success)} simulations completed successfully')
+            self.logger.info(
+                f'{sum(self.sim_success)} out of {len(self.sim_success)} simulations completed successfully.')
 
     def setup_evaluation(self):
         """Set evaluation of simulation series up.
@@ -486,6 +495,8 @@ class SimulationSeries:
         Setting up the evaluation of a simulation series is only necessary once, continuing the evaluation at a later
         time does not need an additional setup. Doing so anyway results in a reset of the evaluation progress.
         """
+
+        self.logger.info('Setting up evaluation.')
 
         # create evaluation directory
         os.makedirs(self.path.evaluation_save_dir, exist_ok=True)
@@ -517,7 +528,7 @@ class SimulationSeries:
             functions.progress_bar(progress, total)
 
             # logger entry "start"
-            self.logger.info(f'Starting evaluation for {self.filename_sim_variants_excel}')
+            self.logger.info(f'Starting evaluation of {self.filename_sim_variants_excel}.')
 
             # evaluate variants
             for variant_index, variant_name in enumerate(self.sim_list):
@@ -601,7 +612,7 @@ class SimulationSeries:
 
         # ...the variant has a corresponding directory
         if variant_name not in self.sim_list:
-            self.logger.error(f'Did not find {variant_name} in {self.path.sim_variants_excel}')
+            self.logger.error(f'Did not find {variant_name} in {self.path.sim_variants_excel}.')
             return
 
         # endregion
@@ -638,7 +649,7 @@ class SimulationSeries:
 
         self.eval_success[variant_index] = True
 
-        # self.logger.info(f'Finished evaluation for variant {variant_name}')
+        # self.logger.info(f'Finished evaluation of variant {variant_name}.')
 
     def cumulative_evaluation(self):
         """Perform cumulative evaluation.
@@ -696,6 +707,8 @@ class SimulationSeries:
             export(self.zone_3_with_df, self.sheet_name_zone_3_with_operating_time, 1, 7)
             export(self.zone_3_without_df, self.sheet_name_zone_3_without_operating_time, 1, 7)
             export(self.variant_result_columns, self.sheet_name_cumulative_input, 60, 2)
+
+        self.logger.info(f'Exported cumulative evaluation successfully to {self.path.cumulative_evaluation_save_file}.')
 
 
 class SchweikerDataFrame:
