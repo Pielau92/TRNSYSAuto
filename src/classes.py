@@ -119,6 +119,8 @@ class SimulationSeries:
         # copy simulation variants Excel file into simulation series directory
         shutil.copy(os.path.join(self.path.original_sim_variants_excel), self.path.sim_variants_excel)
 
+        functions.set_env_and_paths(self.conda_venv_name)
+
     def create_sim_series_dir(self):
         """Create new directory for the simulation series."""
 
@@ -313,8 +315,6 @@ class SimulationSeries:
         repeated until all simulations were calculated successfully, unless some simulations are on the "ignore" list
         anyway).
         """
-
-        functions.set_env_and_paths(self.conda_venv_name)
 
         # initialize lock, if multiprocessing is enabled
         if self.multiprocessing_max > 1:
