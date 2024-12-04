@@ -113,22 +113,23 @@ class SimulationSeries:
         self.filename_sim_variants_excel = os.path.basename(self.path.original_sim_variants_excel).split('.')[0]
         self.dirname_sim_series = self.filename_sim_variants_excel + '_' + self.execution_time
 
-        self.create_sim_series_dir()
+        self.setup_sim_series_dir()
+
+        functions.set_env_and_paths(self.conda_venv_name)
+
+    def setup_sim_series_dir(self):
+        """Set up new directory for the simulation series."""
+
+        # if directory already exists, delete
+        if os.path.exists(self.path.sim_series_dir):
+            shutil.rmtree(self.path.sim_series_dir)
+
+        os.makedirs(self.path.sim_series_dir)
+
         self.initialize_logging()
 
         # copy simulation variants Excel file into simulation series directory
         shutil.copy(os.path.join(self.path.original_sim_variants_excel), self.path.sim_variants_excel)
-
-        functions.set_env_and_paths(self.conda_venv_name)
-
-    def create_sim_series_dir(self):
-        """Create new directory for the simulation series."""
-
-        try:
-            os.makedirs(self.path.sim_series_dir)
-        except FileExistsError:  # if directory already exists, delete and create new one
-            shutil.rmtree(self.path.sim_series_dir)
-            os.makedirs(self.path.sim_series_dir)
 
     def initialize_logging(self):
         """Initialize logging file."""
@@ -141,7 +142,7 @@ class SimulationSeries:
         f_handler = logging.FileHandler(self.path.logfile, mode='w')
 
         # create stream handler (outputs messages in the console additionally)
-        s_handler = logging.StreamHandler(sys.stdout)   # sys.stdout prevents messages to be formatted like errors (red)
+        s_handler = logging.StreamHandler(sys.stdout)  # sys.stdout prevents messages to be formatted like errors (red)
         s_handler.setLevel(logging.INFO)
 
         # create formatter and add it to the handlers
@@ -156,7 +157,7 @@ class SimulationSeries:
         self.logger.info(('Log file created successfully in {}.'.format(self.path.logfile)))
 
     def setup_simulation(self):
-        """Set simulation series up.
+        """Set up simulation series.
 
         Setting up the simulation series is only necessary once, continuing the simulation at a later time does not need
         an additional setup. Doing so anyway results in a reset of the simulation progress.
@@ -225,7 +226,7 @@ class SimulationSeries:
         self.df_dck.index = self.df_dck.index.map(str)
 
     def setup_sim_subdirectories(self):
-        """Setup simulation subdirectories.
+        """Set up simulation subdirectories.
 
         1)  Create a subdirectory (inside the simulation series directory) for each TRNSYS simulation
         2)  Save a copy of each file and template necessary for the simulation
@@ -271,7 +272,7 @@ class SimulationSeries:
             if errors:
                 self.logger.error(f'FileNotFoundError: {", ".join(errors)}')
                 self.sim_ignore[index] = True  # simulation variant will be ignored
-                raise FileNotFoundError     # program will end if error is raised
+                raise FileNotFoundError  # program will end if error is raised
 
         def overwrite_dck_file_parameters():
             """Overwrite parameters inside .dck File.
@@ -407,7 +408,7 @@ class SimulationSeries:
         app.start(self.path_exe)
 
         try:
-            app.connect(title="Öffnen", timeout=2)  # self.timeout)
+            app.connect(title="Öffnen", timeout=2)
             app.Öffnen.wait('visible')
             app.Öffnen.set_focus()
 
@@ -436,7 +437,7 @@ class SimulationSeries:
             lock.release()
 
         window_title = 'TRNSYS: ' + path_dck_file
-        window_title = window_title.replace('documents', 'Documents')   # workaround, as search is case sensitive
+        window_title = window_title.replace('documents', 'Documents')  # workaround, as search is case sensitive
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
         try:
@@ -464,7 +465,6 @@ class SimulationSeries:
 
         if reset:
             self.logger.info('Resetting simulation success flags.')
-
             self.sim_success = [False] * len(self.sim_list)
 
         self.logger.info('Checking for failed simulations.')
