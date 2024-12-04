@@ -170,7 +170,7 @@ class Building:
 
             return index_list
 
-        def get_costs(Q):
+        def get_heatpump_costs(Q):
 
             # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
             f = [self.settings.eer, self.settings.cop][self.settings.season]
@@ -179,11 +179,21 @@ class Building:
 
             return sum(costs)
 
+        def get_costs(T_R, T_SP, Q, alpha_pos, alpha_neg, beta, gamma):
+
+            result = []
+            for (T_R_i, T_SP_i, Q_i) in zip(T_R, T_SP, Q):
+                alpha = [alpha_neg, alpha_pos][T_R_i > T_SP_i]    # alpha_pos if T_room > T_setpoint, else alpha_neg
+                result.append(alpha * abs(T_R_i - T_SP_i) ** beta + abs(get_heatpump_costs(Q)) ** gamma)
+
+            return result
+        
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
         pred_hor_short_time_steps = int(self.settings.pred_hor_short * 3600 / self.dt_trnsys)
 
         cost_pred = np.array([0.1] * pred_hor_time_steps)  # [€/kWh] todo DUMMY
+        alpha_pos, alpha_neg, beta, gamma = 1, 1, 4, 1.5    # todo DUMMIES
 
         indices = get_indices()
 
