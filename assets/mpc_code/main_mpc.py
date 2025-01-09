@@ -189,7 +189,7 @@ class Building:
 
             costs = (Q / f) * (3600 / self.dt_trnsys) * electricity_price
 
-            return sum(costs)
+            return costs
 
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
@@ -208,7 +208,7 @@ class Building:
         dHeat = self.settings.dHeat  # W
         T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
 
-        best_LSE = []
+        best_LSE = np.zeros(self.settings.max_count)
         objective_met = False
         counter = 1
         while not objective_met and counter < self.settings.max_count:
@@ -237,7 +237,7 @@ class Building:
                     case 2:  # positive perturbation has lowest least square error
                         Q_heat[i] += dHeat
 
-                best_LSE.append(np.min([lse_baseline, lse_negative, lse_positive]))
+                best_LSE[counter] = np.min([lse_baseline, lse_negative, lse_positive])
 
                 # limit to max heating power during heating season / limit to max cooling power, during cooling season
                 max_value = [0, self.max_heating][self.settings.season]
@@ -247,7 +247,7 @@ class Building:
                 Q_help[i] = Q_heat[i]
 
             Q_help = Q_heat
-            objective_met = abs((best_LSE[-1] - best_LSE[-2])) <= self.settings.ChgProgTol
+            objective_met = abs((best_LSE[counter] - best_LSE[counter - 1])) <= self.settings.ChgProgTol
             counter += 1
 
         return Q_heat
