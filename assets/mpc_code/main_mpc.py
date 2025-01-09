@@ -5,6 +5,7 @@ Created on Thu Aug  3 13:08:01 2023
 @author: Magdalena
 """
 import numpy as np
+import scipy.optimize as spo
 import csv
 import os
 
@@ -207,6 +208,22 @@ class Building:
 
         dHeat = self.settings.dHeat  # W
         T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
+
+        # region SCIPY SOLVER
+
+        bounds = ((self.max_cooling, self.max_heating),) * pred_hor_time_steps
+
+        result = spo.minimize(get_lse, Q_heat, bounds=bounds)
+
+        # if result.success:
+        #     print(result.x)
+        #     print(result.fun)
+        # else:
+        #     print(result.message)
+
+        return result.x
+
+        # endregion
 
         best_LSE = np.zeros(self.settings.max_count)
         objective_met = False
