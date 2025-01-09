@@ -141,8 +141,10 @@ class Building:
     def optimize(self):
         """todo"""
 
-        def get_lse():
-            electricity_costs = np.abs(Q_heat) * cost_pred / 4 #todo: /4 wegen 1/4-Stundenschritten?
+        def get_lse(Q_hc):
+            T_in, T_tab = self.predict(Q_hc, Q_solar, T_out)
+            alpha = get_alpha()
+            electricity_costs = np.abs(Q_hc) * cost_pred / 4 #todo: /4 wegen 1/4-Stundenschritten?
             return np.sum((alpha * np.abs(T_in - T_sp) ** beta) + electricity_costs ** gamma)
 
         def get_alpha():
@@ -198,7 +200,7 @@ class Building:
         #     return result
         
         # prediction horizon in terms of time steps, instead of hours
-        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
+
 
         cost_pred = np.array([0.1] * pred_hor_time_steps)  # [€/kWh] todo DUMMY
         alpha_pos, alpha_neg, beta, gamma = 1, 1, 4, 1.5    # todo DUMMIES
@@ -207,37 +209,32 @@ class Building:
         Q_solar = self.igs[indices]  # W/m²
         T_out = self.ta[indices]  # °C
 
-        dHeat = self.settings.dHeat  # W
-        T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
-
+        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
         Q_heat = np.zeros(pred_hor_time_steps)  # W
         Q_help = np.zeros(pred_hor_time_steps)  # W
 
-        best_LSE = np.zeros(self.settings.max_count)
-        objective = False
+        dHeat = self.settings.dHeat  # W
+        T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
+
+        best_LSE = []
+        objective_met = False
         counter = 1
-        while not objective and counter < self.settings.max_count:
+        while not objective_met and counter < self.settings.max_count:
 
             # loop through hours of prediction horizon
             for i in range(pred_hor_time_steps):
 
                 # positive perturbation
                 Q_heat[i] = min(Q_help[i] + dHeat, self.max_heating)  # limit to maximum heating power
-                T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
-                alpha = get_alpha()
-                lse_positive = get_lse()  # least square error, positive perturbation
+                lse_positive = get_lse(Q_heat)  # least square error, positive perturbation
 
                 # negative perturbation
                 Q_heat[i] = max(Q_help[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
-                T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
-                alpha = get_alpha()
-                lse_negative = get_lse()  # least square error, negative perturbation
+                lse_negative = get_lse(Q_heat)  # least square error, negative perturbation
 
                 # baseline calculation
                 Q_heat[i] = Q_help[i]
-                T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
-                alpha = get_alpha()
-                lse_baseline = get_lse()    # least square error, baseline calculation
+                lse_baseline = get_lse(Q_heat)    # least square error, baseline calculation
 
                 # interpretation of perturbation effect
                 match np.argmin([lse_baseline, lse_negative, lse_positive]):
@@ -248,21 +245,21 @@ class Building:
                     case 2:  # positive perturbation has lowest least square error
                         Q_heat[i] += dHeat
 
-                best_LSE[counter] = np.min([lse_baseline, lse_negative, lse_positive])
+                best_LSE.append(np.min([lse_baseline, lse_negative, lse_positive]))
 
                 # limitation that cooling and heating simultaneously in one period is not possible
-                min_value, max_value = 0, 0
                 if self.settings.season:
                     max_value = self.max_heating  # limit to maximum heating power
+                    min_value = 0
                 elif not self.settings.season:
+                    max_value = 0
                     min_value = self.max_cooling  # limit to maximum cooling power
                 Q_heat[i] = np.clip(Q_heat[i], min_value, max_value)
 
                 Q_help[i] = Q_heat[i]
 
-            # lse_final = get_lse(Q_heat)  # least square error, final perturbation
             Q_help = Q_heat
-            objective = abs((best_LSE[counter] - best_LSE[counter-1])) <= self.settings.ChgProgTol
+            objective_met = abs((best_LSE[-1] - best_LSE[-2])) <= self.settings.ChgProgTol
             counter += 1
 
         return Q_heat
