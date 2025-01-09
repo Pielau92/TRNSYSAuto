@@ -84,7 +84,7 @@ class Building:
         self.path_logFile = "PythonLog.log"
 
     @property
-    def alpha(self):    #todo: zu heat transfer coeff. ändern (Name "alpha" schon in verwendung)
+    def alpha(self):  # todo: zu heat transfer coeff. ändern (Name "alpha" schon in verwendung)
         """Heat transfer coefficient [W/m²K], depending on the current season."""
         return [self.alpha_s, self.alpha_w][self.settings.season]
 
@@ -143,14 +143,15 @@ class Building:
 
         def get_lse(Q_hc):
             T_in, T_tab = self.predict(Q_hc, Q_solar, T_out)
-            alpha = get_alpha()
-            electricity_costs = np.abs(Q_hc) * cost_pred / 4 #todo: /4 wegen 1/4-Stundenschritten?
+            alpha = get_alpha(T_in - T_sp)
+            electricity_costs = np.abs(Q_hc) * cost_pred
             return np.sum((alpha * np.abs(T_in - T_sp) ** beta) + electricity_costs ** gamma)
 
-        def get_alpha():
-            diff = T_in - T_sp
+        def get_alpha(temperature_deviation):
+            """Return alpha factor (for the lse calculation) from the deviation of the room temperature from the
+            setpoint temperature."""
             alpha_val = []
-            for val in diff:
+            for val in temperature_deviation:
                 if val >= 0:
                     alpha_val.append(alpha_pos)
                 elif val < 0:
@@ -181,35 +182,26 @@ class Building:
 
             return index_list
 
-        # def get_heatpump_costs(Q):
-        #
-        #     # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
-        #     f = [self.settings.eer, self.settings.cop][self.settings.season]
-        #
-        #     costs = (Q / f) * (3600 / self.dt_trnsys) * cost_pred
-        #
-        #     return sum(costs)
-        #
-        # def get_costs(T_R, T_SP, Q, alpha_pos, alpha_neg, beta, gamma):
-        #
-        #     result = []
-        #     for (T_R_i, T_SP_i, Q_i) in zip(T_R, T_SP, Q):
-        #         alpha = [alpha_neg, alpha_pos][T_R_i > T_SP_i]    # alpha_pos if T_room > T_setpoint, else alpha_neg
-        #         result.append(alpha * abs(T_R_i - T_SP_i) ** beta + abs(get_heatpump_costs(Q)) ** gamma)
-        #
-        #     return result
-        
+        def get_heatpump_costs(Q):
+
+            # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
+            f = [self.settings.eer, self.settings.cop][self.settings.season]
+
+            costs = (Q / f) * (3600 / self.dt_trnsys) * electricity_price
+
+            return sum(costs)
+
         # prediction horizon in terms of time steps, instead of hours
+        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
 
+        alpha_pos, alpha_neg, beta, gamma = 1, 1, 4, 1.5  # todo DUMMIES
+        electricity_price = np.array([0.1] * pred_hor_time_steps)  # [€/kWh] todo DUMMY
+        cost_pred = get_heatpump_costs(electricity_price)
 
-        cost_pred = np.array([0.1] * pred_hor_time_steps)  # [€/kWh] todo DUMMY
-        alpha_pos, alpha_neg, beta, gamma = 1, 1, 4, 1.5    # todo DUMMIES
+        indices = get_indices()  # get right indices of weather data
 
-        indices = get_indices()
         Q_solar = self.igs[indices]  # W/m²
         T_out = self.ta[indices]  # °C
-
-        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
         Q_heat = np.zeros(pred_hor_time_steps)  # W
         Q_help = np.zeros(pred_hor_time_steps)  # W
 
@@ -234,7 +226,7 @@ class Building:
 
                 # baseline calculation
                 Q_heat[i] = Q_help[i]
-                lse_baseline = get_lse(Q_heat)    # least square error, baseline calculation
+                lse_baseline = get_lse(Q_heat)  # least square error, baseline calculation
 
                 # interpretation of perturbation effect
                 match np.argmin([lse_baseline, lse_negative, lse_positive]):
@@ -247,13 +239,9 @@ class Building:
 
                 best_LSE.append(np.min([lse_baseline, lse_negative, lse_positive]))
 
-                # limitation that cooling and heating simultaneously in one period is not possible
-                if self.settings.season:
-                    max_value = self.max_heating  # limit to maximum heating power
-                    min_value = 0
-                elif not self.settings.season:
-                    max_value = 0
-                    min_value = self.max_cooling  # limit to maximum cooling power
+                # limit to max heating power during heating season / limit to max cooling power, during cooling season
+                max_value = [0, self.max_heating][self.settings.season]
+                min_value = [self.max_cooling, 0][self.settings.season]
                 Q_heat[i] = np.clip(Q_heat[i], min_value, max_value)
 
                 Q_help[i] = Q_heat[i]
@@ -291,7 +279,7 @@ class Building:
 
         for t in range(pred_hor_time_steps):
             Q_loss = (T_in[t] - T_out[t]) * self.k  # convection, transition and ventilation losses [W]
-            Q_tab = (T_tab[t] - T_in[t]) * self.alpha * self.area   # thermal heat flow between room and TAB [W]
+            Q_tab = (T_tab[t] - T_in[t]) * self.alpha * self.area  # thermal heat flow between room and TAB [W]
 
             T_tab[t + 1] = (Q_heat[t] - Q_tab) * (self.dt_trnsys / 3600) / self.cp_tab + T_tab[t]
             T_in[t + 1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt_trnsys / 3600) / self.cp_r + T_in[t]
