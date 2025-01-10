@@ -169,17 +169,17 @@ class Building:
              """
 
             index_list = list(range(
-                self.time_step_nr, self.time_step_nr + pred_hor_time_steps,
+                self.time_step_nr, self.time_step_nr + pred_hor_time_steps_trnsys,
                 int(self.settings.dt_pred / self.dt_trnsys)))
 
             time_steps_per_year = int(365 * 24 * 3600 / self.dt_trnsys)
 
             # if prediction horizon reaches the following year, reset to beginning of year to form a cycle
-            for i, val in enumerate(index_list):
+            for _i, val in enumerate(index_list):
                 if val < time_steps_per_year:
                     continue
                 else:
-                    index_list[i] -= time_steps_per_year
+                    index_list[_i] -= time_steps_per_year
 
             return index_list
 
@@ -188,30 +188,31 @@ class Building:
             # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
             f = [self.settings.eer, self.settings.cop][self.settings.season]
 
-            costs = (Q / f) * (3600 / self.dt_trnsys) * electricity_price
+            costs = (Q / f) * (self.dt_trnsys / 3600) * electricity_price
 
             return costs
 
         # prediction horizon in terms of time steps, instead of hours
-        pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
+        pred_hor_time_steps_trnsys = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
+        pred_hor_time_steps_pred = int(self.settings.pred_hor * 3600 / self.settings.dt_pred)
 
         alpha_pos, alpha_neg, beta, gamma = 1, 1, 4, 1.5  # todo DUMMIES
-        electricity_price = np.array([0.1] * pred_hor_time_steps)  # [€/kWh] todo DUMMY
+        electricity_price = np.array([0.1] * pred_hor_time_steps_pred)  # [€/kWh] todo DUMMY
         cost_pred = get_heatpump_costs(electricity_price)
 
         indices = get_indices()  # get right indices of weather data
 
         Q_solar = self.igs[indices]  # W/m²
         T_out = self.ta[indices]  # °C
-        Q_heat = np.zeros(pred_hor_time_steps)  # W
-        Q_help = np.zeros(pred_hor_time_steps)  # W
+        Q_heat = np.zeros(pred_hor_time_steps_pred)  # W
+        Q_help = np.zeros(pred_hor_time_steps_pred)  # W
 
         dHeat = self.settings.dHeat  # W
         T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
 
         # region SCIPY SOLVER
 
-        bounds = ((self.max_cooling, self.max_heating),) * pred_hor_time_steps
+        bounds = ((self.max_cooling, self.max_heating),) * pred_hor_time_steps_pred
 
         result = spo.minimize(get_lse, Q_heat, bounds=bounds)
 
@@ -231,7 +232,7 @@ class Building:
         while not objective_met and counter < self.settings.max_count:
 
             # loop through hours of prediction horizon
-            for i in range(pred_hor_time_steps):
+            for i in range(pred_hor_time_steps_pred):
 
                 # positive perturbation
                 Q_heat[i] = min(Q_help[i] + dHeat, self.max_heating)  # limit to maximum heating power
