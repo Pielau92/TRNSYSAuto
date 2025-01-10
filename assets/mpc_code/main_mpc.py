@@ -139,7 +139,7 @@ class Building:
         self.igs = interpolate(self.igs, 3600 / self.dt_trnsys)
         self.ign = interpolate(self.ign, 3600 / self.dt_trnsys)
 
-    def optimize(self):
+    def optimize(self, start_value=None):
         """todo"""
 
         def get_lse(Q_hc):
@@ -204,8 +204,12 @@ class Building:
 
         Q_solar = self.igs[indices]  # W/m²
         T_out = self.ta[indices]  # °C
-        Q_heat = np.zeros(pred_hor_time_steps_pred)  # W
-        Q_help = np.zeros(pred_hor_time_steps_pred)  # W
+        if start_value:
+            Q_heat = [start_value] * pred_hor_time_steps_pred  # W
+            Q_help = Q_heat  # W
+        else:
+            Q_heat = np.zeros(pred_hor_time_steps_pred)  # W
+            Q_help = np.zeros(pred_hor_time_steps_pred)  # W
 
         dHeat = self.settings.dHeat  # W
         T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
