@@ -6,7 +6,7 @@
 #
 # MKu, 2022-02-15
 
-import numpy
+import numpy as np
 import os
 
 try:
@@ -17,7 +17,7 @@ except ModuleNotFoundError:
 thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
 global building  # building class
-global temp  # temporary value holder
+global Q_heat_start
 global value_loggers
 global delimiter
 global filename_logger
@@ -35,6 +35,9 @@ def StartTime(TRNData):
     global value_loggers
     global delimiter
     global filename_logger
+    global Q_heat_start
+
+    Q_heat_start = None
 
     inputs = TRNData[thisModule]["inputs"]
 
@@ -91,7 +94,7 @@ def StartTime(TRNData):
 # Iteration: function called at each TRNSYS iteration within a time step
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
-    global temp
+    global Q_heat_start
 
     inputs = TRNData[thisModule]["inputs"]
 
@@ -118,9 +121,10 @@ def Iteration(TRNData):
         building.settings.T_start_in = inputs[10]  # room temperature [°C]
         building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
 
-        temp = building.optimize()[0]  # python output, first value of Q_heat
+        Q_heat = building.optimize(Q_heat_start)  # python output
 
-    TRNData[thisModule]["outputs"][0] = temp    # store Python output value inside temporary variable
+    TRNData[thisModule]["outputs"][0] = Q_heat[0]    # output is first value of Q_heat
+    Q_heat_start = np.append(Q_heat[1:], Q_heat[-1])    # predicted heating power as starting point in next iteration
 
     # write to values logger
     zone_nr = int(inputs[12])
@@ -131,7 +135,7 @@ def Iteration(TRNData):
 
         for value in inputs:
             f.write(f'{delimiter}{round(value, 2)}'.replace('.', ','))
-        f.write(f'{delimiter}{temp}'.replace('.', ','))
+        f.write(f'{delimiter}{Q_heat[0]}'.replace('.', ','))
 
     return
 
