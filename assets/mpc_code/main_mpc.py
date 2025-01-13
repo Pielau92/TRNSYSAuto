@@ -78,6 +78,10 @@ class Building:
         self.ta = None  # outside temperature [°C]
         self.igs = None  # global radiation, south [W/m²]
         self.ign = None  # global radiation, north [W/m²]
+
+        # electricity price data
+        self.electricity_price = None   # electricity price [€/kWh]
+
         self.time_step_nr = 0
 
         self.settings = SettingsMPC()
@@ -130,14 +134,38 @@ class Building:
         self.ign = np.array(self.ign)
 
         if not self.dt_trnsys == 3600:
-            self.interpolate_weather_data()
+            self.interpolate_external_data()
 
-    def interpolate_weather_data(self):
+    def read_electricity_price_data(self, path_trnsys_input_file,
+                                    filename_price_data='EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2023.txt'):
+
+        path_sim_dir = os.path.dirname(path_trnsys_input_file)
+        path_price_data = os.path.join(path_sim_dir, filename_price_data)
+
+        lines = Path(path_price_data).read_text().splitlines()
+        reader = csv.reader(lines, delimiter='\t')
+        # todo: offset und col_index_* in settings verstauen
+        offset = 2
+
+        # column index of specific rows
+        col_index = 2
+
+        electricity_price = []
+        for index, row in enumerate(reader):
+            if index < offset:
+                continue  # apply offset by skipping the first rows
+            electricity_price.append(float(row[col_index])/1000)    # convert from €/MWh to €/kWh
+
+        # save as numpy array
+        self.electricity_price = np.array(electricity_price)
+
+    def interpolate_external_data(self):
         """Interpolate weather data to right length."""
 
         self.ta = interpolate(self.ta, 3600 / self.dt_trnsys)
         self.igs = interpolate(self.igs, 3600 / self.dt_trnsys)
         self.ign = interpolate(self.ign, 3600 / self.dt_trnsys)
+        self.electricity_price = interpolate(self.electricity_price, 3600 / self.dt_trnsys)
 
     def optimize(self, start_value=None):
         """todo"""
@@ -200,10 +228,12 @@ class Building:
         electricity_price = np.array([0.1] * pred_hor_time_steps_pred)  # [€/kWh] todo DUMMY
         cost_pred = get_heatpump_costs(electricity_price)
 
-        indices = get_indices()  # get right indices of weather data
+        indices = get_indices()  # get right indices of weather and electricity price data
 
         Q_solar = self.igs[indices]  # W/m²
         T_out = self.ta[indices]  # °C
+        electricity_price = self.electricity_price[indices]  # €/kWh
+
         if start_value is None:
             Q_heat = np.zeros(pred_hor_time_steps_pred)  # W
             Q_help = np.zeros(pred_hor_time_steps_pred)  # W
