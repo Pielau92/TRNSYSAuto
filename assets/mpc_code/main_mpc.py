@@ -204,12 +204,12 @@ class Building:
 
         Q_solar = self.igs[indices]  # W/m²
         T_out = self.ta[indices]  # °C
-        if start_value:
-            Q_heat = [start_value] * pred_hor_time_steps_pred  # W
-            Q_help = Q_heat  # W
-        else:
+        if start_value is None:
             Q_heat = np.zeros(pred_hor_time_steps_pred)  # W
             Q_help = np.zeros(pred_hor_time_steps_pred)  # W
+        else:
+            Q_heat = start_value    # W
+            Q_help = Q_heat  # W
 
         dHeat = self.settings.dHeat  # W
         T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
