@@ -143,10 +143,10 @@ class Building:
         """todo"""
 
         def get_lse(Q_hc):
-            T_in, T_tab = self.predict(Q_hc, Q_solar, T_out)
-            alpha = get_alpha(T_in - T_sp)
+            _T_in, _T_tab = self.predict(Q_hc, Q_solar, T_out)
+            alpha = get_alpha(_T_in - T_sp)
             electricity_costs = np.abs(Q_hc) * cost_pred
-            return np.sum((alpha * np.abs(T_in - T_sp) ** beta) + electricity_costs ** gamma)
+            return np.sum((alpha * np.abs(_T_in - T_sp) ** beta) + electricity_costs ** gamma)
 
         def get_alpha(temperature_deviation):
             """Return alpha factor (for the lse calculation) from the deviation of the room temperature from the
@@ -226,7 +226,9 @@ class Building:
         # else:
         #     print(result.message)
 
-        return result.x
+        T_in, T_tab = self.predict(result.x, Q_solar, T_out)
+
+        return result.x#, T_in, T_tab
 
         # endregion
 
