@@ -133,9 +133,6 @@ class Building:
         self.igs = np.array(self.igs)
         self.ign = np.array(self.ign)
 
-        if not self.dt_trnsys == 3600:
-            self.interpolate_external_data()
-
     def read_electricity_price_data(self, path_trnsys_input_file,
                                     filename_price_data='EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2023.txt'):
 
@@ -172,9 +169,10 @@ class Building:
 
         def get_lse(Q_hc):
             _T_in, _T_tab = self.predict(Q_hc, Q_solar, T_out)
+            cost_pred = get_heatpump_costs(Q_hc)
             alpha = get_alpha(_T_in - T_sp)
-            electricity_costs = np.abs(Q_hc) * cost_pred
-            return np.sum((alpha * np.abs(_T_in - T_sp) ** beta) + electricity_costs ** gamma)
+            # electricity_costs = np.abs(Q_hc) * cost_pred
+            return np.sum((alpha * np.abs(_T_in - T_sp) ** beta) + cost_pred ** gamma)
 
         def get_alpha(temperature_deviation):
             """Return alpha factor (for the lse calculation) from the deviation of the room temperature from the
@@ -216,23 +214,22 @@ class Building:
             # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
             f = [self.settings.eer, self.settings.cop][self.settings.season]
 
-            costs = (Q / f) * (self.dt_trnsys / 3600) * electricity_price
+            costs = (np.abs(Q) / f) * (self.dt_trnsys / 3600) * electricity_price
 
             return costs
+
+        alpha_pos, alpha_neg, beta, gamma = 1, 5, 4, 1.3  # todo DUMMIES
 
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps_trnsys = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
         pred_hor_time_steps_pred = int(self.settings.pred_hor * 3600 / self.settings.dt_pred)
-
-        alpha_pos, alpha_neg, beta, gamma = 1, 1, 4, 1.5  # todo DUMMIES
-        electricity_price = np.array([0.1] * pred_hor_time_steps_pred)  # [€/kWh] todo DUMMY
-        cost_pred = get_heatpump_costs(electricity_price)
 
         indices = get_indices()  # get right indices of weather and electricity price data
 
         Q_solar = self.igs[indices]  # W/m²
         T_out = self.ta[indices]  # °C
         electricity_price = self.electricity_price[indices]  # €/kWh
+        electricity_price[electricity_price < 0] = 0
 
         if start_value is None:
             Q_heat = np.zeros(pred_hor_time_steps_pred)  # W
@@ -245,11 +242,13 @@ class Building:
         T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
 
         # region SCIPY SOLVER
-
-        bounds = ((self.max_cooling, self.max_heating),) * pred_hor_time_steps_pred
-
-        result = spo.minimize(get_lse, Q_heat, bounds=bounds)
-
+        bound = ((
+            [self.max_cooling, 0][self.settings.season],    # minimum heating/cooling power
+            [0, self.max_heating][self.settings.season]     # maximum heating/cooling power
+                 ),)
+        bounds = bound * pred_hor_time_steps_pred
+        # bounds = ((self.max_cooling, self.max_heating),) * pred_hor_time_steps_pred
+        result = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10})
         # if result.success:
         #     print(result.x)
         #     print(result.fun)
@@ -304,7 +303,9 @@ class Building:
             objective_met = abs((best_LSE[counter] - best_LSE[counter - 1])) <= self.settings.ChgProgTol
             counter += 1
 
-        return Q_heat
+        T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
+
+        return Q_heat, T_in, T_tab
 
     def predict(self, Q_heat, Q_solar, T_out):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
@@ -329,7 +330,7 @@ class Building:
         pred_hor_time_steps = int(self.settings.pred_hor * 3600 / self.settings.dt_pred)
 
         T_in = [self.settings.T_start_in] + [0] * pred_hor_time_steps
-        T_tab = [self.settings.T_start_in] + [0] * pred_hor_time_steps
+        T_tab = [self.settings.T_start_tab] + [0] * pred_hor_time_steps
 
         for t in range(pred_hor_time_steps):
             Q_loss = (T_in[t] - T_out[t]) * self.k  # convection, transition and ventilation losses [W]
