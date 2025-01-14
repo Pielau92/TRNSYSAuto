@@ -67,6 +67,10 @@ def StartTime(TRNData):
     building.settings.pred_hor_conversion = True
 
     building.read_weather_data(path_trnsys_input_file)
+    building.read_electricity_price_data(path_trnsys_input_file)
+
+    if not building.dt_trnsys == 3600:
+        building.interpolate_external_data()
 
     # write TRNSYS predefined variables into log file
     with open(building.path_logFile, 'w') as f:
