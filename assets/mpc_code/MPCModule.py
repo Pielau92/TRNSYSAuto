@@ -45,15 +45,15 @@ def StartTime(TRNData):
     path_settings_file = os.path.dirname(path_trnsys_input_file)
 
     # TRNSYS input
-    building = Building(area=inputs[0],
-                        alpha_w=inputs[1],
-                        alpha_s=inputs[2],
-                        k=inputs[3],
-                        cp_tab=inputs[4],
-                        cp_r=inputs[5],
-                        max_heating=inputs[6],
-                        max_cooling=inputs[7],
-                        dt_trnsys=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS
+    building = Building(area=inputs[0],                 # [W]
+                        alpha_w=inputs[1],              # [W/m²K]
+                        alpha_s=inputs[2],              # [W/m²K]
+                        k=inputs[3],                    # [W/K]
+                        cp_tab=inputs[4],               # [Wh/K]
+                        cp_r=inputs[5],                 # [Wh/k]
+                        max_heating=inputs[6] * 1000,   # [W]
+                        max_cooling=inputs[7] * 1000,   # [W]
+                        dt_trnsys=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS [s]
                         )
 
     building.settings.load_settings(path_settings_file)
@@ -84,8 +84,9 @@ def StartTime(TRNData):
 
     # create header row
     delimiter = '\t'
-    headers = ['index', 'area_BTA', 'alpha_w', 'alpha_s', 'k_heatloss', 'cbta', 'cr', 'qheizmax', 'qkuehlmax',
-              'heizperiode', 'theizsollminideal', 'tzone', 'tnodeo', 'Zone', 'Qheat']
+    headers = ['index', 'area_BTA [m²]', 'alpha_w [W/m²K]', 'alpha_s [W/m²K]', 'k_heatloss [W/K]', 'cbta [Wh/K]',
+               'cr [Wh/K]', 'qheizmax [kW]', 'qkuehlmax [kW]', 'heizperiode [bool]', 'theizsollminideal [°C]',
+               'tzone [°C]', 'tnodeo [°C]', 'Zone', 'Qheat [kW]']
     headers = delimiter.join(headers)
 
     # write header row into values logger
@@ -127,7 +128,7 @@ def Iteration(TRNData):
 
         Q_heat = building.optimize(Q_heat_start)  # python output
 
-    TRNData[thisModule]["outputs"][0] = Q_heat[0]    # output is first value of Q_heat
+    TRNData[thisModule]["outputs"][0] = Q_heat[0] / 1000    # output is first value of Q_heat, kW
     Q_heat_start = np.append(Q_heat[1:], Q_heat[-1])    # predicted heating power as starting point in next iteration
 
     # write to values logger
