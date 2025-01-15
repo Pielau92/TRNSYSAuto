@@ -6,7 +6,7 @@
 #
 # MKu, 2022-02-15
 
-import numpy
+import numpy as np
 import os
 
 try:
@@ -17,7 +17,7 @@ except ModuleNotFoundError:
 thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
 global building  # building class
-global temp  # temporary value holder
+global Q_heat_start
 global value_loggers
 global delimiter
 global filename_logger
@@ -35,6 +35,9 @@ def StartTime(TRNData):
     global value_loggers
     global delimiter
     global filename_logger
+    global Q_heat_start
+
+    Q_heat_start = None
 
     inputs = TRNData[thisModule]["inputs"]
 
@@ -64,6 +67,10 @@ def StartTime(TRNData):
     building.settings.pred_hor_conversion = True
 
     building.read_weather_data(path_trnsys_input_file)
+    building.read_electricity_price_data(path_trnsys_input_file)
+
+    if not building.dt_trnsys == 3600:
+        building.interpolate_external_data()
 
     # write TRNSYS predefined variables into log file
     with open(building.path_logFile, 'w') as f:
@@ -91,17 +98,22 @@ def StartTime(TRNData):
 # Iteration: function called at each TRNSYS iteration within a time step
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
-    global temp
+    global Q_heat_start
 
     inputs = TRNData[thisModule]["inputs"]
 
     building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
     # region FOR DEBUGGING PURPOSES
-    # skipto = 365*24*3600/building.dt_trnsys - 100   # skip optimization algorithm until this time step
-    # if building.time_step_nr < skipto:
-    #     TRNData[thisModule]["outputs"][0] = 10  # store Python output value inside temporary variable
-    #     return
+
+    # skip optimization algorithm until this time step, return dummy value instead
+    skip_to = 365 * 24 * 3600 / building.dt_trnsys - 100  # skip to those last iterations
+    skip_to = None  
+
+    if skip_to and building.time_step_nr < (365*24*3600/building.dt_trnsys - skip_to):
+        TRNData[thisModule]["outputs"][0] = 10
+        return
+
     # endregion
 
     # "Iteration" triggers every n time steps
@@ -113,9 +125,10 @@ def Iteration(TRNData):
         building.settings.T_start_in = inputs[10]  # room temperature [°C]
         building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
 
-        temp = building.optimize()[0]  # python output, first value of Q_heat
+        Q_heat = building.optimize(Q_heat_start)  # python output
 
-    TRNData[thisModule]["outputs"][0] = temp    # store Python output value inside temporary variable
+    TRNData[thisModule]["outputs"][0] = Q_heat[0]    # output is first value of Q_heat
+    Q_heat_start = np.append(Q_heat[1:], Q_heat[-1])    # predicted heating power as starting point in next iteration
 
     # write to values logger
     zone_nr = int(inputs[12])
@@ -126,7 +139,7 @@ def Iteration(TRNData):
 
         for value in inputs:
             f.write(f'{delimiter}{round(value, 2)}'.replace('.', ','))
-        f.write(f'{delimiter}{temp}'.replace('.', ','))
+        f.write(f'{delimiter}{Q_heat[0]}'.replace('.', ','))
 
     return
 
