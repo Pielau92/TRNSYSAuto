@@ -140,7 +140,7 @@ def Iteration(TRNData):
 
         for value in inputs:
             f.write(f'{delimiter}{round(value, 2)}'.replace('.', ','))
-        f.write(f'{delimiter}{Q_heat[0]}'.replace('.', ','))
+        f.write(f'{delimiter}{TRNData[thisModule]["outputs"][0]}'.replace('.', ','))
 
     return
 
