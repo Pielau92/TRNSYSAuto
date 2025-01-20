@@ -82,16 +82,24 @@ def StartTime(TRNData):
     zone_nr = int(inputs[12])
     filename_logger = f'log_values_zone{str(zone_nr)}.log'
 
-    # create header row
-    delimiter = '\t'
-    headers = ['index', 'area_BTA [m²]', 'alpha_w [W/m²K]', 'alpha_s [W/m²K]', 'k_heatloss [W/K]', 'cbta [Wh/K]',
+    # header lists
+    headers_inputs = ['area_BTA [m²]', 'alpha_w [W/m²K]', 'alpha_s [W/m²K]', 'k_heatloss [W/K]', 'cbta [Wh/K]',
                'cr [Wh/K]', 'qheizmax [kW]', 'qkuehlmax [kW]', 'heizperiode [bool]', 'theizsollminideal [°C]',
+               'tzone [°C]', 'tnodeo [°C]', 'Zone']
+    headers_time_steps = ['index', 'heizperiode [bool]', 'theizsollminideal [°C]',
                'tzone [°C]', 'tnodeo [°C]', 'Zone', 'Qheat [kW]']
-    headers = delimiter.join(headers)
 
-    # write header row into values logger
+    # add delimiter
+    delimiter = '\t'
+    headers_inputs = delimiter.join(headers_inputs)
+    headers_time_steps = delimiter.join(headers_time_steps)
+
+    # write into values logger...
     with open(filename_logger, 'w') as f:
-        f.write(headers)
+        f.write(f'{headers_inputs}\n')   # ...header of input values from TRNSYS
+        for value in inputs:    # ...input values from TRNSYS
+            f.write(f'{round(value, 2)}{delimiter}'.replace('.', ','))
+        f.write(f'\n\n{headers_time_steps}')    # ...header of time step values
 
     return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
 
@@ -133,14 +141,14 @@ def Iteration(TRNData):
 
     # write to values logger
     zone_nr = int(inputs[12])
+    log_outputs = [building.settings.season, building.settings.setpoint_temperature, inputs[10], inputs[11], zone_nr,
+     TRNData[thisModule]["outputs"][0]]
     filename_logger = f'log_values_zone{str(zone_nr)}.log'
     with open(filename_logger, 'a') as f:
         # f.write(f'\n{row}')
         f.write(f'\n{building.time_step_nr}')
-
-        for value in inputs:
-            f.write(f'{delimiter}{round(value, 2)}'.replace('.', ','))
-        f.write(f'{delimiter}{TRNData[thisModule]["outputs"][0]}'.replace('.', ','))
+        for log_output in log_outputs:
+            f.write(f'{delimiter}{log_output}'.replace('.', ','))
 
     return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
 
