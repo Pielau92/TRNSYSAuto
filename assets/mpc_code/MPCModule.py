@@ -25,7 +25,7 @@ global filename_logger
 # Initialization: function called at TRNSYS initialization
 # ----------------------------------------------------------------------------------------------------------------------
 def Initialization(TRNData):
-    return
+    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
 
 
 # StartTime: function called at TRNSYS starting time (not an actual time step, initial values should be reported)
@@ -93,7 +93,7 @@ def StartTime(TRNData):
     with open(filename_logger, 'w') as f:
         f.write(headers)
 
-    return
+    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
 
 
 # Iteration: function called at each TRNSYS iteration within a time step
@@ -113,7 +113,7 @@ def Iteration(TRNData):
 
     if skip_to and building.time_step_nr < (365*24*3600/building.dt_trnsys - skip_to):
         TRNData[thisModule]["outputs"][0] = 10
-        return
+        return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
 
     # endregion
 
@@ -142,14 +142,14 @@ def Iteration(TRNData):
             f.write(f'{delimiter}{round(value, 2)}'.replace('.', ','))
         f.write(f'{delimiter}{TRNData[thisModule]["outputs"][0]}'.replace('.', ','))
 
-    return
+    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
 
 
 # EndOfTimeStep: function called at the end of each time step, after iteration and before moving on to next time step
 # ----------------------------------------------------------------------------------------------------------------------
 def EndOfTimeStep(TRNData):
 
-    return
+    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
 
 
 # LastCallOfSimulation: function called at the end of the simulation (once) - outputs are meaningless at this call
@@ -167,4 +167,4 @@ def LastCallOfSimulation(TRNData):
     # if stepNo == nSteps-1:     # Remember: TRNSYS steps go from 0 to (number of steps - 1)
     #     do stuff that needs to be done only at the end of simulation
 
-    return
+    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
