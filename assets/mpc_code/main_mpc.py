@@ -257,7 +257,7 @@ class Building:
 
         T_in, T_tab = self.predict(result.x, Q_solar, T_out)
 
-        return result.x#, T_in, T_tab
+        return result.x, T_in, T_tab
 
         # endregion
 

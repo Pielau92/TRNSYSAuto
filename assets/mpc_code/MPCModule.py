@@ -126,7 +126,7 @@ def Iteration(TRNData):
         building.settings.T_start_in = inputs[10]  # room temperature [°C]
         building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
 
-        Q_heat = building.optimize(Q_heat_start)  # python output
+        Q_heat, T_in, T_tab = building.optimize(Q_heat_start)  # python output
 
     TRNData[thisModule]["outputs"][0] = Q_heat[0] / 1000    # output is first value of Q_heat, kW
     Q_heat_start = np.append(Q_heat[1:], Q_heat[-1])    # predicted heating power as starting point in next iteration
