@@ -248,7 +248,7 @@ class Building:
                  ),)
         bounds = bound * pred_hor_time_steps_pred
         # bounds = ((self.max_cooling, self.max_heating),) * pred_hor_time_steps_pred
-        result = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10})
+        result = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10, "ftol": 1e-5, "gtol": 1e-5})
         # if result.success:
         #     print(result.x)
         #     print(result.fun)
