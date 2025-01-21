@@ -152,7 +152,7 @@ def Iteration(TRNData):
         # f.write(f'\n{row}')
         f.write(f'\n{building.time_step_nr}')
         for log_output in log_outputs:
-            f.write(f'{delimiter}{log_output}'.replace('.', ','))
+            f.write(f'{delimiter}{round(log_output,2)}'.replace('.', ','))
 
     return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
 
