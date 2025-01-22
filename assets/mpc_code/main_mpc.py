@@ -80,7 +80,7 @@ class Building:
         self.ign = None  # global radiation, north [W/m²]
 
         # electricity price data
-        self.electricity_price = None   # electricity price [€/kWh]
+        self.electricity_price = None  # electricity price [€/kWh]
 
         self.time_step_nr = 0
 
@@ -151,7 +151,7 @@ class Building:
         for index, row in enumerate(reader):
             if index < offset:
                 continue  # apply offset by skipping the first rows
-            electricity_price.append(float(row[col_index])/1000)    # convert from €/MWh to €/kWh
+            electricity_price.append(float(row[col_index]) / 1000)  # convert from €/MWh to €/kWh
 
         # save as numpy array
         self.electricity_price = np.array(electricity_price)
@@ -164,19 +164,42 @@ class Building:
         self.ign = interpolate(self.ign, 3600 / self.dt_trnsys)
         self.electricity_price = interpolate(self.electricity_price, 3600 / self.dt_trnsys)
 
-    def optimize(self, start_value=None):
-        """todo"""
+    def optimize(self, initial_guess=None):
+        """Optimize the heating/cooling power.
+
+         Calculates the optimal heating/cooling power on the basis of the following framework:
+            - tries to reach the setpoint temperature within a defined prediction horizon
+            - constrained by the maximal heating and cooling power respectively
+            - variable energy costs
+
+        Parameters
+        ----------
+        initial_guess : numpy.ndarray[float]
+            Initial guess for the heating/cooling power within the prediction horizon
+
+        Returns
+        -------
+        Q_heat : numpy.ndarray[float]
+            Calculated heating/cooling power, reaching the set point temperature within the prediction horizon
+        T_in : numpy.ndarray[float]
+            Predicted room temperature, resulting from the computed heating/cooling power
+        T_tab : numpy.ndarray[float]
+            Predicted TAB temperature, resulting from the computed heating/cooling power
+        """
 
         def get_lse(Q_hc):
+            """Get least square error using modified formula."""
+
             _T_in, _T_tab = self.predict(Q_hc, Q_solar, T_out)
             cost_pred = get_heatpump_costs(Q_hc)
             alpha = get_alpha(_T_in - T_sp)
-            # electricity_costs = np.abs(Q_hc) * cost_pred
+
             return np.sum((alpha * np.abs(_T_in - T_sp) ** beta) + cost_pred ** gamma)
 
         def get_alpha(temperature_deviation):
             """Return alpha factor (for the lse calculation) from the deviation of the room temperature from the
             setpoint temperature."""
+
             alpha_val = []
             for val in temperature_deviation:
                 if val >= 0:
@@ -187,11 +210,13 @@ class Building:
             return alpha_val
 
         def get_indices():
-            """Get list of indices for the current prediction horizon. Takes the following into account:
-             - prediction horizon
-             - current time step
-             - time step durations (of TRNSYS and prediction)
-             - prediction horizon exceeding the end of the current year
+            """Get list of indices for the current prediction horizon.
+
+            Takes the following into account:
+                - prediction horizon
+                - current time step
+                - time step durations (of TRNSYS and prediction)
+                - prediction horizon exceeding the end of the current year
              """
 
             index_list = list(range(
@@ -210,13 +235,12 @@ class Building:
             return index_list
 
         def get_heatpump_costs(Q):
+            """Get energy costs of heat pump."""
 
             # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
             f = [self.settings.eer, self.settings.cop][self.settings.season]
 
-            costs = (np.abs(Q) / f) * (self.dt_trnsys / 3600) * electricity_price
-
-            return costs
+            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * electricity_price
 
         alpha_pos, alpha_neg, beta, gamma = 1, 5, 4, 1.3  # todo DUMMIES
 
@@ -226,86 +250,32 @@ class Building:
 
         indices = get_indices()  # get right indices of weather and electricity price data
 
-        Q_solar = self.igs[indices]  # W/m²
-        T_out = self.ta[indices]  # °C
-        electricity_price = self.electricity_price[indices]  # €/kWh
-        electricity_price[electricity_price < 0] = 0
+        Q_solar = self.igs[indices]  # solar radiation [W/m²]
+        T_out = self.ta[indices]  # outside temperature [°C]
+        electricity_price = self.electricity_price[indices]  # [€/kWh]
+        electricity_price[electricity_price < 0] = 0  # no electricity price < 0 allowed, otherwise error
 
-        if start_value is None:
-            Q_heat = np.zeros(pred_hor_time_steps_pred)  # W
-            Q_help = np.zeros(pred_hor_time_steps_pred)  # W
+        # get initial guess for heating/cooling power [W]
+        if initial_guess is None:
+            Q_heat = np.zeros(pred_hor_time_steps_pred)
         else:
-            Q_heat = start_value    # W
-            Q_help = Q_heat  # W
+            Q_heat = initial_guess
 
-        dHeat = self.settings.dHeat  # W
-        T_sp = [self.settings.setpoint_temperature] * int(self.settings.pred_hor * 3600 / self.settings.dt_pred)  # °C
+        T_sp = [self.settings.setpoint_temperature] * len(Q_heat)  # [°C]
 
-        # region SCIPY SOLVER
+        # define bounds
         bound = ((
-            [self.max_cooling, 0][self.settings.season],    # minimum heating/cooling power
-            [0, self.max_heating][self.settings.season]     # maximum heating/cooling power
+                     [self.max_cooling, 0][self.settings.season],  # minimum heating/cooling power [W]
+                     [0, self.max_heating][self.settings.season]  # maximum heating/cooling power [W]
                  ),)
         bounds = bound * pred_hor_time_steps_pred
-        # bounds = ((self.max_cooling, self.max_heating),) * pred_hor_time_steps_pred
-        result = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10, "ftol": 1e-5, "gtol": 1e-5})
-        # if result.success:
-        #     print(result.x)
-        #     print(result.fun)
-        # else:
-        #     print(result.message)
 
-        T_in, T_tab = self.predict(result.x, Q_solar, T_out)
+        # optimize using scipy solver
+        Q = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10, "ftol": 1e-5, "gtol": 1e-5})
 
-        return result.x, T_in, T_tab
+        T_in, T_tab = self.predict(Q.x, Q_solar, T_out)
 
-        # endregion
-
-        best_LSE = np.zeros(self.settings.max_count)
-        objective_met = False
-        counter = 1
-        while not objective_met and counter < self.settings.max_count:
-
-            # loop through hours of prediction horizon
-            for i in range(pred_hor_time_steps_pred):
-
-                # positive perturbation
-                Q_heat[i] = min(Q_help[i] + dHeat, self.max_heating)  # limit to maximum heating power
-                lse_positive = get_lse(Q_heat)  # least square error, positive perturbation
-
-                # negative perturbation
-                Q_heat[i] = max(Q_help[i] - dHeat, self.max_cooling)  # limit to minimum cooling power
-                lse_negative = get_lse(Q_heat)  # least square error, negative perturbation
-
-                # baseline calculation
-                Q_heat[i] = Q_help[i]
-                lse_baseline = get_lse(Q_heat)  # least square error, baseline calculation
-
-                # interpretation of perturbation effect
-                match np.argmin([lse_baseline, lse_negative, lse_positive]):
-                    case 0:  # baseline calculation has lowest least square error
-                        pass
-                    case 1:  # negative perturbation has lowest least square error
-                        Q_heat[i] -= dHeat
-                    case 2:  # positive perturbation has lowest least square error
-                        Q_heat[i] += dHeat
-
-                best_LSE[counter] = np.min([lse_baseline, lse_negative, lse_positive])
-
-                # limit to max heating power during heating season / limit to max cooling power, during cooling season
-                max_value = [0, self.max_heating][self.settings.season]
-                min_value = [self.max_cooling, 0][self.settings.season]
-                Q_heat[i] = np.clip(Q_heat[i], min_value, max_value)
-
-                Q_help[i] = Q_heat[i]
-
-            Q_help = Q_heat
-            objective_met = abs((best_LSE[counter] - best_LSE[counter - 1])) <= self.settings.ChgProgTol
-            counter += 1
-
-        T_in, T_tab = self.predict(Q_heat, Q_solar, T_out)
-
-        return Q_heat, T_in, T_tab
+        return Q.x, T_in, T_tab
 
     def predict(self, Q_heat, Q_solar, T_out):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
