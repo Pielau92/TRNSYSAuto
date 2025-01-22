@@ -277,7 +277,9 @@ class Building:
 
         T_in, T_tab = self.predict(Q.x, Q_solar, T_out)
 
-        return Q.x, T_in, T_tab
+        result = Q.x - Q.x % self.settings.heat_pump_mod_step
+
+        return result, T_in, T_tab
 
     def predict(self, Q_heat, Q_solar, T_out):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
@@ -329,6 +331,7 @@ class SettingsMPC:
         self.mpc_trigger = int()  # how often the mpc controller is triggered (1=every time step, 4=every 4th, etc.)
         self.cop = float()  # coefficient of performance (COP) of heat pump for heating
         self.eer = float()  # energy efficiency ratio (EER) of heat pump for cooling
+        self.heat_pump_mod_step = int()  # modulation step size of heat pump [W]
         self.cost_optimization = bool()  # cost optimization flag
 
         # least square error calculation constants
