@@ -87,7 +87,7 @@ def StartTime(TRNData):
                'cr [Wh/K]', 'qheizmax [kW]', 'qkuehlmax [kW]', 'heizperiode [bool]', 'theizsollminideal [°C]',
                'tzone [°C]', 'tnodeo [°C]', 'Zone']
     headers_time_steps = ['index', 'heizperiode [bool]', 'theizsollminideal [°C]',
-               'tzone [°C]', 'tnodeo [°C]', 'Zone', 'Qheat [kW]']
+               'tzone [°C]', 'tnodeo [°C]', 'Zone', 'Qheat [kW]', 'Costs [€]']
 
     # add delimiter
     delimiter = '\t'
@@ -136,9 +136,9 @@ def Iteration(TRNData):
         building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
 
         if str(zone_nr) in Q_heat_start.keys():
-            Q_heat, T_in, T_tab = building.optimize(Q_heat_start[str(zone_nr)])  # python output
+            Q_heat, T_in, T_tab, costs = building.optimize(Q_heat_start[str(zone_nr)])  # python output
         else:
-            Q_heat, T_in, T_tab = building.optimize()  # python output
+            Q_heat, T_in, T_tab, costs = building.optimize()  # python output
 
     Q_heat_start[str(zone_nr)] = \
         np.append(Q_heat[1:], Q_heat[-1])  # predicted heating power as starting point in next iteration
@@ -146,7 +146,7 @@ def Iteration(TRNData):
 
     # write to values logger
     log_outputs = [building.settings.season, building.settings.setpoint_temperature, inputs[10], inputs[11], zone_nr,
-     TRNData[thisModule]["outputs"][0]]
+     TRNData[thisModule]["outputs"][0], costs[0]]
     filename_logger = f'log_values_zone{str(zone_nr)}.log'
     with open(filename_logger, 'a') as f:
         # f.write(f'\n{row}')

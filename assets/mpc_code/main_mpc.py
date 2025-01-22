@@ -235,7 +235,7 @@ class Building:
             return index_list
 
         def get_heatpump_costs(Q):
-            """Get energy costs of heat pump."""
+            """Get energy costs of heat pump in €."""
 
             if not self.settings.cost_optimization:
                 return Q * 0    # no costs
@@ -275,11 +275,12 @@ class Building:
         Q = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10, "ftol": self.settings.optimizer_tolerance,
                                                                   "gtol": self.settings.optimizer_tolerance})
 
-        T_in, T_tab = self.predict(Q.x, Q_solar, T_out)
-
         result = Q.x - Q.x % self.settings.heat_pump_mod_step
 
-        return result, T_in, T_tab
+        T_in, T_tab = self.predict(result, Q_solar, T_out)
+        costs = get_heatpump_costs(result)
+
+        return result, T_in, T_tab, costs
 
     def predict(self, Q_heat, Q_solar, T_out):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
