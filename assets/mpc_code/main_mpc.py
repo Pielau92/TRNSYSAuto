@@ -237,6 +237,9 @@ class Building:
         def get_heatpump_costs(Q):
             """Get energy costs of heat pump."""
 
+            if not self.settings.cost_optimization:
+                return Q * 0    # no costs
+
             # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
             f = [self.settings.eer, self.settings.cop][self.settings.season]
 
