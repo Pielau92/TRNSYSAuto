@@ -194,7 +194,7 @@ class Building:
             cost_pred = get_heatpump_costs(Q_hc)
             alpha = get_alpha(_T_in - T_sp)
 
-            return np.sum((alpha * np.abs(_T_in - T_sp) ** beta) + cost_pred ** gamma)
+            return np.sum((alpha * np.abs(_T_in - T_sp) ** self.settings.beta) + cost_pred ** self.settings.gamma)
 
         def get_alpha(temperature_deviation):
             """Return alpha factor (for the lse calculation) from the deviation of the room temperature from the
@@ -203,9 +203,9 @@ class Building:
             alpha_val = []
             for val in temperature_deviation:
                 if val >= 0:
-                    alpha_val.append(alpha_pos)
+                    alpha_val.append(self.settings.alpha_pos)
                 elif val < 0:
-                    alpha_val.append(alpha_neg)
+                    alpha_val.append(self.settings.alpha_neg)
 
             return alpha_val
 
@@ -242,8 +242,6 @@ class Building:
 
             return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * electricity_price
 
-        alpha_pos, alpha_neg, beta, gamma = 1, 5, 4, 1.3  # todo DUMMIES
-
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps_trnsys = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
         pred_hor_time_steps_pred = int(self.settings.pred_hor * 3600 / self.settings.dt_pred)
@@ -271,7 +269,8 @@ class Building:
         bounds = bound * pred_hor_time_steps_pred
 
         # optimize using scipy solver
-        Q = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10, "ftol": 1e-5, "gtol": 1e-5})
+        Q = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10, "ftol": self.settings.optimizer_tolerance,
+                                                                  "gtol": self.settings.optimizer_tolerance})
 
         T_in, T_tab = self.predict(Q.x, Q_solar, T_out)
 
@@ -321,15 +320,19 @@ class SettingsMPC:
         self._settings = ConfigParser()
         self._settings.optionxform = str  # keeps capital letters when reading .ini file
 
-        self.dHeat = int()  # perturbation value [W]
         self.dt_pred = int()  # time step of the prediction [s]
-        self.max_count = int()  # max. runs of iteration possible
-        self.ChgProgTol = float()  # termination criterion optimization - change in least square error
+        self.optimizer_tolerance = float()  # termination criterion optimization - change in least square error
         self.pred_hor = int()  # prediction horizon [h]
         self.mpc_trigger = int()  # how often the mpc controller is triggered (1=every time step, 4=every 4th, etc.)
         self.cop = float()  # coefficient of performance (COP) of heat pump for heating
         self.eer = float()  # energy efficiency ratio (EER) of heat pump for cooling
         self.cost_optimization = bool()  # cost optimization flag
+
+        # least square error calculation constants
+        self.alpha_pos = float()  # alpha factor (positive deviation)
+        self.alpha_neg = float()  # alpha factor (negative deviation)
+        self.beta = float()  # beta exponent
+        self.gamma = float()  # gamma exponent
 
         # TRNSYS specific simulation parameters
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
