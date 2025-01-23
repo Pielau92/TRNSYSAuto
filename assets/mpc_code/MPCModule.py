@@ -12,7 +12,7 @@ import os
 try:
     from main_mpc import Building
 except ModuleNotFoundError:
-    from assets.mpc_code.main_mpc import Building   # for debugging purposes
+    from assets.mpc_code.main_mpc import Building  # for debugging purposes
 
 thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
@@ -22,10 +22,11 @@ global value_loggers
 global delimiter
 global filename_logger
 
+
 # Initialization: function called at TRNSYS initialization
 # ----------------------------------------------------------------------------------------------------------------------
 def Initialization(TRNData):
-    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
+    return TRNData  # usually only empty return statement, but return TRNData for testing with pytest
 
 
 # StartTime: function called at TRNSYS starting time (not an actual time step, initial values should be reported)
@@ -84,10 +85,10 @@ def StartTime(TRNData):
 
     # header lists
     headers_inputs = ['area_BTA [m²]', 'alpha_w [W/m²K]', 'alpha_s [W/m²K]', 'k_heatloss [W/K]', 'cbta [Wh/K]',
-               'cr [Wh/K]', 'qheizmax [kW]', 'qkuehlmax [kW]', 'heizperiode [bool]', 'theizsollminideal [°C]',
-               'tzone [°C]', 'tnodeo [°C]', 'Zone']
+                      'cr [Wh/K]', 'qheizmax [kW]', 'qkuehlmax [kW]', 'heizperiode [bool]', 'theizsollminideal [°C]',
+                      'tzone [°C]', 'tnodeo [°C]', 'Zone']
     headers_time_steps = ['index', 'heizperiode [bool]', 'theizsollminideal [°C]',
-               'tzone [°C]', 'tnodeo [°C]', 'Zone', 'Qheat [kW]', 'Costs [€]']
+                          'tzone [°C]', 'tnodeo [°C]', 'Zone', 'Qheat [kW]', 'Costs [€]']
 
     # add delimiter
     delimiter = '\t'
@@ -96,12 +97,12 @@ def StartTime(TRNData):
 
     # write into values logger...
     with open(filename_logger, 'w') as f:
-        f.write(f'{headers_inputs}\n')   # ...header of input values from TRNSYS
-        for value in inputs:    # ...input values from TRNSYS
+        f.write(f'{headers_inputs}\n')  # ...header of input values from TRNSYS
+        for value in inputs:  # ...input values from TRNSYS
             f.write(f'{round(value, 2)}{delimiter}'.replace('.', ','))
-        f.write(f'\n\n{headers_time_steps}')    # ...header of time step values
+        f.write(f'\n\n{headers_time_steps}')  # ...header of time step values
 
-    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
+    return TRNData  # usually only empty return statement, but return TRNData for testing with pytest
 
 
 # Iteration: function called at each TRNSYS iteration within a time step
@@ -115,14 +116,18 @@ def Iteration(TRNData):
     building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
     # region FOR DEBUGGING PURPOSES
+    skip = False
 
-    # skip optimization algorithm until this time step, return dummy value instead
-    skip_to = 365 * 24 * 3600 / building.dt_trnsys - 100  # skip to those last iterations
-    skip_to = None  
+    if skip:
+        start_hour = 4500
+        stop_hour = 4900
+        skip_condition = not \
+            (start_hour * 3600 / building.dt_trnsys) < building.time_step_nr < (stop_hour * 3600 / building.dt_trnsys)
 
-    if skip_to and building.time_step_nr < (365*24*3600/building.dt_trnsys - skip_to):
-        TRNData[thisModule]["outputs"][0] = 10
-        return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
+        # skip optimization algorithm, return dummy value instead
+        if skip_condition:
+            TRNData[thisModule]["outputs"][0] = 10
+            return TRNData  # usually only empty return statement, but return TRNData for testing with pytest
 
     # endregion
 
@@ -142,26 +147,25 @@ def Iteration(TRNData):
 
     Q_heat_start[str(zone_nr)] = \
         np.append(Q_heat[1:], Q_heat[-1])  # predicted heating power as starting point in next iteration
-    TRNData[thisModule]["outputs"][0] = Q_heat[0] / 1000    # output is first value of Q_heat, kW
+    TRNData[thisModule]["outputs"][0] = Q_heat[0] / 1000  # output is first value of Q_heat, kW
 
     # write to values logger
     log_outputs = [building.settings.season, building.settings.setpoint_temperature, inputs[10], inputs[11], zone_nr,
-     TRNData[thisModule]["outputs"][0], costs[0]]
+                   TRNData[thisModule]["outputs"][0], costs[0]]
     filename_logger = f'log_values_zone{str(zone_nr)}.log'
     with open(filename_logger, 'a') as f:
         # f.write(f'\n{row}')
         f.write(f'\n{building.time_step_nr}')
         for log_output in log_outputs:
-            f.write(f'{delimiter}{round(log_output,2)}'.replace('.', ','))
+            f.write(f'{delimiter}{round(log_output, 2)}'.replace('.', ','))
 
-    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
+    return TRNData  # usually only empty return statement, but return TRNData for testing with pytest
 
 
 # EndOfTimeStep: function called at the end of each time step, after iteration and before moving on to next time step
 # ----------------------------------------------------------------------------------------------------------------------
 def EndOfTimeStep(TRNData):
-
-    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
+    return TRNData  # usually only empty return statement, but return TRNData for testing with pytest
 
 
 # LastCallOfSimulation: function called at the end of the simulation (once) - outputs are meaningless at this call
@@ -179,4 +183,4 @@ def LastCallOfSimulation(TRNData):
     # if stepNo == nSteps-1:     # Remember: TRNSYS steps go from 0 to (number of steps - 1)
     #     do stuff that needs to be done only at the end of simulation
 
-    return TRNData  # usually only empty return statement, but return TRNData for testint with pytest
+    return TRNData  # usually only empty return statement, but return TRNData for testing with pytest
