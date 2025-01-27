@@ -264,23 +264,33 @@ class Building:
 
         T_sp = [self.settings.setpoint_temperature] * len(Q_heat)  # [°C]
 
-        # define bounds
-        bound = ((
-                     [self.max_cooling, 0][self.settings.season],  # minimum heating/cooling power [W]
-                     [0, self.max_heating][self.settings.season]  # maximum heating/cooling power [W]
-                 ),)
-        bounds = bound * pred_hor_time_steps_pred
-
-        # optimize using scipy solver
-        Q = spo.minimize(get_lse, Q_heat, bounds=bounds, options={'eps': 10, "ftol": self.settings.optimizer_tolerance,
-                                                                  "gtol": self.settings.optimizer_tolerance})
-
-        result = Q.x - Q.x % self.settings.heat_pump_mod_step
+        result = self.scipy_solver(Q_heat, get_lse)
 
         T_in, T_tab = self.predict(result, Q_solar, T_out)
         costs = get_heatpump_costs(result)
 
         return result, T_in, T_tab, costs
+
+    def scipy_solver(self, initial_guess, objective_fun):
+
+        # define bounds
+        bound = ((
+                     [self.max_cooling, 0][self.settings.season],  # minimum heating/cooling power [W]
+                     [0, self.max_heating][self.settings.season]  # maximum heating/cooling power [W]
+                 ),)
+        bounds = bound * len(initial_guess)
+
+        # define options
+        options = {'eps': 10}
+        if self.settings.optimizer_tolerance:
+            options.update({'ftol': self.settings.optimizer_tolerance, 'gtol': self.settings.optimizer_tolerance})
+
+        # optimize
+        result = spo.minimize(fun=objective_fun, x0=initial_guess, bounds=bounds, options=options)
+
+        result = result.x - result.x % self.settings.heat_pump_mod_step   # apply modulation step size
+
+        return result
 
     def predict(self, Q_heat, Q_solar, T_out):
         """Predict room air temperature and temperature of thermally activated building (TAB) component.
