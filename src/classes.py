@@ -251,7 +251,7 @@ class SimulationSeries:
             # filename list of files to be copied into simulation subdirectories
             file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
                          'Windetc20190804.txt', 'StrahlungBruck.txt',
-                         'EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2023.txt']
+                         'EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2019.txt']
 
             # source paths
             src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
