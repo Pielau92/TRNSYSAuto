@@ -282,7 +282,7 @@ class Building:
 
         # define options
         options = {'eps': 10}
-        if self.settings.optimizer_tolerance:
+        if self.settings.set_optimizer_tolerance:
             options.update({'ftol': self.settings.optimizer_tolerance, 'gtol': self.settings.optimizer_tolerance})
 
         # optimize
@@ -338,6 +338,7 @@ class SettingsMPC:
 
         self.dt_pred = int()  # time step of the prediction [s]
         self.optimizer_tolerance = float()  # termination criterion optimization - change in least square error
+        self.set_optimizer_tolerance = bool()  # True = pass optimizer_tolerance setting to optimizer - False = ignore
         self.pred_hor = int()  # prediction horizon [h]
         self.mpc_trigger = int()  # how often the mpc controller is triggered (1=every time step, 4=every 4th, etc.)
         self.cop = float()  # coefficient of performance (COP) of heat pump for heating
