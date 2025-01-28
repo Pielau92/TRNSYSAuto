@@ -80,7 +80,7 @@ class Building:
         self.ign = None  # global radiation, north [W/m²]
 
         # electricity price data
-        self.electricity_price = None  # electricity price [€/kWh]
+        self.price_signal = None  # electricity price [€/kWh]
 
         self.time_step_nr = 0
 
@@ -153,8 +153,11 @@ class Building:
                 continue  # apply offset by skipping the first rows
             electricity_price.append(float(row[col_index]) / 1000)  # convert from €/MWh to €/kWh
 
+        # apply offset to remove negative values
+        price_signal = np.array(electricity_price) + abs(min(electricity_price))
+
         # save as numpy array
-        self.electricity_price = np.array(electricity_price)
+        self.price_signal = price_signal
 
     def interpolate_external_data(self):
         """Interpolate weather data to right length."""
@@ -162,7 +165,7 @@ class Building:
         self.ta = interpolate(self.ta, 3600 / self.dt_trnsys)
         self.igs = interpolate(self.igs, 3600 / self.dt_trnsys)
         self.ign = interpolate(self.ign, 3600 / self.dt_trnsys)
-        self.electricity_price = interpolate(self.electricity_price, 3600 / self.dt_trnsys)
+        self.price_signal = interpolate(self.price_signal, 3600 / self.dt_trnsys)
 
     def optimize(self, initial_guess=None):
         """Optimize the heating/cooling power.
@@ -253,8 +256,8 @@ class Building:
 
         Q_solar = self.igs[indices]  # solar radiation [W/m²]
         T_out = self.ta[indices]  # outside temperature [°C]
-        electricity_price = self.electricity_price[indices]  # [€/kWh]
-        electricity_price[electricity_price < 0] = 0  # no electricity price < 0 allowed, otherwise error
+        electricity_price = self.price_signal[indices]  # [€/kWh]
+        # electricity_price[electricity_price < 0] = 0  # no electricity price < 0 allowed, otherwise error
 
         # get initial guess for heating/cooling power [W]
         if initial_guess is None:
