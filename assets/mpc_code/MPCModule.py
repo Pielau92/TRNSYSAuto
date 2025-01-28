@@ -85,9 +85,9 @@ def StartTime(TRNData):
 
     # header lists
     headers_inputs = ['area_BTA [m²]', 'alpha_w [W/m²K]', 'alpha_s [W/m²K]', 'k_heatloss [W/K]', 'cbta [Wh/K]',
-                      'cr [Wh/K]', 'qheizmax [kW]', 'qkuehlmax [kW]', 'heizperiode [bool]', 'theizsollminideal [°C]',
+                      'cr [Wh/K]', 'qheizmax [kW]', 'qkuehlmax [kW]', 'heizperiode [bool]', 'tbtasoll [°C]',
                       'tzone [°C]', 'tnodeo [°C]', 'Zone']
-    headers_time_steps = ['index', 'heizperiode [bool]', 'theizsollminideal [°C]',
+    headers_time_steps = ['index', 'heizperiode [bool]', 'tbtasoll [°C]',
                           'tzone [°C]', 'tnodeo [°C]', 'Zone', 'Qheat [kW]', 'Costs [€]']
 
     # add delimiter
