@@ -134,7 +134,7 @@ class Building:
         self.ign = np.array(self.ign)
 
     def read_electricity_price_data(self, path_trnsys_input_file,
-                                    filename_price_data='EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2023.txt'):
+                                    filename_price_data='EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2019.txt'):
 
         path_sim_dir = os.path.dirname(path_trnsys_input_file)
         path_price_data = os.path.join(path_sim_dir, filename_price_data)
@@ -145,13 +145,18 @@ class Building:
         offset = 2
 
         # column index of specific rows
-        col_index = 2
+        if self.settings.price_signal == "COST":    # energy price data [€/MWh
+            col_index = 2
+            factor = 1/1000
+        elif self.settings.price_signal == "CO2":   # CO2 emissions [gCO2eq/kWh]
+            col_index = 3
+            factor = 1
 
         electricity_price = []
         for index, row in enumerate(reader):
             if index < offset:
                 continue  # apply offset by skipping the first rows
-            electricity_price.append(float(row[col_index]) / 1000)  # convert from €/MWh to €/kWh
+            electricity_price.append(float(row[col_index]) * factor)
 
         # apply offset to remove negative values
         price_signal = np.array(electricity_price) + abs(min(electricity_price))
@@ -348,6 +353,7 @@ class SettingsMPC:
         self.eer = float()  # energy efficiency ratio (EER) of heat pump for cooling
         self.heat_pump_mod_step = int()  # modulation step size of heat pump [W]
         self.cost_optimization = bool()  # cost optimization flag
+        self.price_signal = str()   # cost optimization can either take the energy price or CO2 emission into account
 
         # least square error calculation constants
         self.alpha_pos = float()  # alpha factor (positive deviation)
