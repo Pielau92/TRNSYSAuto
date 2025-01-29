@@ -113,6 +113,10 @@ def Iteration(TRNData):
     inputs = TRNData[thisModule]["inputs"]
     zone_nr = int(inputs[12])
 
+    if not zone_nr == 1:
+        TRNData[thisModule]["outputs"][0] = 1
+        return
+
     building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
     # region FOR DEBUGGING PURPOSES
