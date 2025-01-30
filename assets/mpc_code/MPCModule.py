@@ -19,7 +19,8 @@ thisModule = os.path.splitext(os.path.basename(__file__))[0]
 global building
 global delimiter
 global filename_logger
-global initial_guess
+global Q_hc
+global costs
 
 
 # Initialization: function called at TRNSYS initialization
@@ -34,12 +35,14 @@ def StartTime(TRNData):
     global building
     global delimiter
     global filename_logger
-    global initial_guess
+    global Q_hc
+    global costs
 
     inputs = TRNData[thisModule]["inputs"]
     path_trnsys_input_file = TRNData[thisModule]["TRNSYS input file path"]
     path_settings_file = os.path.dirname(path_trnsys_input_file)
-    initial_guess = {}
+    Q_hc = {}
+    costs = {}
 
     # TRNSYS input into building object
     building = Building(area=inputs[0],         # [W]
@@ -133,7 +136,8 @@ def Iteration(TRNData):
     # endregion
 
     # "Iteration" triggers every n time steps (mpc_trigger = 1 => every time step, 2 = every second time step etc.)
-    if not building.time_step_nr % building.settings.mpc_trigger:   # todo: wenn mpc_trigger > 1 dann die Werte aus initial guess outputen
+    remainder = building.time_step_nr % building.settings.mpc_trigger
+    if not remainder:
 
         # update values
         building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
@@ -142,19 +146,19 @@ def Iteration(TRNData):
         building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
 
         # pass initial guess from last iteration, if available
-        if zone_nr in initial_guess.keys():
-            Q_heat, T_in, T_tab, costs = building.optimize(initial_guess[zone_nr])
+        if zone_nr in Q_hc.keys():
+            initial_guess = np.append(Q_hc[zone_nr][1:], Q_hc[zone_nr][-1])
+            Q_hc[zone_nr], T_in, T_tab, costs[zone_nr] = building.optimize(initial_guess)
         else:
-            Q_heat, T_in, T_tab, costs = building.optimize()
+            Q_hc[zone_nr], T_in, T_tab, costs[zone_nr] = building.optimize()
 
-        # save predicted heating/cooling power as initial guess for the next iteration
-        initial_guess[zone_nr] = np.append(Q_heat[1:], Q_heat[-1])
-
-    TRNData[thisModule]["outputs"][0] = Q_heat[0]  # output is first value of Q_heat [W]
+    # output first value of Q_heat [W] (or if the mpc controller does not trigger in this iteration: take value from
+    # output of last time it was triggered
+    TRNData[thisModule]["outputs"][0] = Q_hc[zone_nr][remainder]
 
     # write to values logger
     log_outputs = [building.settings.season, building.settings.setpoint_temperature, inputs[10], inputs[11],
-                   int(zone_nr), TRNData[thisModule]["outputs"][0], costs[0]]
+                   int(zone_nr), TRNData[thisModule]["outputs"][0], costs[zone_nr][remainder]]
     filename_logger = f'log_values_zone{zone_nr}.log'
     with open(filename_logger, 'a') as f:
         # f.write(f'\n{row}')
