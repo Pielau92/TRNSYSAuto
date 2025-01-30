@@ -10,26 +10,7 @@ import csv
 import os
 
 from pathlib import Path
-from statistics import mean
 from configparser import ConfigParser
-
-
-def main():
-    # building object
-    building = Building(area=158.46,
-                        alpha_w=6.5,
-                        alpha_s=10.75,
-                        k=120.71,
-                        cp_tab=23.45,
-                        cp_r=54.91,
-                        max_heating=13000,  # heating - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
-                        max_cooling=-10000,  # cooling - both TOPS: -10 kW
-                        dt_trnsys=3600)
-
-    # import data from csv
-    # building.import_csv("Test_MPC_Python.csv")
-
-    result = building.optimize()
 
 
 class Building:
@@ -89,7 +70,7 @@ class Building:
         self.path_logFile = "PythonLog.log"
 
     @property
-    def alpha(self):  # todo: zu heat transfer coeff. ändern (Name "alpha" schon in verwendung)
+    def heat_transfer_coeff(self):
         """Heat transfer coefficient [W/m²K], depending on the current season."""
         return [self.alpha_s, self.alpha_w][self.settings.season]
 
@@ -145,12 +126,13 @@ class Building:
         offset = 2
 
         # column index of specific rows
-        if self.settings.price_signal == "COST":    # energy price data [€/MWh
+        col_index = None
+        factor = 1
+        if self.settings.price_signal == "COST":  # energy price data [€/MWh
             col_index = 2
-            factor = 1/1000
-        elif self.settings.price_signal == "CO2":   # CO2 emissions [gCO2eq/kWh]
+            factor /= 1000
+        elif self.settings.price_signal == "CO2":  # CO2 emissions [gCO2eq/kWh]
             col_index = 3
-            factor = 1
 
         electricity_price = []
         for index, row in enumerate(reader):
@@ -167,10 +149,12 @@ class Building:
     def interpolate_external_data(self):
         """Interpolate weather data to right length."""
 
-        self.ta = interpolate(self.ta, 3600 / self.dt_trnsys)
-        self.igs = interpolate(self.igs, 3600 / self.dt_trnsys)
-        self.ign = interpolate(self.ign, 3600 / self.dt_trnsys)
-        self.price_signal = interpolate(self.price_signal, 3600 / self.dt_trnsys)
+        factor = int(3600 / self.dt_trnsys)
+
+        self.ta = interpolate(self.ta, factor)
+        self.igs = interpolate(self.igs, factor)
+        self.ign = interpolate(self.ign, factor)
+        self.price_signal = interpolate(self.price_signal, factor)
 
     def optimize(self, initial_guess=None):
         """Optimize the heating/cooling power.
@@ -246,7 +230,7 @@ class Building:
             """Get energy costs of heat pump in €."""
 
             if not self.settings.cost_optimization:
-                return Q * 0    # no costs
+                return Q * 0  # no costs
 
             # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
             f = [self.settings.eer, self.settings.cop][self.settings.season]
@@ -296,7 +280,7 @@ class Building:
         # optimize
         result = spo.minimize(fun=objective_fun, x0=initial_guess, bounds=bounds, options=options)
 
-        result = result.x - result.x % self.settings.heat_pump_mod_step   # apply modulation step size
+        result = result.x - result.x % self.settings.heat_pump_mod_step  # apply modulation step size
 
         return result
 
@@ -327,7 +311,8 @@ class Building:
 
         for t in range(pred_hor_time_steps):
             Q_loss = (T_in[t] - T_out[t]) * self.k  # convection, transition and ventilation losses [W]
-            Q_tab = (T_tab[t] - T_in[t]) * self.alpha * self.area  # thermal heat flow between room and TAB [W]
+            Q_tab = (T_tab[t] - T_in[
+                t]) * self.heat_transfer_coeff * self.area  # thermal heat flow between room and TAB [W]
 
             T_tab[t + 1] = (Q_heat[t] - Q_tab) * (self.dt_trnsys / 3600) / self.cp_tab + T_tab[t]
             T_in[t + 1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt_trnsys / 3600) / self.cp_r + T_in[t]
@@ -353,7 +338,7 @@ class SettingsMPC:
         self.eer = float()  # energy efficiency ratio (EER) of heat pump for cooling
         self.heat_pump_mod_step = int()  # modulation step size of heat pump [W]
         self.cost_optimization = bool()  # cost optimization flag
-        self.price_signal = str()   # cost optimization can either take the energy price or CO2 emission into account
+        self.price_signal = str()  # cost optimization can either take the energy price or CO2 emission into account
 
         # least square error calculation constants
         self.alpha_pos = float()  # alpha factor (positive deviation)
@@ -382,7 +367,7 @@ class SettingsMPC:
         try:
             self._settings.read(path_settings_file)
         except:
-            print(f"Format error in settings file, check {self._save_path}")
+            print(f"Format error in settings file, check {path_settings_file}")
             raise SystemExit()
 
     def apply_settings(self):
@@ -445,9 +430,9 @@ def multiply_nested_list(nested_list, factor):
     """
 
     new_nested_list = []
-    for list in nested_list:
+    for _list in nested_list:
         new_list = []
-        for value in list:
+        for value in _list:
             new_list.append(int(value * factor))
         new_nested_list.append(new_list)
 
@@ -459,7 +444,7 @@ def interpolate(y, factor):
 
     Parameters
     ----------
-    y : list
+    y : list[]
         y values of array
     factor : int
         Factor by which the length of the array is to be multiplied
