@@ -80,7 +80,7 @@ def StartTime(TRNData):
     filename_logger = f'log_values_zone{str(int(inputs[12]))}.log'
 
     # header lists
-    headers_inputs\
+    headers_inputs \
         = ['area_BTA [m²]', 'alpha_w [W/m²K]', 'alpha_s [W/m²K]', 'k_heatloss [W/K]', 'cbta [Wh/K]', 'cr [Wh/K]',
            'qheizmax [W]', 'qkuehlmax [W]', 'heizperiode [bool]', 'tbtasoll [°C]', 'tzone [°C]', 'tnodeo [°C]', 'Zone']
 
@@ -105,7 +105,6 @@ def StartTime(TRNData):
 # Iteration: function called at each TRNSYS iteration within a time step
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
-
     inputs = TRNData[thisModule]["inputs"]
     zone_nr = str(int(inputs[12]))
 
