@@ -52,8 +52,8 @@ def StartTime(TRNData):
                         k=inputs[3],                    # [W/K]
                         cp_tab=inputs[4],               # [Wh/K]
                         cp_r=inputs[5],                 # [Wh/k]
-                        max_heating=inputs[6] * 1000,   # [W]
-                        max_cooling=inputs[7] * 1000,   # [W]
+                        max_heating=inputs[6],   # [W]
+                        max_cooling=inputs[7],   # [W]
                         dt_trnsys=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS [s]
                         )
 
@@ -151,7 +151,7 @@ def Iteration(TRNData):
 
     Q_heat_start[str(zone_nr)] = \
         np.append(Q_heat[1:], Q_heat[-1])  # predicted heating power as starting point in next iteration
-    TRNData[thisModule]["outputs"][0] = Q_heat[0] / 1000  # output is first value of Q_heat, kW
+    TRNData[thisModule]["outputs"][0] = Q_heat[0]  # output is first value of Q_heat, kW
 
     # write to values logger
     log_outputs = [building.settings.season, building.settings.setpoint_temperature, inputs[10], inputs[11], zone_nr,

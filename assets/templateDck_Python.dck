@@ -1018,7 +1018,7 @@ tsystems = -qbtamaxs/(minbta1+minbta2+minbta3+1)/4.18*3.6*(1-gt(queber,0))-quebe
 tsystem1 = heizperiode1*tsystemw+(1-heizperiode1)*tsystems
 *tsystem = gt(tsystem1,35)*35+(1-gt(tsystem1,35))*(lt(tsystem1,18)*18+tsystem1*(1-lt(tsystem1,18)))
 
-EQUATIONS 14	! PYTHON LINK START
+EQUATIONS 16	! PYTHON LINK START
 ! zone indizes
 zone1 = 1	
 zone2 = 2
@@ -1039,6 +1039,9 @@ cr1 = 200 * anutz1	! absolute heat capacity of room [Wh/K]
 cr2 = 200 * anutz2	
 cr3 = 200 * anutz3
 
+qheizmax_W = qheizmax * anutz1   !tz20250130 Umrechung W/m≤ auf W
+qkuehlmax_W = qkuehlmax * anutz1 !tz20250130 Umrechung W/m≤ auf W
+
 * Model "Type3157" (Type 3157)
 * 
 
@@ -1053,7 +1056,7 @@ PARAMETERS 4
 1		! 3 Number of outputs
 1		! 4 Iteration Mode
 INPUTS 13
-area_BTA1 alpha_w  alpha_s k_heatloss1 cbta1 cr1 qheizmax qkuehlmax heizperiode1 tbtasoll tzone1 tnode1o zone1
+area_BTA1 alpha_w  alpha_s k_heatloss1 cbta1 cr1 qheizmax_W qkuehlmax_W heizperiode1 tbtasoll tzone1 tnode1o zone1
 *** INITIAL INPUT VALUES
 0 0 0 0 0 0 0 0 0 0 0 0 0
 LABELS 1
@@ -1074,7 +1077,7 @@ PARAMETERS 4
 1		! 3 Number of outputs
 1		! 4 Iteration Mode
 INPUTS 13
-area_BTA2 alpha_w  alpha_s k_heatloss2 cbta2 cr2 qheizmax qkuehlmax heizperiode1 tbtasoll tzone2 tnode1o zone2
+area_BTA2 alpha_w  alpha_s k_heatloss2 cbta2 cr2 qheizmax_W qkuehlmax_W heizperiode1 tbtasoll tzone2 tnode1o zone2
 *** INITIAL INPUT VALUES
 0 0 0 0 0 0 0 0 0 0 0 0 0
 LABELS 1
@@ -1095,7 +1098,7 @@ PARAMETERS 4
 1		! 3 Number of outputs
 1		! 4 Iteration Mode
 INPUTS 13
-area_BTA3 alpha_w  alpha_s k_heatloss3 cbta3 cr3 qheizmax qkuehlmax heizperiode1 tbtasoll tzone3 tnode1o zone3
+area_BTA3 alpha_w  alpha_s k_heatloss3 cbta3 cr3 qheizmax_W qkuehlmax_W heizperiode1 tbtasoll tzone3 tnode1o zone3
 *** INITIAL INPUT VALUES
 0 0 0 0 0 0 0 0 0 0 0 0 0
 LABELS 1
@@ -1104,14 +1107,14 @@ MPCModule.py
 
 EQUATIONS 4
 
-Qheizbtapy1 = [67,1] 
+Qheizbtapy1 = [67,1] !tz20250130 laut Pierre in Watt
 Qheizbtapy2 = [68,1] 
 Qheizbtapy3 = [69,1]
 Qheizbtapy = Qheizbtapy1 ! PYTHON LINK END
 
 EQUATIONS 62
 
-tsystem = Qheizbtapy/((minbta1+0.0001)*(4.18/3.6))+tofl1u0   !n‰herungsweise
+tsystem = Qheizbtapy/((minbta1+0.0001)*(4.18/3.6))+tofl1u0   !tz20250130 Qheizbtapy in W, minbta1 in kg/h, Umrechnung W‰rmekapazit‰t 4.18 kJ/kg K von Wasser in Wh/kg K
 
 *tsystem = (tinbta1v*minbta1+tinbta2v*minbta2+tinbta3v*minbta3)/(minbta1+minbta2+minbta3+0.001) !30*heizperiode1+(1-heizperiode1)*20  !Auﬂentemperatursteuern
 tinbta1v = qbtamax1/MBTAspez/4.18*3.6*(1-gt(queber1,0))+qbtamax1/MBTAspez/4.18*3.6*gt(queber1,0)+tofl1u0  !tsystem
