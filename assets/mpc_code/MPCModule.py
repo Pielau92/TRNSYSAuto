@@ -16,11 +16,10 @@ except ModuleNotFoundError:
 
 thisModule = os.path.splitext(os.path.basename(__file__))[0]
 
-global building  # building class
-global Q_heat_start
-global value_loggers
+global building
 global delimiter
 global filename_logger
+global initial_guess
 
 
 # Initialization: function called at TRNSYS initialization
@@ -33,43 +32,42 @@ def Initialization(TRNData):
 # ----------------------------------------------------------------------------------------------------------------------
 def StartTime(TRNData):
     global building
-    global value_loggers
     global delimiter
     global filename_logger
-    global Q_heat_start
-
-    Q_heat_start = {}
+    global initial_guess
 
     inputs = TRNData[thisModule]["inputs"]
-
     path_trnsys_input_file = TRNData[thisModule]["TRNSYS input file path"]
     path_settings_file = os.path.dirname(path_trnsys_input_file)
+    initial_guess = {}
 
-    # TRNSYS input
-    building = Building(area=inputs[0],                 # [W]
-                        alpha_w=inputs[1],              # [W/m²K]
-                        alpha_s=inputs[2],              # [W/m²K]
-                        k=inputs[3],                    # [W/K]
-                        cp_tab=inputs[4],               # [Wh/K]
-                        cp_r=inputs[5],                 # [Wh/k]
-                        max_heating=inputs[6],   # [W]
-                        max_cooling=inputs[7],   # [W]
+    # TRNSYS input into building object
+    building = Building(area=inputs[0],         # [W]
+                        alpha_w=inputs[1],      # [W/m²K]
+                        alpha_s=inputs[2],      # [W/m²K]
+                        k=inputs[3],            # [W/K]
+                        cp_tab=inputs[4],       # [Wh/K]
+                        cp_r=inputs[5],         # [Wh/k]
+                        max_heating=inputs[6],  # [W]
+                        max_cooling=inputs[7],  # [W]
                         dt_trnsys=TRNData[thisModule]["simulation time step"] * 3600,  # same time step like TRNSYS [s]
                         )
 
+    # load settings
     building.settings.load_settings(path_settings_file)
     building.settings.apply_settings()
 
-    building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
+    building.settings.season = int(inputs[8])           # heating or cooling: heating = 1, cooling = 0
     building.settings.setpoint_temperature = inputs[9]
-    building.settings.T_start_in = inputs[10]  # room temperature [°C]
-    building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
-    building.settings.dt_pred = 3600
-    building.settings.pred_hor_conversion = True
+    building.settings.T_start_in = inputs[10]           # room temperature [°C]
+    building.settings.T_start_tab = inputs[11]          # thermally activated building component temperature [°C]
+    building.settings.dt_pred = 3600                    # time step during prediction/optimization
 
+    # read external data sources
     building.read_weather_data(path_trnsys_input_file)
     building.read_electricity_price_data(path_trnsys_input_file)
 
+    # interpolate external data if necessary
     if not building.dt_trnsys == 3600:
         building.interpolate_external_data()
 
@@ -79,16 +77,15 @@ def StartTime(TRNData):
             f.write(f'{var_name}:  {str(TRNData[thisModule][var_name])} \n')
         f.write('\n')
 
-    # determine values logger filename
-    zone_nr = int(inputs[12])
-    filename_logger = f'log_values_zone{str(zone_nr)}.log'
+    filename_logger = f'log_values_zone{str(int(inputs[12]))}.log'
 
     # header lists
-    headers_inputs = ['area_BTA [m²]', 'alpha_w [W/m²K]', 'alpha_s [W/m²K]', 'k_heatloss [W/K]', 'cbta [Wh/K]',
-                      'cr [Wh/K]', 'qheizmax [kW]', 'qkuehlmax [kW]', 'heizperiode [bool]', 'tbtasoll [°C]',
-                      'tzone [°C]', 'tnodeo [°C]', 'Zone']
-    headers_time_steps = ['index', 'heizperiode [bool]', 'tbtasoll [°C]',
-                          'tzone [°C]', 'tnodeo [°C]', 'Zone', 'Qheat [kW]', 'Costs [€]']
+    headers_inputs \
+        = ['area_BTA [m²]', 'alpha_w [W/m²K]', 'alpha_s [W/m²K]', 'k_heatloss [W/K]', 'cbta [Wh/K]', 'cr [Wh/K]',
+           'qheizmax [W]', 'qkuehlmax [W]', 'heizperiode [bool]', 'tbtasoll [°C]', 'tzone [°C]', 'tnodeo [°C]', 'Zone']
+
+    headers_time_steps = ['index', 'heizperiode [bool]', 'tbtasoll [°C]', 'tzone [°C]', 'tnodeo [°C]', 'Zone',
+                          'Qheat [W]', 'Costs [€]']
 
     # add delimiter
     delimiter = '\t'
@@ -100,7 +97,7 @@ def StartTime(TRNData):
         f.write(f'{headers_inputs}\n')  # ...header of input values from TRNSYS
         for value in inputs:  # ...input values from TRNSYS
             f.write(f'{round(value, 2)}{delimiter}'.replace('.', ','))
-        f.write(f'\n\n{headers_time_steps}')  # ...header of time step values
+        f.write(f'\n\n{headers_time_steps}')  # ...header of simulation variable values
 
     return TRNData  # usually only empty return statement, but return TRNData for testing with pytest
 
@@ -108,21 +105,21 @@ def StartTime(TRNData):
 # Iteration: function called at each TRNSYS iteration within a time step
 # ----------------------------------------------------------------------------------------------------------------------
 def Iteration(TRNData):
-    global Q_heat_start
-
     inputs = TRNData[thisModule]["inputs"]
-    zone_nr = int(inputs[12])
-
-    if not zone_nr == 1:
-        TRNData[thisModule]["outputs"][0] = 1
-        return
+    zone_nr = str(int(inputs[12]))
 
     building.time_step_nr = TRNData[thisModule]["current time step number"] - 1
 
     # region FOR DEBUGGING PURPOSES
-    skip = False
 
-    if skip:
+    # skip any heating zone that is not zone 1
+    if not zone_nr == "1":
+        TRNData[thisModule]["outputs"][0] = 1
+        return TRNData  # usually only empty return statement, but return TRNData for testing with pytest
+
+    skip_hours = False
+
+    if skip_hours:
         start_hour = 4500
         stop_hour = 4900
         skip_condition = not \
@@ -135,28 +132,30 @@ def Iteration(TRNData):
 
     # endregion
 
-    # "Iteration" triggers every n time steps
-    # (mpc_trigger = 1 => every time step, 2 = every second time step, and so on)
-    if not building.time_step_nr % building.settings.mpc_trigger:
+    # "Iteration" triggers every n time steps (mpc_trigger = 1 => every time step, 2 = every second time step etc.)
+    if not building.time_step_nr % building.settings.mpc_trigger:   # todo: wenn mpc_trigger > 1 dann die Werte aus initial guess outputen
+
         # update values
         building.settings.season = int(inputs[8])  # heating or cooling: heating = 1, cooling = 0
         building.settings.setpoint_temperature = inputs[9]
         building.settings.T_start_in = inputs[10]  # room temperature [°C]
         building.settings.T_start_tab = inputs[11]  # thermally activated building [°C]
 
-        if str(zone_nr) in Q_heat_start.keys():
-            Q_heat, T_in, T_tab, costs = building.optimize(Q_heat_start[str(zone_nr)])  # python output
+        # pass initial guess from last iteration, if available
+        if zone_nr in initial_guess.keys():
+            Q_heat, T_in, T_tab, costs = building.optimize(initial_guess[zone_nr])
         else:
-            Q_heat, T_in, T_tab, costs = building.optimize()  # python output
+            Q_heat, T_in, T_tab, costs = building.optimize()
 
-    Q_heat_start[str(zone_nr)] = \
-        np.append(Q_heat[1:], Q_heat[-1])  # predicted heating power as starting point in next iteration
-    TRNData[thisModule]["outputs"][0] = Q_heat[0]  # output is first value of Q_heat, kW
+        # save predicted heating/cooling power as initial guess for the next iteration
+        initial_guess[zone_nr] = np.append(Q_heat[1:], Q_heat[-1])
+
+    TRNData[thisModule]["outputs"][0] = Q_heat[0]  # output is first value of Q_heat [W]
 
     # write to values logger
-    log_outputs = [building.settings.season, building.settings.setpoint_temperature, inputs[10], inputs[11], zone_nr,
-                   TRNData[thisModule]["outputs"][0], costs[0]]
-    filename_logger = f'log_values_zone{str(zone_nr)}.log'
+    log_outputs = [building.settings.season, building.settings.setpoint_temperature, inputs[10], inputs[11],
+                   int(zone_nr), TRNData[thisModule]["outputs"][0], costs[0]]
+    filename_logger = f'log_values_zone{zone_nr}.log'
     with open(filename_logger, 'a') as f:
         # f.write(f'\n{row}')
         f.write(f'\n{building.time_step_nr}')
