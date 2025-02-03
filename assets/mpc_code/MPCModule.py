@@ -74,6 +74,8 @@ def StartTime(TRNData):
     if not building.dt_trnsys == 3600:
         building.interpolate_external_data()
 
+    building.get_price_signal()
+
     # write TRNSYS predefined variables into log file
     with open(building.path_logFile, 'w') as f:
         for var_name in TRNData[thisModule]:

@@ -60,8 +60,10 @@ class Building:
         self.igs = None  # global radiation, south [W/m²]
         self.ign = None  # global radiation, north [W/m²]
 
-        # electricity price data
-        self.price_signal = None  # electricity price [€/kWh]
+        # electricity price and emission data
+        self.electricity_price = None  # electricity price [€/kWh]
+        self.electricity_emission = None  # CO2 emissions [gCO2eq/kWh]
+        self.price_signal = None    # price (or emission) signal for grid serviceability optimization
 
         self.time_step_nr = 0
 
@@ -116,35 +118,36 @@ class Building:
 
     def read_electricity_price_data(self, path_trnsys_input_file,
                                     filename_price_data='EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2019.txt'):
+        """Read electricity price or CO2 emission data
+
+        Parameters
+        ----------
+        path_trnsys_input_file : str
+            Path to trnsys input file (dck file)
+        filename_price_data : str
+            Filename of the csv file with pricing/CO2 data
+        """
 
         path_sim_dir = os.path.dirname(path_trnsys_input_file)
         path_price_data = os.path.join(path_sim_dir, filename_price_data)
 
         lines = Path(path_price_data).read_text().splitlines()
         reader = csv.reader(lines, delimiter='\t')
+
         # todo: offset und col_index_* in settings verstauen
         offset = 2
+        col_index_price = 2
+        col_index_co2 = 3
+        factor_price = 1
+        factor_co2 = 1/1000
 
-        # column index of specific rows
-        col_index = None
-        factor = 1
-        if self.settings.price_signal == "COST":  # energy price data [€/MWh
-            col_index = 2
-            factor /= 1000
-        elif self.settings.price_signal == "CO2":  # CO2 emissions [gCO2eq/kWh]
-            col_index = 3
-
-        electricity_price = []
+        self.electricity_price = []
+        self.electricity_emission = []
         for index, row in enumerate(reader):
             if index < offset:
                 continue  # apply offset by skipping the first rows
-            electricity_price.append(float(row[col_index]) * factor)
-
-        # apply offset to remove negative values
-        price_signal = np.array(electricity_price) + abs(min(electricity_price))
-
-        # save as numpy array
-        self.price_signal = price_signal
+            self.electricity_price.append(float(row[col_index_price]) * factor_price)
+            self.electricity_emission.append(float(row[col_index_co2]) * factor_co2)
 
     def interpolate_external_data(self):
         """Interpolate weather data to right length."""
@@ -154,7 +157,22 @@ class Building:
         self.ta = interpolate(self.ta, factor)
         self.igs = interpolate(self.igs, factor)
         self.ign = interpolate(self.ign, factor)
-        self.price_signal = interpolate(self.price_signal, factor)
+        self.electricity_price = interpolate(self.electricity_price, factor)
+
+    def get_price_signal(self):
+        """Get normalized price signal for grid serviceability optimization."""
+        if self.settings.price_signal == "COST":
+            price_signal = np.array(self.electricity_price)
+        elif self.settings.price_signal == "CO2":
+            price_signal = np.array(self.electricity_emission)
+
+        # remove negative values
+        price_signal = price_signal - min(price_signal)
+
+        # normalize data (range from 0 to 1)
+        price_signal = price_signal * 1 / max(price_signal)
+
+        self.price_signal = price_signal
 
     def optimize(self, initial_guess=None):
         """Optimize the heating/cooling power.
@@ -235,7 +253,7 @@ class Building:
             # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
             f = [self.settings.eer, self.settings.cop][self.settings.season]
 
-            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * electricity_price
+            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * price_signal
 
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps_trnsys = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
@@ -245,8 +263,7 @@ class Building:
 
         Q_solar = self.igs[indices]  # solar radiation [W/m²]
         T_out = self.ta[indices]  # outside temperature [°C]
-        electricity_price = self.price_signal[indices]  # [€/kWh]
-        # electricity_price[electricity_price < 0] = 0  # no electricity price < 0 allowed, otherwise error
+        price_signal = self.price_signal[indices]  # Normalized value from 0 to 100
 
         # get initial guess for heating/cooling power [W]
         if initial_guess is None:
