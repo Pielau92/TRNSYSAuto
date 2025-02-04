@@ -201,10 +201,17 @@ class Building:
             """Get least square error using modified formula."""
 
             _T_in, _T_tab = self.predict(Q_hc, Q_solar, T_out)
-            cost_pred = get_heatpump_costs(Q_hc)
             alpha = get_alpha(_T_in - T_sp)
 
-            return np.sum((alpha * np.abs(_T_in - T_sp) ** self.settings.beta) + cost_pred ** self.settings.gamma)
+            _result = (alpha * np.abs(_T_in - T_sp) ** self.settings.beta)
+
+            if self.settings.cost_optimization:
+                f = [self.settings.eer, self.settings.cop][self.settings.season]  # todo: als property speichern
+
+                _result += ((np.abs(Q_hc) / f) *
+                            (self.dt_trnsys / 3600) * price_signal * self.settings.zeta) ** self.settings.gamma
+
+            return np.sum(_result)
 
         def get_alpha(temperature_deviation):
             """Return alpha factor (for the lse calculation) from the deviation of the room temperature from the
@@ -247,13 +254,18 @@ class Building:
         def get_heatpump_costs(Q):
             """Get energy costs of heat pump in €."""
 
-            if not self.settings.cost_optimization:
-                return Q * 0  # no costs
+            # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
+            f = [self.settings.eer, self.settings.cop][self.settings.season]    # todo: als property speichern
+
+            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * self.electricity_price[indices]
+
+        def get_heatpump_emissions(Q):
+            """Get CO2eq emissions of heat pump in todo:EINHEIT."""
 
             # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
             f = [self.settings.eer, self.settings.cop][self.settings.season]
 
-            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * price_signal
+            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * self.electricity_emission[indices]
 
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps_trnsys = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
@@ -263,7 +275,7 @@ class Building:
 
         Q_solar = self.igs[indices]  # solar radiation [W/m²]
         T_out = self.ta[indices]  # outside temperature [°C]
-        price_signal = self.price_signal[indices]  # Normalized value from 0 to 100
+        price_signal = self.price_signal[indices]  # Normalized value from 0 to 1
 
         # get initial guess for heating/cooling power [W]
         if initial_guess is None:
@@ -276,9 +288,12 @@ class Building:
         result = self.scipy_solver(Q_heat, get_lse)
 
         T_in, T_tab = self.predict(result, Q_solar, T_out)
-        costs = get_heatpump_costs(result)
 
-        return result, T_in, T_tab, costs
+        costs = get_heatpump_costs(result)
+        emissions = get_heatpump_emissions(result)
+
+
+        return result, T_in, T_tab, costs, emissions
 
     def scipy_solver(self, initial_guess, objective_fun):
 
@@ -358,10 +373,11 @@ class SettingsMPC:
         self.price_signal = str()  # cost optimization can either take the energy price or CO2 emission into account
 
         # least square error calculation constants
-        self.alpha_pos = float()  # alpha factor (positive deviation)
-        self.alpha_neg = float()  # alpha factor (negative deviation)
+        self.alpha_pos = float()  # alpha factor (positive temperature deviation)
+        self.alpha_neg = float()  # alpha factor (negative temperature deviation)
         self.beta = float()  # beta exponent
         self.gamma = float()  # gamma exponent
+        self.zeta = float()  # zeta factor
 
         # TRNSYS specific simulation parameters
         self.season = 0  # heating or cooling: heating = 1, cooling = 0

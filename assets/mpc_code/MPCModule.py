@@ -21,6 +21,7 @@ global delimiter
 global filename_logger
 global Q_hc
 global costs
+global emissions
 
 
 # Initialization: function called at TRNSYS initialization
@@ -37,12 +38,14 @@ def StartTime(TRNData):
     global filename_logger
     global Q_hc
     global costs
+    global emissions
 
     inputs = TRNData[thisModule]["inputs"]
     path_trnsys_input_file = TRNData[thisModule]["TRNSYS input file path"]
     path_settings_file = os.path.dirname(path_trnsys_input_file)
     Q_hc = {}
     costs = {}
+    emissions = {}
 
     # TRNSYS input into building object
     building = Building(area=inputs[0],         # [W]
@@ -90,7 +93,7 @@ def StartTime(TRNData):
            'qheizmax [W]', 'qkuehlmax [W]', 'heizperiode [bool]', 'tbtasoll [°C]', 'tzone [°C]', 'tnodeo [°C]', 'Zone']
 
     headers_time_steps = ['index', 'heizperiode [bool]', 'tbtasoll [°C]', 'tzone [°C]', 'tnodeo [°C]', 'Zone',
-                          'Qheat [W]', 'Costs [€]']
+                          'Qheat [W]', 'Costs [€]', 'Emissions [gCO2eq]']
 
     # add delimiter
     delimiter = '\t'
@@ -150,9 +153,9 @@ def Iteration(TRNData):
         # pass initial guess from last iteration, if available
         if zone_nr in Q_hc.keys():
             initial_guess = np.append(Q_hc[zone_nr][1:], Q_hc[zone_nr][-1])
-            Q_hc[zone_nr], T_in, T_tab, costs[zone_nr] = building.optimize(initial_guess)
+            Q_hc[zone_nr], T_in, T_tab, costs[zone_nr], emissions[zone_nr] = building.optimize(initial_guess)
         else:
-            Q_hc[zone_nr], T_in, T_tab, costs[zone_nr] = building.optimize()
+            Q_hc[zone_nr], T_in, T_tab, costs[zone_nr], emissions[zone_nr] = building.optimize()
 
     # output first value of Q_heat [W] (or if the mpc controller does not trigger in this iteration: take value from
     # output of last time it was triggered
@@ -160,7 +163,8 @@ def Iteration(TRNData):
 
     # write to values logger
     log_outputs = [building.settings.season, building.settings.setpoint_temperature, inputs[10], inputs[11],
-                   int(zone_nr), TRNData[thisModule]["outputs"][0], costs[zone_nr][remainder]]
+                   int(zone_nr), TRNData[thisModule]["outputs"][0], costs[zone_nr][remainder],
+                   emissions[zone_nr][remainder]]
     filename_logger = f'log_values_zone{zone_nr}.log'
     with open(filename_logger, 'a') as f:
         # f.write(f'\n{row}')
