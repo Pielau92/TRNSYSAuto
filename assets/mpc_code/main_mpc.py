@@ -98,7 +98,7 @@ class Building:
         path_sim_dir = os.path.dirname(path_trnsys_input_file)
         path_weather_data = os.path.join(path_sim_dir, filename_weather_data)
         # path_weather_data = \
-        #     Path('C:/Users/pierre/PycharmProjects/BBSR Sommerlicher Komfort/Basisordner/Windetc20190804.txt')
+        #     Path('C:/Users/pierre/PycharmProjects/TRNSYSAuto/Basisordner/Windetc20190804.txt')
 
         lines = Path(path_weather_data).read_text().splitlines()
         reader = csv.reader(lines, delimiter='\t')
