@@ -11,8 +11,8 @@ import openpyxl
 
 import numpy as np
 import pandas as pd
-import src.functions as functions
-import src.settings as settings
+import TRNSYSAuto.functions as functions
+import TRNSYSAuto.settings as settings
 
 from pywinauto.application import Application
 from datetime import datetime

@@ -14,8 +14,8 @@ import multiprocessing
 import os
 import sys
 import tkinter as tk
-import src.classes as classes
-import src.functions as functions
+import TRNSYSAuto.classes as classes
+import TRNSYSAuto.functions as functions
 
 """For some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
 directory/file is asked multiple times), freeze_support() prevents this."""
@@ -26,9 +26,9 @@ def get_root_dir():
     """Get root directory path."""
 
     if getattr(sys, 'frozen', False):  # if program is run from an executable .exe file
-        return os.path.dirname(sys.executable)
+        return os.path.dirname(os.path.dirname(sys.executable))
     else:  # if program is run from IDE or command window
-        return os.path.dirname(os.path.abspath(__file__))
+        return os.path.dirname(os.path.dirname(__file__))
 
 
 root_dir = get_root_dir()
@@ -65,7 +65,7 @@ def main():
     def evaluate():
         window.destroy()  # close GUI window
 
-        initialdir = os.path.join(root_dir, 'data', 'results')
+        initialdir = os.path.join(root_dir, '../data', 'results')
         path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
@@ -81,7 +81,7 @@ def main():
     def continue_simulation():
         window.destroy()  # close GUI window
 
-        initialdir = os.path.join(root_dir, 'data', 'results')
+        initialdir = os.path.join(root_dir, '../data', 'results')
         path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
@@ -96,7 +96,7 @@ def main():
     def continue_evaluation():
         window.destroy()  # close GUI window
 
-        initialdir = os.path.join(root_dir, 'data', 'results')
+        initialdir = os.path.join(root_dir, '../data', 'results')
         path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
         sim_series = functions.load(path_savefile)  # load SimulationSeries object
 
@@ -142,7 +142,7 @@ def create_sim_queue():
     Opens the explorer and asks for one or multiple simulation variants Excel files. For each selected Excel file, an
     additional SimulationSeries object is created and added a list."""
 
-    initialdir = os.path.join(root_dir, 'data', 'input')
+    initialdir = os.path.join(root_dir, '../data', 'input')
 
     return [classes.SimulationSeries(path, root_dir) for path in functions.ask_filenames(initialdir=initialdir)]
 
