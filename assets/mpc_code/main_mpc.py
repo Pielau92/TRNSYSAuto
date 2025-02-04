@@ -76,6 +76,14 @@ class Building:
         """Heat transfer coefficient [W/m²K], depending on the current season."""
         return [self.alpha_s, self.alpha_w][self.settings.season]
 
+    @property
+    def heatpump_eff_factor(self):
+        """Heat pump efficiency factor.
+
+         COP (Coefficient of Performance) for heating and EER (Energy Efficiency Ratio) for cooling
+         """
+        return [self.settings.eer, self.settings.cop][self.settings.season]
+
     def read_weather_data(self, path_trnsys_input_file, filename_weather_data='Windetc20190804.txt'):
         """Read weather data for TRNSYS simulation.
 
@@ -158,6 +166,7 @@ class Building:
         self.igs = interpolate(self.igs, factor)
         self.ign = interpolate(self.ign, factor)
         self.electricity_price = interpolate(self.electricity_price, factor)
+        self.electricity_emission = interpolate(self.electricity_emission, factor)
 
     def get_price_signal(self):
         """Get normalized price signal for grid serviceability optimization."""
@@ -206,9 +215,7 @@ class Building:
             _result = (alpha * np.abs(_T_in - T_sp) ** self.settings.beta)
 
             if self.settings.cost_optimization:
-                f = [self.settings.eer, self.settings.cop][self.settings.season]  # todo: als property speichern
-
-                _result += ((np.abs(Q_hc) / f) *
+                _result += ((np.abs(Q_hc) / self.heatpump_eff_factor) *
                             (self.dt_trnsys / 3600) * price_signal * self.settings.zeta) ** self.settings.gamma
 
             return np.sum(_result)
@@ -253,19 +260,12 @@ class Building:
 
         def get_heatpump_costs(Q):
             """Get energy costs of heat pump in €."""
-
-            # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
-            f = [self.settings.eer, self.settings.cop][self.settings.season]    # todo: als property speichern
-
-            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * self.electricity_price[indices]
+            return (np.abs(Q) / self.heatpump_eff_factor) * (self.dt_trnsys / 3600) * self.electricity_price[indices]
 
         def get_heatpump_emissions(Q):
-            """Get CO2eq emissions of heat pump in todo:EINHEIT."""
-
-            # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
-            f = [self.settings.eer, self.settings.cop][self.settings.season]
-
-            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * self.electricity_emission[indices]
+            """Get CO2eq emissions of heat pump in g CO2eq."""
+            return (np.abs(Q) / self.heatpump_eff_factor) * \
+                         (self.dt_trnsys / 3600) * self.electricity_emission[indices] * 1000
 
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps_trnsys = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
