@@ -1,0 +1,7 @@
+cffi==1.17.1
+numpy==2.2.2
+pip==24.2
+pycparser==2.22
+scipy==1.15.1
+setuptools==75.8.0
+wheel==0.44.0
