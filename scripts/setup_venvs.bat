@@ -26,10 +26,10 @@ cd ..
 
 echo Installing packages from requirements%VENV_NAME%.txt
 call conda activate %VENV_NAME_MAIN%
-pip install -r requirements%VENV_NAME_MAIN%.txt
+%USERPROFILE%\%CONDA%\envs\%VENV_NAME_MAIN%\python.exe -m pip install -r requirements%VENV_NAME_MAIN%.txt
 call conda deactivate
 call conda activate %VENV_NAME_TRNSYS%
-pip install -r requirements%VENV_NAME_TRNSYS%.txt
+%USERPROFILE%\%CONDA%\envs\%VENV_NAME_TRNSYS%\python.exe -m pip install -r requirements%VENV_NAME_TRNSYS%.txt
 
 echo Virtual environments %VENV_NAME_MAIN% and %VENV_NAME_TRNSYS% set up successfully!
 endlocal
