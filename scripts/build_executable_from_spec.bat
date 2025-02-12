@@ -18,9 +18,14 @@ rem Path variables
 set VENV_PATH=%USERPROFILE%\%CONDA%\envs\%VENV_NAME%
 set PYINSTALLER_PATH=%VENV_PATH%\Scripts\pyinstaller.exe
 
-rem call PyInstaller to create executable from spec file
+rem Change to parent directory
+cd ..
+
 echo Creating .exe file with PyInstaller...
-%PYINSTALLER_PATH% %SPEC_NAME%
+%PYINSTALLER_PATH% scripts\%SPEC_NAME%
+
+echo Copying executable into %CD%
+xcopy "dist\main.exe" . /y
 
 if %errorlevel% neq 0 (
     echo An error occured while creating executable .exe-file

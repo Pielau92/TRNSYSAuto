@@ -18,11 +18,14 @@ for %%i in ("%CD%\..") do set PROJECT_PATH=%%~fi
 for %%i in ("%CD%\..") do set PROJECT_NAME=%%~nxi
 set MAIN_PATH=%PROJECT_PATH%\%PROJECT_NAME%\main.py
 
-rem call PyInstaller to create executable
-echo Creating .exe file with PyInstaller...
 cd %PROJECT_PATH%
+
+echo Creating .exe file with PyInstaller...
 %PYINSTALLER_PATH% %MAIN_PATH% --clean --onefile --add-binary "C:/Users/pierre/miniconda3/DLLs/pyexpat.pyd;dlls"
 rem --hidden-import=openpyxl.cell._writer --hidden-import=win32timezone --hidden-import=tkinter --hidden-import=pyexpat  --collect-all xml.parsers.expat
+
+echo Copying executable into %PROJECT_PATH%
+xcopy "%PROJECT_PATH%\dist\main.exe" . /y
 
 if %errorlevel% neq 0 (
     echo An error occured while creating executable .exe-file
