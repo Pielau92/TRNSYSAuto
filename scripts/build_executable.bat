@@ -35,4 +35,4 @@ if %errorlevel% neq 0 (
 
 echo Executable created successfully!
 endlocal
-pause
+if "%1" neq "nopause" pause

@@ -17,7 +17,7 @@ set INNO_SETUP_EXE_PATH="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 set INNO_SETUP_SCRIPT_PATH="%CD%\%INNO_SETUP_SCRIPT_NAME%"
 
 rem Build executable .exe-file
-build_executable_from_spec.bat
+call build_executable.bat nopause
 
 rem update MPC modules in dist\assets\mpc_code directory
 xcopy "%USERPROFILE%\PycharmProjects\%PROJECT_NAME%\assets\mpc_code\main_mpc.py" "%USERPROFILE%\PycharmProjects\%PROJECT_NAME%\dist\assets\mpc_code\" /y
