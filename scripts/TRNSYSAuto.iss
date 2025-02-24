@@ -26,7 +26,7 @@ LicenseFile=C:\Users\pierre\PycharmProjects\TRNSYSAuto\license.txt
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=C:\Users\pierre\PycharmProjects\TRNSYSAuto\scripts
+OutputDir=C:\Users\pierre\PycharmProjects\TRNSYSAuto
 OutputBaseFilename=TRNSYSAuto_WINDOWS_1.0_setup
 Compression=lzma
 SolidCompression=yes
