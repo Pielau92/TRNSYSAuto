@@ -6,7 +6,7 @@ call set_variables.bat
 
 echo Building package...
 cd %PROJECT_PATH%
-%PYTHON_PATH% setup.py bdist_wheel sdist
+%PYTHON_PATH_MAIN% setup.py bdist_wheel sdist
 
 if %errorlevel% neq 0 (
     echo An error occured while building package
