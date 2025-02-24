@@ -4,7 +4,6 @@ setlocal
 rem Load variables
 call set_variables.bat
 
-rem Build package
 echo Building package...
 cd %PROJECT_PATH%
 %PYTHON_PATH% setup.py bdist_wheel sdist

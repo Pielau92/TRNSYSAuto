@@ -27,5 +27,3 @@ set PYTHON_PATH=%VENV_PATH_MAIN%\python.exe
 set PYINSTALLER_PATH=%VENV_PATH_MAIN%\Scripts\pyinstaller.exe
 set INNO_SETUP_EXE_PATH="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 set INNO_SETUP_SCRIPT_PATH="%CD%\%INNO_SETUP_SCRIPT_NAME%"
-
-rem set PROJECT_PATH=%USERPROFILE%\PycharmProjects\%PROJECT_NAME%
