@@ -1,21 +1,8 @@
 @echo off
 setlocal
 
-rem -------------------- BEFORE YOU START --------------------
-
-rem Name of Inno Setup Script
-set INNO_SETUP_SCRIPT_NAME=TRNSYSAuto.iss
-
-rem Name of Project
-set PROJECT_NAME=TRNSYSAuto
-
-rem ----------------------------------------------------------
-
-rem Path variables
-for %%i in ("%CD%\..") do set PROJECT_PATH=%%~fi
-set INNO_SETUP_EXE_PATH="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-set INNO_SETUP_SCRIPT_PATH="%CD%\%INNO_SETUP_SCRIPT_NAME%"
-set PROJECT_PATH=%USERPROFILE%\PycharmProjects\%PROJECT_NAME%
+rem Load variables
+call set_variables.bat
 
 rem Build executable .exe-file
 call build_executable.bat nopause

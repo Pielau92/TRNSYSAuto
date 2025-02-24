@@ -1,18 +1,8 @@
 @echo off
 setlocal
 
-rem -------------------- BEFORE YOU START --------------------
-
-rem Are you using miniconda3 or anaconda3?
-set CONDA=miniconda3
-
-rem Name of your virtual environment (for main modules)
-set VENV_NAME_MAIN=TRNSYSAuto
-
-rem Name of your virtual environment (for TRNSYS/python modules)
-set VENV_NAME_TRNSYS=TRNSYS
-
-rem ----------------------------------------------------------
+rem Load variables
+call set_variables.bat
 
 echo Activating %CONDA% prompt
 call "%USERPROFILE%\%CONDA%\Scripts\activate.bat"

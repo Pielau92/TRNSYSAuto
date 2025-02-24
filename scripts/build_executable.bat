@@ -1,23 +1,10 @@
 @echo off
 setlocal
 
-rem -------------------- BEFORE YOU START --------------------
+rem Load variables
+call set_variables.bat
 
-rem Are you using miniconda3 or anaconda3?
-set CONDA=miniconda3
-
-rem Name of your virtual environment
-set VENV_NAME=TRNSYSAuto
-
-rem ----------------------------------------------------------
-
-rem Path variables
-set VENV_PATH=%USERPROFILE%\%CONDA%\envs\%VENV_NAME%
-set PYINSTALLER_PATH=%VENV_PATH%\Scripts\pyinstaller.exe
-for %%i in ("%CD%\..") do set PROJECT_PATH=%%~fi
-for %%i in ("%CD%\..") do set PROJECT_NAME=%%~nxi
-set MAIN_PATH=%PROJECT_PATH%\%PROJECT_NAME%\main.py
-
+rem change directory
 cd %PROJECT_PATH%
 
 echo Creating .exe file with PyInstaller...
@@ -35,4 +22,6 @@ if %errorlevel% neq 0 (
 
 echo Executable created successfully!
 endlocal
+
+rem do not pause if batch file was called by an other batch file
 if "%1" neq "nopause" pause

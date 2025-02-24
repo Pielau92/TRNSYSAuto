@@ -1,18 +1,8 @@
 @echo off
 setlocal
 
-rem -------------------- BEFORE YOU START --------------------
-
-rem Are you using miniconda3 or anaconda3?
-set CONDA=miniconda3
-
-rem Name of your virtual environment (for main modules)
-set VENV_NAME_MAIN=TRNSYSAuto
-
-rem Name of your virtual environment (for TRNSYS/python modules)
-set VENV_NAME_TRNSYS=TRNSYS
-
-rem ----------------------------------------------------------
+rem Load variables
+call set_variables.bat
 
 echo Activating %CONDA% prompt
 call "%USERPROFILE%\%CONDA%\Scripts\activate.bat"
@@ -26,10 +16,10 @@ cd ..
 
 echo Installing packages from requirements%VENV_NAME%.txt
 call conda activate %VENV_NAME_MAIN%
-%USERPROFILE%\%CONDA%\envs\%VENV_NAME_MAIN%\python.exe -m pip install -r requirements%VENV_NAME_MAIN%.txt
+%PYTHON_PATH% -m pip install -r requirements%VENV_NAME_MAIN%.txt
 call conda deactivate
 call conda activate %VENV_NAME_TRNSYS%
-%USERPROFILE%\%CONDA%\envs\%VENV_NAME_TRNSYS%\python.exe -m pip install -r requirements%VENV_NAME_TRNSYS%.txt
+%PYTHON_PATH% -m pip install -r requirements%VENV_NAME_TRNSYS%.txt
 
 echo Virtual environments %VENV_NAME_MAIN% and %VENV_NAME_TRNSYS% set up successfully!
 endlocal
