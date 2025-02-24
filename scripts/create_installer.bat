@@ -12,6 +12,7 @@ xcopy "%PROJECT_PATH%\assets\mpc_code\main_mpc.py" "%PROJECT_PATH%\dist\assets\m
 xcopy "%PROJECT_PATH%\assets\mpc_code\MPCModule.py" "%PROJECT_PATH%\dist\assets\mpc_code\" /y
 xcopy "%PROJECT_PATH%\assets\mpc_code\settingsMPC.ini" "%PROJECT_PATH%\dist\assets\mpc_code\" /y
 xcopy "%PROJECT_PATH%\settings.ini" "%PROJECT_PATH%\dist\settings.ini"/y
+xcopy %PROJECT_PATH%\scripts %PROJECT_PATH%\dist\scripts /i /y
 
 if %errorlevel% neq 0 (
     echo An error occured while creating executable .exe-file, setup aborted!
