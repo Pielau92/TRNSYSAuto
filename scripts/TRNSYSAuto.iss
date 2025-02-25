@@ -44,6 +44,8 @@ Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\assets\*"; DestDir: "{a
 Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\data\*"; DestDir: "{app}/data"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\scripts\*"; DestDir: "{app}/scripts"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\settings.ini"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\requirementsTRNSYSAuto.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\requirementsTRNSYS.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
