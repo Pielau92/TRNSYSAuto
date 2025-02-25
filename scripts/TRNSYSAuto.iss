@@ -42,6 +42,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\{#MyAppExeName}"; DestDir: "{app}/bin"; Flags: ignoreversion
 Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\assets\*"; DestDir: "{app}/assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\data\*"; DestDir: "{app}/data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\scripts\*"; DestDir: "{app}/scripts"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\Users\pierre\PycharmProjects\TRNSYSAuto\dist\settings.ini"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
