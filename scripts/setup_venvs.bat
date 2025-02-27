@@ -5,7 +5,7 @@ rem Load variables
 call set_variables.bat
 
 echo Activating %CONDA% prompt
-call "%USERPROFILE%\%CONDA%\Scripts\activate.bat"
+call %CONDA_PATH%\Scripts\activate.bat
 
 echo Creating virtual environments "%VENV_NAME_MAIN%" and "%VENV_NAME_TRNSYS%"
 call conda create --name %VENV_NAME_MAIN% python -y

@@ -7,11 +7,11 @@ call set_variables.bat
 rem Build executable .exe-file
 call build_executable.bat nopause
 
-rem update MPC modules in dist\assets\mpc_code directory
-xcopy "%PROJECT_PATH%\assets\mpc_code\main_mpc.py" "%PROJECT_PATH%\dist\assets\mpc_code\" /y
-xcopy "%PROJECT_PATH%\assets\mpc_code\MPCModule.py" "%PROJECT_PATH%\dist\assets\mpc_code\" /y
-xcopy "%PROJECT_PATH%\assets\mpc_code\settingsMPC.ini" "%PROJECT_PATH%\dist\assets\mpc_code\" /y
-xcopy "%PROJECT_PATH%\settings.ini" "%PROJECT_PATH%\dist\settings.ini"/y
+rem Update MPC modules in dist\assets\mpc_code directory
+xcopy %PROJECT_PATH%\assets\mpc_code\main_mpc.py %PROJECT_PATH%\dist\assets\mpc_code\ /y
+xcopy %PROJECT_PATH%\assets\mpc_code\MPCModule.py %PROJECT_PATH%\dist\assets\mpc_code\ /y
+xcopy %PROJECT_PATH%\assets\mpc_code\settingsMPC.ini %PROJECT_PATH%\dist\assets\mpc_code\ /y
+xcopy %PROJECT_PATH%\settings.ini %PROJECT_PATH%\dist\settings.ini /y
 xcopy %PROJECT_PATH%\requirements%VENV_NAME_MAIN%.txt %PROJECT_PATH%\dist\ /y
 xcopy %PROJECT_PATH%\requirements%VENV_NAME_TRNSYS%.txt %PROJECT_PATH%\dist\ /y
 xcopy %PROJECT_PATH%\scripts %PROJECT_PATH%\dist\scripts /i /y
