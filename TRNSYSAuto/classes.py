@@ -46,6 +46,7 @@ class SimulationSeries:
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # pandas series with the .b18 data file names
         self.weather_series = None  # pandas series with the weather data file names
+        self.df_mpc = None  # pandas DataFrame with the simulation parameters to be replaced in the MPC settings Files
 
         # evaluation
         self.date_df = functions.create_date_column(2024)
@@ -201,6 +202,7 @@ class SimulationSeries:
         df_weather = df[df.index == 'Wetterdaten'].transpose()
         b18_series = df[df.index == 'b18'].transpose()
         df_dck = df[df.index == 'dck'].transpose()
+        df_mpc = df[df.index == 'mpc'].transpose()
 
         # convert into series
         self.weather_series = df_weather[1:].squeeze()
@@ -208,7 +210,9 @@ class SimulationSeries:
 
         # use first row as header
         df_dck.columns = df_dck.iloc[0]
+        df_mpc.columns = df_mpc.iloc[0]
         self.df_dck = df_dck[1:]
+        self.df_mpc = df_mpc[1:]
 
         # list of simulation variants
         self.sim_list = df.columns[1:].astype(str).tolist()
@@ -224,6 +228,7 @@ class SimulationSeries:
         self.weather_series.index = self.weather_series.index.map(str)
         self.b18_series.index = self.b18_series.index.map(str)
         self.df_dck.index = self.df_dck.index.map(str)
+        self.df_mpc.index = self.df_mpc.index.map(str)
 
     def setup_sim_subdirectories(self):
         """Set up simulation subdirectories.
