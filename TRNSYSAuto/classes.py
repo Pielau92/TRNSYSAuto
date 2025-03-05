@@ -77,6 +77,7 @@ class SimulationSeries:
         self.filename_logger = str()
         self.filename_trnsys_output = str()
         self.filename_savefile = str()
+        self.filename_mpc_settings = str()
         self.filenames_redundant = list()  # list of redundant TRNSYS files that are to be deleted after the simulation
         self.filenames_sim_folder = list()  # list of files in each simulation folder (necessary for TRNSYS simulation)
 
@@ -301,9 +302,13 @@ class SimulationSeries:
         for index, sim in enumerate(self.sim_list):
             path_sim = os.path.join(self.path.sim_series_dir, sim)  # path of simulation subdirectory
             path_dck = os.path.join(path_sim, self.filename_dck_template)  # path of .dck file
+            path_mpc = os.path.join(path_sim, self.filename_mpc_settings)  # path of settingsMPC.ini file
 
             create_sim_subdir()
             overwrite_dck_file_parameters()
+
+            # replace parameters inside settingsMPC.ini file
+            functions.replace_parameter_values(path_mpc, self.df_mpc.loc[sim])
 
     def save(self):
         """Save SimulationSeries object in simulation series directory."""
