@@ -10,26 +10,7 @@ import csv
 import os
 
 from pathlib import Path
-from statistics import mean
 from configparser import ConfigParser
-
-
-def main():
-    # building object
-    building = Building(area=158.46,
-                        alpha_w=6.5,
-                        alpha_s=10.75,
-                        k=120.71,
-                        cp_tab=23.45,
-                        cp_r=54.91,
-                        max_heating=13000,  # heating - reduced from 6.5 kW to 3.5 kW on 14.11.2019 //Both TOPS: 13 kW
-                        max_cooling=-10000,  # cooling - both TOPS: -10 kW
-                        dt_trnsys=3600)
-
-    # import data from csv
-    # building.import_csv("Test_MPC_Python.csv")
-
-    result = building.optimize()
 
 
 class Building:
@@ -79,8 +60,10 @@ class Building:
         self.igs = None  # global radiation, south [W/m²]
         self.ign = None  # global radiation, north [W/m²]
 
-        # electricity price data
-        self.price_signal = None  # electricity price [€/kWh]
+        # electricity price and emission data
+        self.electricity_price = None  # electricity price [€/kWh]
+        self.electricity_emission = None  # CO2 emissions [gCO2eq/kWh]
+        self.price_signal = None    # price (or emission) signal for grid serviceability optimization
 
         self.time_step_nr = 0
 
@@ -89,9 +72,17 @@ class Building:
         self.path_logFile = "PythonLog.log"
 
     @property
-    def alpha(self):  # todo: zu heat transfer coeff. ändern (Name "alpha" schon in verwendung)
+    def heat_transfer_coeff(self):
         """Heat transfer coefficient [W/m²K], depending on the current season."""
         return [self.alpha_s, self.alpha_w][self.settings.season]
+
+    @property
+    def heatpump_eff_factor(self):
+        """Heat pump efficiency factor.
+
+         COP (Coefficient of Performance) for heating and EER (Energy Efficiency Ratio) for cooling
+         """
+        return [self.settings.eer, self.settings.cop][self.settings.season]
 
     def read_weather_data(self, path_trnsys_input_file, filename_weather_data='Windetc20190804.txt'):
         """Read weather data for TRNSYS simulation.
@@ -107,7 +98,7 @@ class Building:
         path_sim_dir = os.path.dirname(path_trnsys_input_file)
         path_weather_data = os.path.join(path_sim_dir, filename_weather_data)
         # path_weather_data = \
-        #     Path('C:/Users/pierre/PycharmProjects/BBSR Sommerlicher Komfort/Basisordner/Windetc20190804.txt')
+        #     Path('C:/Users/pierre/PycharmProjects/TRNSYSAuto/Basisordner/Windetc20190804.txt')
 
         lines = Path(path_weather_data).read_text().splitlines()
         reader = csv.reader(lines, delimiter='\t')
@@ -135,42 +126,62 @@ class Building:
 
     def read_electricity_price_data(self, path_trnsys_input_file,
                                     filename_price_data='EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2019.txt'):
+        """Read electricity price or CO2 emission data
+
+        Parameters
+        ----------
+        path_trnsys_input_file : str
+            Path to trnsys input file (dck file)
+        filename_price_data : str
+            Filename of the csv file with pricing/CO2 data
+        """
 
         path_sim_dir = os.path.dirname(path_trnsys_input_file)
         path_price_data = os.path.join(path_sim_dir, filename_price_data)
 
         lines = Path(path_price_data).read_text().splitlines()
         reader = csv.reader(lines, delimiter='\t')
+
         # todo: offset und col_index_* in settings verstauen
         offset = 2
+        col_index_price = 2
+        col_index_co2 = 3
+        factor_price = 1
+        factor_co2 = 1/1000
 
-        # column index of specific rows
-        if self.settings.price_signal == "COST":    # energy price data [€/MWh
-            col_index = 2
-            factor = 1/1000
-        elif self.settings.price_signal == "CO2":   # CO2 emissions [gCO2eq/kWh]
-            col_index = 3
-            factor = 1
-
-        electricity_price = []
+        self.electricity_price = []
+        self.electricity_emission = []
         for index, row in enumerate(reader):
             if index < offset:
                 continue  # apply offset by skipping the first rows
-            electricity_price.append(float(row[col_index]) * factor)
-
-        # apply offset to remove negative values
-        price_signal = np.array(electricity_price) + abs(min(electricity_price))
-
-        # save as numpy array
-        self.price_signal = price_signal
+            self.electricity_price.append(float(row[col_index_price]) * factor_price)
+            self.electricity_emission.append(float(row[col_index_co2]) * factor_co2)
 
     def interpolate_external_data(self):
         """Interpolate weather data to right length."""
 
-        self.ta = interpolate(self.ta, 3600 / self.dt_trnsys)
-        self.igs = interpolate(self.igs, 3600 / self.dt_trnsys)
-        self.ign = interpolate(self.ign, 3600 / self.dt_trnsys)
-        self.price_signal = interpolate(self.price_signal, 3600 / self.dt_trnsys)
+        factor = int(3600 / self.dt_trnsys)
+
+        self.ta = interpolate(self.ta, factor)
+        self.igs = interpolate(self.igs, factor)
+        self.ign = interpolate(self.ign, factor)
+        self.electricity_price = interpolate(self.electricity_price, factor)
+        self.electricity_emission = interpolate(self.electricity_emission, factor)
+
+    def get_price_signal(self):
+        """Get normalized price signal for grid serviceability optimization."""
+        if self.settings.price_signal == "COST":
+            price_signal = np.array(self.electricity_price)
+        elif self.settings.price_signal == "CO2":
+            price_signal = np.array(self.electricity_emission)
+
+        # remove negative values
+        price_signal = price_signal - min(price_signal)
+
+        # normalize data (range from 0 to 1)
+        price_signal = price_signal * 1 / max(price_signal)
+
+        self.price_signal = price_signal
 
     def optimize(self, initial_guess=None):
         """Optimize the heating/cooling power.
@@ -199,10 +210,15 @@ class Building:
             """Get least square error using modified formula."""
 
             _T_in, _T_tab = self.predict(Q_hc, Q_solar, T_out)
-            cost_pred = get_heatpump_costs(Q_hc)
             alpha = get_alpha(_T_in - T_sp)
 
-            return np.sum((alpha * np.abs(_T_in - T_sp) ** self.settings.beta) + cost_pred ** self.settings.gamma)
+            _result = (alpha * np.abs(_T_in - T_sp) ** self.settings.beta)
+
+            if self.settings.cost_optimization:
+                _result += ((np.abs(Q_hc) / self.heatpump_eff_factor) *
+                            (self.dt_trnsys / 3600) * price_signal * self.settings.zeta) ** self.settings.gamma
+
+            return np.sum(_result)
 
         def get_alpha(temperature_deviation):
             """Return alpha factor (for the lse calculation) from the deviation of the room temperature from the
@@ -244,14 +260,12 @@ class Building:
 
         def get_heatpump_costs(Q):
             """Get energy costs of heat pump in €."""
+            return (np.abs(Q) / self.heatpump_eff_factor) * (self.dt_trnsys / 3600) * self.electricity_price[indices]
 
-            if not self.settings.cost_optimization:
-                return Q * 0    # no costs
-
-            # coefficient of performance (COP) when heating, energy efficiency ration (EER) when cooling
-            f = [self.settings.eer, self.settings.cop][self.settings.season]
-
-            return (np.abs(Q) / f) * (self.dt_trnsys / 3600) * electricity_price
+        def get_heatpump_emissions(Q):
+            """Get CO2eq emissions of heat pump in g CO2eq."""
+            return (np.abs(Q) / self.heatpump_eff_factor) * \
+                         (self.dt_trnsys / 3600) * self.electricity_emission[indices] * 1000
 
         # prediction horizon in terms of time steps, instead of hours
         pred_hor_time_steps_trnsys = int(self.settings.pred_hor * 3600 / self.dt_trnsys)
@@ -261,8 +275,7 @@ class Building:
 
         Q_solar = self.igs[indices]  # solar radiation [W/m²]
         T_out = self.ta[indices]  # outside temperature [°C]
-        electricity_price = self.price_signal[indices]  # [€/kWh]
-        # electricity_price[electricity_price < 0] = 0  # no electricity price < 0 allowed, otherwise error
+        price_signal = self.price_signal[indices]  # Normalized value from 0 to 1
 
         # get initial guess for heating/cooling power [W]
         if initial_guess is None:
@@ -275,9 +288,12 @@ class Building:
         result = self.scipy_solver(Q_heat, get_lse)
 
         T_in, T_tab = self.predict(result, Q_solar, T_out)
-        costs = get_heatpump_costs(result)
 
-        return result, T_in, T_tab, costs
+        costs = get_heatpump_costs(result)
+        emissions = get_heatpump_emissions(result)
+
+
+        return result, T_in, T_tab, costs, emissions
 
     def scipy_solver(self, initial_guess, objective_fun):
 
@@ -296,7 +312,7 @@ class Building:
         # optimize
         result = spo.minimize(fun=objective_fun, x0=initial_guess, bounds=bounds, options=options)
 
-        result = result.x - result.x % self.settings.heat_pump_mod_step   # apply modulation step size
+        result = result.x - result.x % self.settings.heat_pump_mod_step  # apply modulation step size
 
         return result
 
@@ -327,7 +343,8 @@ class Building:
 
         for t in range(pred_hor_time_steps):
             Q_loss = (T_in[t] - T_out[t]) * self.k  # convection, transition and ventilation losses [W]
-            Q_tab = (T_tab[t] - T_in[t]) * self.alpha * self.area  # thermal heat flow between room and TAB [W]
+            Q_tab = (T_tab[t] - T_in[
+                t]) * self.heat_transfer_coeff * self.area  # thermal heat flow between room and TAB [W]
 
             T_tab[t + 1] = (Q_heat[t] - Q_tab) * (self.dt_trnsys / 3600) / self.cp_tab + T_tab[t]
             T_in[t + 1] = (Q_tab + Q_solar[t] - Q_loss) * (self.dt_trnsys / 3600) / self.cp_r + T_in[t]
@@ -353,13 +370,14 @@ class SettingsMPC:
         self.eer = float()  # energy efficiency ratio (EER) of heat pump for cooling
         self.heat_pump_mod_step = int()  # modulation step size of heat pump [W]
         self.cost_optimization = bool()  # cost optimization flag
-        self.price_signal = str()   # cost optimization can either take the energy price or CO2 emission into account
+        self.price_signal = str()  # cost optimization can either take the energy price or CO2 emission into account
 
         # least square error calculation constants
-        self.alpha_pos = float()  # alpha factor (positive deviation)
-        self.alpha_neg = float()  # alpha factor (negative deviation)
+        self.alpha_pos = float()  # alpha factor (positive temperature deviation)
+        self.alpha_neg = float()  # alpha factor (negative temperature deviation)
         self.beta = float()  # beta exponent
         self.gamma = float()  # gamma exponent
+        self.zeta = float()  # zeta factor
 
         # TRNSYS specific simulation parameters
         self.season = 0  # heating or cooling: heating = 1, cooling = 0
@@ -382,7 +400,7 @@ class SettingsMPC:
         try:
             self._settings.read(path_settings_file)
         except:
-            print(f"Format error in settings file, check {self._save_path}")
+            print(f"Format error in settings file, check {path_settings_file}")
             raise SystemExit()
 
     def apply_settings(self):
@@ -445,9 +463,9 @@ def multiply_nested_list(nested_list, factor):
     """
 
     new_nested_list = []
-    for list in nested_list:
+    for _list in nested_list:
         new_list = []
-        for value in list:
+        for value in _list:
             new_list.append(int(value * factor))
         new_nested_list.append(new_list)
 
@@ -459,7 +477,7 @@ def interpolate(y, factor):
 
     Parameters
     ----------
-    y : list
+    y : list[]
         y values of array
     factor : int
         Factor by which the length of the array is to be multiplied

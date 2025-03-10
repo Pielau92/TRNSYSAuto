@@ -11,8 +11,8 @@ import openpyxl
 
 import numpy as np
 import pandas as pd
-import src.functions as functions
-import src.settings as settings
+import TRNSYSAuto.functions as functions
+import TRNSYSAuto.settings as settings
 
 from pywinauto.application import Application
 from datetime import datetime
@@ -46,6 +46,7 @@ class SimulationSeries:
         self.df_dck = None  # pandas DataFrame with the simulation parameters to be replaced in the .dck Files
         self.b18_series = None  # pandas series with the .b18 data file names
         self.weather_series = None  # pandas series with the weather data file names
+        self.df_mpc = None  # pandas DataFrame with the simulation parameters to be replaced in the MPC settings Files
 
         # evaluation
         self.date_df = functions.create_date_column(2024)
@@ -76,6 +77,7 @@ class SimulationSeries:
         self.filename_logger = str()
         self.filename_trnsys_output = str()
         self.filename_savefile = str()
+        self.filename_mpc_settings = str()
         self.filenames_redundant = list()  # list of redundant TRNSYS files that are to be deleted after the simulation
         self.filenames_sim_folder = list()  # list of files in each simulation folder (necessary for TRNSYS simulation)
 
@@ -201,6 +203,7 @@ class SimulationSeries:
         df_weather = df[df.index == 'Wetterdaten'].transpose()
         b18_series = df[df.index == 'b18'].transpose()
         df_dck = df[df.index == 'dck'].transpose()
+        df_mpc = df[df.index == 'mpc'].transpose()
 
         # convert into series
         self.weather_series = df_weather[1:].squeeze()
@@ -208,7 +211,9 @@ class SimulationSeries:
 
         # use first row as header
         df_dck.columns = df_dck.iloc[0]
+        df_mpc.columns = df_mpc.iloc[0]
         self.df_dck = df_dck[1:]
+        self.df_mpc = df_mpc[1:]
 
         # list of simulation variants
         self.sim_list = df.columns[1:].astype(str).tolist()
@@ -224,6 +229,7 @@ class SimulationSeries:
         self.weather_series.index = self.weather_series.index.map(str)
         self.b18_series.index = self.b18_series.index.map(str)
         self.df_dck.index = self.df_dck.index.map(str)
+        self.df_mpc.index = self.df_mpc.index.map(str)
 
     def setup_sim_subdirectories(self):
         """Set up simulation subdirectories.
@@ -296,9 +302,13 @@ class SimulationSeries:
         for index, sim in enumerate(self.sim_list):
             path_sim = os.path.join(self.path.sim_series_dir, sim)  # path of simulation subdirectory
             path_dck = os.path.join(path_sim, self.filename_dck_template)  # path of .dck file
+            path_mpc = os.path.join(path_sim, self.filename_mpc_settings)  # path of settingsMPC.ini file
 
             create_sim_subdir()
             overwrite_dck_file_parameters()
+
+            # replace parameters inside settingsMPC.ini file
+            functions.replace_parameter_values(path_mpc, self.df_mpc.loc[sim])
 
     def save(self):
         """Save SimulationSeries object in simulation series directory."""

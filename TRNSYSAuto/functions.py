@@ -1,7 +1,7 @@
 import os
 import win32com.client
 import pandas as pd
-import xlwings as xw
+# import xlwings as xw
 import tkinter as tk
 import re
 import pickle
@@ -104,13 +104,14 @@ def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_fo
                                     variant_parameter_df):
     """Output routine for variant excel file."""
 
-    wb = xw.Book(variant_output_file)
-    ws = wb.sheets[sheet_name_variant_input]
-    ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
-        ['File', 'Parameter', variant_folder]]
-    ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
-    wb.save()
-    wb.app.quit()
+    # wb = xw.Book(variant_output_file)
+    # ws = wb.sheets[sheet_name_variant_input]
+    # ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
+    #     ['File', 'Parameter', variant_folder]]
+    # ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
+    # wb.save()
+    # wb.app.quit()
+    pass
 
 
 def to_single_column(df_input):
