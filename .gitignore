@@ -1,10 +1,30 @@
-__pycache__/
+# Python
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
 
-*
+# Build
+build/
+dist/
+*.egg-info/
 
-!*/Basisordner
-!TRNSYSAuto/main.py
-!functions.py
-!classes.py
-!auswertung.py
-/__pycache__
+# Installer
+*.exe
+*.msi
+
+# Logs
+*.log
+
+.idea
+data/
+*.csv
+*.spec
+
+/docs
+/assets
+/tests
+/misc
+
+*.lnk
+*.pdf
