@@ -1,94 +1,190 @@
 import os
-import multiprocessing
-from configparser import ConfigParser
+import configparser
+
+from os.path import join
+from typing import Type, TypeVar, List
+from dataclasses import dataclass, fields
+
+T = TypeVar("T")  # type placeholder
+
+filename_configs = 'configs.ini'
 
 
-class Settings:
-    """Class for storing settings of SimulationSeries object."""
+@dataclass
+class Configs:
+    """Dataclass that contains static (imported from .ini file) and runtime (set automatically at runtime)
+    configurations."""
 
-    def __init__(self, sim_series):
-        self.sim_series = sim_series
-        self._save_path = sim_series.path.settings
-        self._settings = ConfigParser()
-        self._settings.optionxform = str  # keeps capital letters when reading .ini file
+    @dataclass
+    class General:
+        path_exe: str  # path to TRNSYS executable file
+        timeout: int  # if timeout is reached without starting another simulation, stop program [s]
+        start_time_buffer: int  # time buffer between two simulations, for increased stability [s] (optional)
+        multiprocessing_max: int  # maximum number of simulations performed simultaneously
+        multiprocessing_autodetect: bool  # if true, override multiprocessing_max with number of cpu cores
+        eval_save_interval: int  # the evaluation progress is saved after each save interval
+        conda_venv_name: str  # name of the conda virtual environment (venv) to be used
 
-    def load_settings(self):
-        try:
-            self._settings.read(self._save_path)
-        except:
-            print("Format error in settings file, check settings.ini")
-            raise SystemExit()
+    @dataclass
+    class Filenames:  # todo filename_/sheet_name_/... Präfixes loswerden
+        filename_dck_template: str
+        filename_logger: str
+        filename_trnsys_output: str
+        filename_savefile: str
+        filenames_redundant: list[str]
 
-    def apply_settings(self):
-        """Apply imported settings to SimulationSeries object.
+    @dataclass
+    class SheetNames:
+        """Excel sheet names"""
 
-        Applies the imported settings from the settings Excel file to the corresponding attributes of the
-        SimulationSeries object with the same name.
-        """
+        sheet_name_sim_variants: str
+        sheet_name_variant_input: str
+        sheet_name_calculation: str
+        sheet_name_cumulative_input: str
+        sheet_name_zone_1_input: str
+        sheet_name_zone_3_input: str
+        sheet_name_zone_1_with_operating_time: str
+        sheet_name_zone_1_without_operating_time: str
+        sheet_name_zone_3_with_operating_time: str
+        sheet_name_zone_3_without_operating_time: str
 
-        def apply_setting():
-            """Apply setting value to sim_series.
+    @dataclass
+    class ColumnHeaders:
+        var_list_zone1: list[str]
+        var_list_zone2: list[str]
+        var_list_zone3: list[str]
+        col_headers_result_column: list[str]
+        col_headers_trnsys_output: list[str]
+        col_headers_sim_variant: list[str]
 
-            Applies the individual settings to the corresponding (name of setting and of class attribute must match).
-            Automatically recognizes the type of the setting, based on the type of its corresponding class attribute.
-            Raises an error if no corresponding class attribute could be found, or an unsupported type is used (str,
-            int, float, bool, list (of strings)).
-            """
+    @dataclass
+    class Runtime:
+        """Contains configurations set at runtime."""
+        execution_time: str
+        filename_sim_variants_excel: str
 
-            if not hasattr(self.sim_series, setting):
-                raise AttributeError(f'Unknown setting "{setting}" in settings.ini file found.')
+        @property
+        def dirname_sim_series(self) -> str:
+            return self.filename_sim_variants_excel + '_' + self.execution_time
 
-            attr = getattr(self.sim_series, setting)
+    # save each configuration section in own object
+    general: General
+    filenames: Filenames
+    sheetnames: SheetNames
+    col_headers: ColumnHeaders
+    runtime: Runtime = None
 
-            if isinstance(attr, bool):
-                value = self._settings.getboolean(section, setting)
-            elif isinstance(attr, str):
-                value = self._settings.get(section, setting)
-            elif isinstance(attr, int):
-                value = self._settings.getint(section, setting)
-            elif isinstance(attr, float):
-                value = self._settings.getfloat(section, setting)
-            elif isinstance(attr, list):
-                items = self._settings.get(section, setting).split(',')  # apply comma (,) delimiter
-                value = [item.strip() for item in items]  # remove whitespaces at beginning/end of strings
-            else:
-                raise TypeError(f'Unknown type "{type(attr)}" for setting "{setting}" in settings.ini file. '
-                                f'Supported types are string, integer, float, boolean and list (of strings).')
+    """Mapping between section names used to load configurations from .ini file. Sections that are not mapped here will
+        not be loaded from the .ini file and have to be filled elsewhere, which is recommended for runtime
+        configurations for example. The mapping is structured as a dictionary, where:
+            key:    section name inside Configs dataclass
+            value:  section name inside .ini configs file
+    """
 
-            setattr(self.sim_series, setting, value)
-
-        for section in self._settings.sections():
-            for setting in self._settings.options(section):
-                apply_setting()  # save setting value into corresponding class attribute, with the correct datatype
-
-        if self.sim_series.multiprocessing_autodetect:
-            self.sim_series.multiprocessing_max = multiprocessing.cpu_count()
-
-    def save_settings(self):
-        pass
-        # with open(self._save_path, 'w') as f:
-        #     self._settings.write(f)
-
-    def reset_settings(self):
-        pass
+    load_mapping = {
+        'general': 'General',
+        'filenames': 'Filenames',
+        'sheetnames': 'Excel sheet names',
+        'col_headers': 'Column headers',
+    }
 
 
-class PathSettings:
-    """todo: docstring schreiben + zu PathConfig umbenennen (settings stehen dem User zur Verfügung, paths aber nicht
-        deshalb config)"""
+def load_from_ini(path: str) -> Configs:
+    """Load all settings from ini file.
 
-    def __init__(self, sim_series, path_original_sim_variants_excel, root_dir):
-        self.sim_series = sim_series
+    :param str path: path to settings ini file
+    :return: Settings dataclass instance, containing all loaded settings values
+    """
 
-        # original simulation variants within base directory
-        self.original_sim_variants_excel = path_original_sim_variants_excel
-        self.root = root_dir
-        self.results_dir = os.path.join(os.path.expanduser('~'), 'documents', 'TRNSYSAuto')
+    mapping = Configs.load_mapping
 
-    # @property
-    # def root(self):
-    #     """Path to root directory."""
-    #     return os.path.dirname(os.getcwd())
+    kwargs = {}
+    for field in fields(Configs):
+        if field.name in mapping.keys():
+            kwargs[field.name] = get_ini_section(path, mapping[field.name], field.type)
+        else:
+            continue  # if section is not mapped, do not load from .ini file
+
+    return Configs(**kwargs)
+
+
+def get_ini_section(path: str, section: str, cls: Type[T]) -> T:
+    """Load configuration section from ini file and return as dataclass instance.
+
+    For each attribute defined in the passed dataclass, a corresponding key value pair has to be present inside the
+    specified section of the ini file. The value of each corresponding key value pair is collected and then passed to
+    the dataclass constructor, to return an instance of said class.
+
+    :param str path: path to ini file
+    :param str section: name of the section to be loaded used in the ini file
+    :param Type[T] cls: class (not instance of it) whose instance is used to save configurations
+    :return: class instance
+    """
+
+    # read ini file
+    config = configparser.ConfigParser()
+    config.optionxform = str  # keep capital letters
+    config.read(path)
+
+    # get section, if it exists
+    if section not in config:
+        raise ValueError(f'Section "{section}" not found in {path}')
+    cfg_section = config[section]
+
+    kwargs = {}
+    for field in fields(cls):
+        name = field.name
+        typ = field.type
+
+        if field.name not in cfg_section:
+            raise ValueError(f'Missing key "{field.name}" in [{section}]')
+
+        raw = cfg_section[name]
+
+        # type conversion
+        if typ == int:
+            value = int(raw)
+        elif typ == float:
+            value = float(raw)
+        elif typ == bool:
+            value = raw.lower() in ['true', '1', 'yes', 'on', 'false', '0', 'no']
+        elif typ == str:
+            value = raw
+        elif typ == List[str] or typ == list[str]:
+            value = [x.strip() for x in raw.split(',')]
+        else:
+            raise TypeError(f'Unsupported field type: {typ}')
+
+        kwargs[name] = value
+
+    return cls(**kwargs)
+
+
+@dataclass
+class Paths:
+    _configs: Configs
+    root: str  # path to root directory
+    config: str  # path to configuration ini file
+    original_sim_variants_excel: str  # path to original simulation variants Excel file
+
+    results_dir: str = join(os.path.expanduser('~'), 'documents', 'TRNSYSAuto')  # path to results output directory
+
+    @property
+    def configs(self) -> str:
+        """Path to configs.ini file."""
+        return join(self.root, filename_configs)
+
+    @property
+    def sim_series_dir(self) -> str:
+        """Path to simulation series directory."""
+        return join(self.results_dir, self._configs.runtime.dirname_sim_series)
+
+    @property
+    def logfile(self) -> str:
+        """Path to logfile."""
+        return join(self.sim_series_dir, self._configs.filenames.filename_logger)
+
+    # todo ab da prüfen, ob die Pfade noch benötigt werden
 
     @property
     def data_dir(self, dir_name='data'):
@@ -101,36 +197,15 @@ class PathSettings:
         directory when asking to select a simulation variants Excel file)."""
         return os.path.join(self.data_dir, dir_name)
 
-    # @property
-    # def results_dir(self, dir_name='results'):
-    #     """Path to results directory (contains all simulation series folders, containing in turn all simulation and
-    #     evaluation results)."""
-    #     return os.path.join(self.data_dir, dir_name)
-
     @property
     def assets_dir(self, dir_name='assets'):
         """Path to assets directory (contains all files directly needed by TRNSYS)."""
         return os.path.join(self.root, dir_name)
 
     @property
-    def settings(self, filename='settings.ini'):
-        """Path to settings.ini file."""
-        return os.path.join(self.root, filename)
-
-    @property
-    def sim_series_dir(self):
-        """Path to simulation series directory."""
-        return os.path.join(self.results_dir, self.sim_series.dirname_sim_series)
-
-    @property
     def sim_variants_excel(self):
         """Path to simulation series Excel file, copied from the base directory "Basisordner"."""
-        return os.path.join(self.sim_series_dir, self.sim_series.filename_sim_variants_excel) + '.xlsx'
-
-    @property
-    def logfile(self):
-        """Path to logfile."""
-        return os.path.join(self.sim_series_dir, self.sim_series.filename_logger)
+        return os.path.join(self.sim_series_dir, self._configs.runtime.filename_sim_variants_excel) + '.xlsx'
 
     @property
     def evaluation_save_dir(self, dir_name='evaluation'):
@@ -155,4 +230,4 @@ class PathSettings:
     @property
     def savefile(self):
         """Path to savefile where the SimulationSeries object (and the simulation/evaluation progress) is saved."""
-        return os.path.join(self.sim_series_dir, self.sim_series.filename_savefile)
+        return os.path.join(self.sim_series_dir, self._configs.filenames.filename_savefile)
