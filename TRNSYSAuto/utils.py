@@ -7,11 +7,12 @@ import pandas as pd
 import tkinter as tk
 
 from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
+from pandas import Series, DataFrame
 
 
 # todo: numpy docstrings durch reStructuredText ersetzen
 
-def get_root_dir():
+def get_root_dir() -> str:
     """Get root directory path."""
 
     if getattr(sys, 'frozen', False):  # if program is run from an executable .exe file
@@ -20,7 +21,7 @@ def get_root_dir():
         return os.path.dirname(os.path.dirname(__file__))
 
 
-def replace_parameter_values(path_file, parameters):
+def replace_parameter_values(path_file: str, parameters: Series) -> None:
     """Find and replace parameter values within a .txt file.
 
     Finds parameter values within a .txt file, replaces them and overwrites the .txt file. For this, the following must
@@ -73,7 +74,7 @@ def replace_parameter_values(path_file, parameters):
         file.write(new_text)
 
 
-def find_and_replace(path_file, pattern, replacement):
+def find_and_replace(path_file: str, pattern: str, replacement: str) -> None:
     """Find string in text and replace by another string.
 
     Reads text from a .txt file, searches for a defined string, replaces it by another string and overwrites the .txt
@@ -96,7 +97,7 @@ def find_and_replace(path_file, pattern, replacement):
         file.write(new_text)  # overwrite file
 
 
-def update_excel_file(path_excel_file):
+def update_excel_file(path_excel_file: str) -> None:
     """Update calculations in excel file.
 
     https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
@@ -110,21 +111,7 @@ def update_excel_file(path_excel_file):
     xlapp.Quit()
 
 
-def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_folder, variant_output_file,
-                                    variant_parameter_df):
-    """Output routine for variant excel file."""
-
-    # wb = xw.Book(variant_output_file)
-    # ws = wb.sheets[sheet_name_variant_input]
-    # ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
-    #     ['File', 'Parameter', variant_folder]]
-    # ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
-    # wb.save()
-    # wb.app.quit()
-    pass
-
-
-def to_single_column(df_input):
+def to_single_column(df_input: DataFrame) -> Series:
     """Turn pandas DataFrame into one single column.
 
     All columns of df_input are stacked over each other with one free row inbetween and the column headers on top.
@@ -136,7 +123,7 @@ def to_single_column(df_input):
         'col3': [7, 8, 9]
         })
 
-        result = functions.to_single_column(df)
+        result = utils.to_single_column(df)
         print(result)
         """
 
@@ -154,13 +141,13 @@ def to_single_column(df_input):
     return single_column
 
 
-def progress_bar(progress, total):
+def progress_bar(progress: int | float, total: int | float) -> None:
     percent = 100 * (progress / float(total))
     bar = '█' * int(percent) + '-' * (100 - int(percent))
     print(f"\r|{bar}| {percent:.2f}%", end="\r")
 
 
-def ask_filenames(initialdir=None):
+def ask_filenames(initialdir: str = None) -> list[str]:
     root = tk.Tk()
     root.withdraw()
 
@@ -172,7 +159,7 @@ def ask_filenames(initialdir=None):
     return [path.replace("/", "\\") for path in filenames]
 
 
-def ask_filename(initialdir=None):
+def ask_filename(initialdir: str = None) -> str:
     root = tk.Tk()
     root.withdraw()
 
@@ -184,7 +171,7 @@ def ask_filename(initialdir=None):
     return filename.replace("/", "\\")
 
 
-def ask_dir():
+def ask_dir() -> str:
     """CAUTION: Has compatibility issues with pywinauto (explorer does not open to ask directory location), look in
     main.py for a fix."""
     root = tk.Tk()
@@ -192,7 +179,7 @@ def ask_dir():
     return filedialog.askdirectory()
 
 
-def create_date_column(year, time_increment_profiles=60):
+def create_date_column(year: int, time_increment_profiles: int = 60) -> DataFrame:
     date = pd.date_range(
         start=str(year) + '-01-01',
         end=str(year + 1) + '-01-01',
@@ -212,7 +199,7 @@ def create_date_column(year, time_increment_profiles=60):
     return date_df
 
 
-def set_env_and_paths(conda_venv_name):
+def set_env_and_paths(conda_venv_name: str) -> None:
     """ Set environment variables and paths before launching TRNEXE using Calling Python From TRNSYS.
 
     Translation and adaptation of Calling Python From TRNSYS batch file "RunTrnsysStudioWithCondaEnvironment.bat", which
@@ -249,7 +236,7 @@ def set_env_and_paths(conda_venv_name):
     os.environ["PYTHONPATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Lib\\site-packages"
 
 
-def copy_files(source_path, destination_path):
+def copy_files(source_path: str | list[str], destination_path: str | list[str]) -> list[str] | None:
     """Copy file(s) from source path(s) to destination path(s).
 
     The number of source paths must match the number of destination paths.
@@ -281,3 +268,17 @@ def copy_files(source_path, destination_path):
 
     if files_not_found:
         return files_not_found
+
+
+def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_folder, variant_output_file,
+                                    variant_parameter_df):
+    """Output routine for variant excel file."""
+
+    # wb = xw.Book(variant_output_file)
+    # ws = wb.sheets[sheet_name_variant_input]
+    # ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
+    #     ['File', 'Parameter', variant_folder]]
+    # ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
+    # wb.save()
+    # wb.app.quit()
+    pass
