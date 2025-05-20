@@ -1,13 +1,23 @@
-import os
-import win32com.client
-import pandas as pd
-# import xlwings as xw
-import tkinter as tk
+import sys, os
 import re
-import pickle
 import shutil
+import win32com.client
+
+import pandas as pd
+import tkinter as tk
 
 from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
+
+
+# todo: numpy docstrings durch reStructuredText ersetzen
+
+def get_root_dir():
+    """Get root directory path."""
+
+    if getattr(sys, 'frozen', False):  # if program is run from an executable .exe file
+        return os.path.dirname(os.path.dirname(sys.executable))
+    else:  # if program is run from IDE or command window
+        return os.path.dirname(os.path.dirname(__file__))
 
 
 def replace_parameter_values(path_file, parameters):
@@ -148,11 +158,6 @@ def progress_bar(progress, total):
     percent = 100 * (progress / float(total))
     bar = '█' * int(percent) + '-' * (100 - int(percent))
     print(f"\r|{bar}| {percent:.2f}%", end="\r")
-
-
-def load(savefile_path):
-    with open(savefile_path, 'rb') as file:
-        return pickle.load(file)
 
 
 def ask_filenames(initialdir=None):
