@@ -32,6 +32,7 @@ class Configs:
         filename_trnsys_output: str
         filename_savefile: str
         filenames_redundant: list[str]
+        filenames_templates : list [str]
 
     @dataclass
     class SheetNames:
