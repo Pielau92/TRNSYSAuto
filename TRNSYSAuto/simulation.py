@@ -63,15 +63,17 @@ class SimulationSeries:
     def setup(self):
         """Set up simulation series, as preparation for the simulation process ."""
 
+        logs = []  # save log messages until logfile is created
+
         # create directory
         if os.path.exists(self.path.sim_series_dir):
-            self.logger.info(f'Directory {self.path.sim_series_dir} already exists - deleting directory.')
+            logs.append(f'Directory {self.path.sim_series_dir} already exists - deleting directory.')
             shutil.rmtree(self.path.sim_series_dir)
 
+        logs.append(f'Creating new simulation series directory at {self.path.sim_series_dir}.')
         os.makedirs(self.path.sim_series_dir)
 
-        self.init_logger()
-        self.logger.info(f'New Directory created at {self.path.sim_series_dir}.')
+        self.init_logger(logs)
 
         self.logger.info(f'Saving copy of simulation variants Excel file at {self.path.sim_variants_excel}.')
         shutil.copy(os.path.join(self.path.original_sim_variants_excel), self.path.sim_variants_excel)
@@ -83,8 +85,14 @@ class SimulationSeries:
         # save SimulationSeries object
         self.save()
 
-    def init_logger(self):
-        """Initialize logging file."""
+    def init_logger(self, logs:list[str]=None):
+        """Initialize logging file.
+
+        Optionally, logs that would have been due before the logger is initialized can be passed. Those are logged in
+        immediately after the logger is initialized.
+
+        :param list[str] logs: list of messages to be logged in after initialization
+        """
 
         # create logger
         self.logger = logging.getLogger(__name__)
@@ -105,6 +113,9 @@ class SimulationSeries:
         # add the handlers to the logger
         self.logger.addHandler(f_handler)
         self.logger.addHandler(s_handler)
+
+        if logs:
+            [self.logger.info(log) for log in logs]
 
         self.logger.info(('Log file created successfully in {}.'.format(self.path.logfile)))
 
