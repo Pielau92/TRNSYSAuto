@@ -7,15 +7,16 @@ import shutil
 import pickle
 
 import numpy as np
-import pandas as pd
+# import pandas as pd
 import TRNSYSAuto.utils as utils
 
 from datetime import datetime
 from typing import Optional
-from dataclasses import dataclass
+# from dataclasses import dataclass
 from pywinauto.application import Application
 from TRNSYSAuto.configs import Configs, Paths, load_from_ini
-from TRNSYSAuto.evaluation import Evaluation
+# from TRNSYSAuto.evaluation import Evaluation
+from TRNSYSAuto.datalayer import ExcelData, SimParameters
 
 
 class SimulationSeries:
@@ -37,14 +38,16 @@ class SimulationSeries:
             path.original_sim_variants_excel : str
                 path to original simulation variants Excel file corresponding to the simulation series.
             """
-        self.simulations: dict[Simulation] = None  # simulations within simulation series
-        self.evaluation: Evaluation = None
+        self.simulations: dict[Simulation] = {}  # simulations within simulation series
+        # self.evaluation = Evaluation()
+        self.excel_data = ExcelData()
         self.configs: Configs = load_from_ini(path=path_config)
         self.path = Paths(_configs=self.configs,
                           root=path_root,
                           config=path_config,
                           original_sim_variants_excel=original_sim_variants_excel)
         self.logger: Optional[logging.Logger] = None
+        self.sim_success: list[bool] = []
 
         # set runtime configurations
         kwargs = {
@@ -54,8 +57,31 @@ class SimulationSeries:
         self.configs.runtime = Configs.Runtime(**kwargs)
 
         # todo: Zeilen ab hier verbesserungswürdig
-        self.setup_sim_series_dir()
-        utils.set_env_and_paths(self.conda_venv_name)
+        self.setup()
+        # utils.set_env_and_paths(self.configs.general.conda_venv_name)
+
+    def setup(self):
+        """Set up simulation series, as preparation for the simulation process ."""
+
+        # create directory
+        if os.path.exists(self.path.sim_series_dir):
+            self.logger.info(f'Directory {self.path.sim_series_dir} already exists - deleting directory.')
+            shutil.rmtree(self.path.sim_series_dir)
+
+        os.makedirs(self.path.sim_series_dir)
+
+        self.init_logger()
+        self.logger.info(f'New Directory created at {self.path.sim_series_dir}.')
+
+        self.logger.info(f'Saving copy of simulation variants Excel file at {self.path.sim_variants_excel}.')
+        shutil.copy(os.path.join(self.path.original_sim_variants_excel), self.path.sim_variants_excel)
+
+        self.init_simulations()
+
+        self.create_sim_subdirectories()
+
+        # save SimulationSeries object
+        self.save()
 
     def init_logger(self):
         """Initialize logging file."""
@@ -82,6 +108,68 @@ class SimulationSeries:
 
         self.logger.info(('Log file created successfully in {}.'.format(self.path.logfile)))
 
+    def init_simulations(self):
+        """Initialize simulations based on the simulation variants Excel file."""
+
+        self.logger.info(f'Importing simulation variants Excel file from {self.path.original_sim_variants_excel}.')
+        self.excel_data.import_excel(
+            path=self.path.original_sim_variants_excel,
+            sheet_name=self.configs.sheetnames.sheet_name_sim_variants
+        )
+
+        # get simulation parameters from imported Excel data
+        self.excel_data.get_sim_params()
+
+        variants = self.excel_data.parameters.keys()
+        for variant in variants:
+            sim_params = SimParameters(**self.excel_data.parameters[variant])
+
+            self.simulations[variant] = Simulation(
+                name=variant,
+                params=sim_params,
+                configs=self.configs,
+                paths=self.path,
+                logger=self.logger
+            )
+
+    def create_sim_subdirectories(self):
+        """Create a simulation subdirectory.
+
+        Creates a subdirectory within the simulation series directory for each simulation. Also fill each subdirectory
+        with template files and overwrites certain values inside them, based on the simulation variant Excel file."""
+
+        self.logger.info(f'Creating simulation subdirectories inside {self.path.sim_series_dir}.')
+
+        for key in self.simulations.keys():
+            sim = self.simulations[key]
+            path_sim = os.path.join(self.path.sim_series_dir, sim.name)
+
+            os.makedirs(path_sim)  # create new empty simulation subdirectory
+
+            # (relative) source paths for copying process
+            src_file_list = self.configs.filenames.filenames_templates
+            src_file_list += [
+                self.configs.filenames.filename_dck_template,
+                os.path.join('b18', sim.params.b18),
+                os.path.join('Wetterdaten', sim.params.weather)
+            ]
+
+            # (relative) destination paths for copying process
+            dst_file_list = [os.path.basename(filename) for filename in src_file_list]
+
+            # turn into absolute paths
+            src_file_list = [os.path.join(self.path.assets_dir, f) for f in src_file_list]
+            dst_file_list = [os.path.join(path_sim, f) for f in dst_file_list]
+
+            # copy specified files into simulation subdirectory
+            errors = utils.copy_files(src_file_list, dst_file_list)
+            if errors:
+                self.logger.error(f'FileNotFoundError: {", ".join(errors)}')
+                self.simulations[key].ignore = True  # simulation variant will be ignored
+                raise FileNotFoundError  # program will end if error is raised
+
+            sim.overwrite_dck_file_parameters()
+
     def save(self):
         """Pickle save SimulationSeries instance."""
 
@@ -90,21 +178,80 @@ class SimulationSeries:
         with open(self.path.savefile, 'wb') as file:
             pickle.dump(self, file)
 
-    def setup_sim_series_dir(self):  # todo rename setup_dir
-        """Set up new directory for the simulation series."""
+    def start_sim_series(self):  # todo rename "simulate"
+        """Start simulation series.
 
-        # if directory already exists, delete
-        if os.path.exists(self.path.sim_series_dir):
-            shutil.rmtree(self.path.sim_series_dir)
+        Starts the calculation of the simulation series. Multiple simulations may run simultaneously, depending on the
+        attribute "multiprocessing_max". After all simulations are done, the method checks if all simulations were
+        calculated successfully. If needed, unsuccessful simulations are calculated and checked again (this process is
+        repeated until all simulations were calculated successfully, unless some simulations are on the "ignore" list
+        anyway).
+        """
 
-        # create directory
-        os.makedirs(self.path.sim_series_dir)
+        sim_ignore = [sim.ignore for sim in self.simulations.items()]
+        self.sim_success = [sim.success for sim in self.simulations.items()]
 
-        # create logfile
-        self.init_logger()
+        # if multiprocessing is enabled, initialize lock
+        if self.configs.general.multiprocessing_max > 1:
+            lock = multiprocessing.Lock()
+        else:
+            lock = None
 
-        # save copy of simulation variants Excel file
-        shutil.copy(os.path.join(self.path.original_sim_variants_excel), self.path.sim_variants_excel)
+        while not all(np.logical_or(self.sim_success, sim_ignore)):  # check for remaining simulations
+
+            # initialize progress bar   todo Klasse dafür erstellen
+            progress = 0
+            total = len(self.sim_success) - sum(np.logical_or(self.sim_success, sim_ignore))
+            utils.progress_bar(progress, total)
+
+            self.logger.info(f'Starting simulation series "{self.configs.runtime.filename_sim_variants_excel}".')
+
+            # for index in range(len(self.sim_list)):
+            for sim in self.simulations.items():
+
+                # if already successfull or to be ignored, skip
+                if sim.success or sim.ignore:
+                    continue
+
+                try:
+
+                    if lock:
+
+                        # create a new process instance
+                        process = multiprocessing.Process(target=sim.start_sim,
+                                                          args=lock)
+                        with lock:
+                            start_time = time.time()
+                            while len(multiprocessing.active_children()) >= self.configs.general.multiprocessing_max:
+                                time.sleep(5)  # pause until number of active simulations drops below maximum
+                                if time.time() - start_time > self.configs.general.timeout:
+                                    sys.exit(
+                                        f'Timeout of {str(self.configs.general.timeout)} sec reached, program ended.')
+                            time.sleep(5)
+                            process.start()
+                        lock.acquire()
+
+                    else:  # no lock
+                        sim.start_sim()
+
+                except Exception:
+
+                    self.logger.error(f'Error occurred during simulation of {sim.name}.')
+
+                progress += 1
+                utils.progress_bar(progress, total)
+
+            # after all simulations were triggered, wait until all are done before proceeding
+            while len(multiprocessing.active_children()) > 0:
+                time.sleep(5)
+                if time.time() - start_time > self.configs.general.timeout:
+                    sys.exit(f'Timeout of {str(self.configs.general.timeout)} sec reached, program ended.')
+
+            # check for each simulation if it was successful
+            self.check_sim_success()
+
+            # save progress
+            self.save()
 
     def check_sim_success(self, reset: bool = False) -> None:
         """Check simulation success.
@@ -125,263 +272,48 @@ class SimulationSeries:
 
         # log simulation success status
         if all(self.sim_success):
-            self.logger.info(f'"Simulation of {self.filename_sim_variants_excel}" completed successfully.')
+            self.logger.info(
+                f'"Simulation of {self.configs.runtime.filename_sim_variants_excel}" completed successfully.')
         else:
             self.logger.info(
                 f'{sum(self.sim_success)} out of {len(self.sim_success)} simulations completed successfully.')
 
-    def start_sim_series(self):
-        """Start simulation series.
-
-        Starts the calculation of the simulation series. Multiple simulations may run simultaneously, depending on the
-        attribute "multiprocessing_max". After all simulations are done, the method checks if all simulations were
-        calculated successfully. If needed, unsuccessful simulations are calculated and checked again (this process is
-        repeated until all simulations were calculated successfully, unless some simulations are on the "ignore" list
-        anyway).
-        """
-
-        # initialize lock, if multiprocessing is enabled
-        if self.multiprocessing_max > 1:
-            lock = multiprocessing.Lock()
-
-        while not all(np.logical_or(self.sim_success, self.sim_ignore)):  # check for remaining simulations
-
-            # initialize progress bar
-            progress = 0
-            total = len(self.sim_list) - sum(np.logical_or(self.sim_success, self.sim_ignore))
-            utils.progress_bar(progress, total)
-
-            self.logger.info(f'Starting simulation series "{self.filename_sim_variants_excel}".')
-
-            for index in range(len(self.sim_list)):
-
-                if not self.sim_success[index] and not self.sim_ignore[index]:
-                    sim = self.sim_list[index]  # name of simulation
-                    path_dck = os.path.join(self.path.sim_series_dir, sim,
-                                            self.filename_dck_template)  # path of dck-file
-
-                    try:
-
-                        if self.multiprocessing_max > 1:
-
-                            # create a new process instance
-                            process = multiprocessing.Process(target=self.start_sim,
-                                                              args=(path_dck, lock))
-                            with lock:
-                                start_time = time.time()
-                                while len(multiprocessing.active_children()) >= self.multiprocessing_max:
-                                    time.sleep(5)  # pause until number of active simulations drops below maximum
-                                    if time.time() - start_time > self.timeout:
-                                        sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-                                time.sleep(5)
-                                process.start()  # start process
-                            lock.acquire()
-
-                        elif self.multiprocessing_max == 1:
-                            self.start_sim(path_dck)
-
-                    except Exception:
-
-                        self.logger.error(f'Error occurred during simulation of {sim}.')
-
-                    progress += 1
-                    utils.progress_bar(progress, total)
-
-            # after all simulations were triggered, wait until all are done before proceeding
-            while len(multiprocessing.active_children()) > 0:
-                time.sleep(5)
-                if time.time() - start_time > self.timeout:
-                    sys.exit('Timeout of ' + str(self.timeout) + ' sec reached, program ended.')
-
-            # check for each simulation if it was successful
-            self.check_sim_success()
-
-            # save progress
-            self.save()
-
-    def setup_simulation(self):
-        """Set up simulation series.
-
-        Setting up the simulation series is only necessary once, continuing the simulation at a later time does not need
-        an additional setup. Doing so anyway results in a reset of the simulation progress.
-        """
-
-        self.logger.info('Setting up simulation.')
-
-        # import simulation variants Excel file
-        self.import_sim_variants_excel()
-
-        # initialize simulation success/ignore flags
-        self.sim_success = [False] * len(self.sim_list)
-        self.sim_ignore = [False] * len(self.sim_list)
-
-        self.setup_sim_subdirectories()
-
-        # save SimulationSeries object
-        self.save()
-
-    def import_sim_variants_excel(self):
-        """Import simulation variants Excel file.
-
-        Imports the simulation variants Excel file and applies the data to the SimulationSeries object.
-        """
-
-        self.logger.info(f'Importing simulation variants Excel file from {self.path.original_sim_variants_excel}.')
-
-        # todo: hier wird zwei mal der Inhalt des Simulationsvariantenfiles importiert, auf 1 mal reduzieren
-        # read simulation variant parameters
-        self.variant_parameter_df = pd.read_excel(self.path.original_sim_variants_excel,
-                                                  sheet_name='Simulationsvarianten')
-        self.variant_parameter_df.columns = [str(parameter) for parameter in self.variant_parameter_df.columns]
-
-        # read simulation variants Excel file
-        excel_data = pd.ExcelFile(self.path.original_sim_variants_excel)
-
-        # convert Excel data into pandas DataFrame
-        df = excel_data.parse(self.sheet_name_sim_variants, index_col=0)
-
-        # transpose data
-        df_weather = df[df.index == 'Wetterdaten'].transpose()
-        b18_series = df[df.index == 'b18'].transpose()
-        df_dck = df[df.index == 'dck'].transpose()
-        df_mpc = df[df.index == 'mpc'].transpose()
-
-        # convert into series
-        self.weather_series = df_weather[1:].squeeze()
-        self.b18_series = b18_series[1:].squeeze()
-
-        # use first row as header
-        df_dck.columns = df_dck.iloc[0]
-        df_mpc.columns = df_mpc.iloc[0]
-        self.df_dck = df_dck[1:]
-        self.df_mpc = df_mpc[1:]
-
-        # list of simulation variants
-        self.sim_list = df.columns[1:].astype(str).tolist()
-
-        # in case there is only 1 simulation variant, make sure those attributes are still pandas.Series
-        if len(self.sim_list) == 1:
-            self.weather_series = pd.Series(self.weather_series)
-            self.weather_series.index = [self.sim_list[0]]
-            self.b18_series = pd.Series(self.b18_series)
-            self.b18_series.index = [self.sim_list[0]]
-
-        # convert index into string (for stability reasons)
-        self.weather_series.index = self.weather_series.index.map(str)
-        self.b18_series.index = self.b18_series.index.map(str)
-        self.df_dck.index = self.df_dck.index.map(str)
-        self.df_mpc.index = self.df_mpc.index.map(str)
-
-    def setup_sim_subdirectories(self):
-        """Set up simulation subdirectories.
-
-        1)  Create a subdirectory (inside the simulation series directory) for each TRNSYS simulation
-        2)  Save a copy of each file and template necessary for the simulation
-        3)  Overwrite parameter inside the copy of the template .dck file, according to the variant's specifications
-            from the simulation variants Excel file
-
-        After the simulation is complete, the simulation results from TRNSYS are also saved inside its respective
-        subdirectory.
-        """
-
-        self.logger.info('Setting up simulation subdirectories.')
-
-        def create_sim_subdir():
-            """Create simulation subdirectory within simulation series directory.
-
-            Creates a subdirectory within the simulation series directory, with a copy of all simulation assets and
-            template files. Each subdirectory corresponds to one TRNSYS simulation.
-            """
-
-            os.makedirs(path_sim)  # create new empty simulation subdirectory
-
-            # filename list of files to be copied into simulation subdirectories
-            file_list = [self.filename_dck_template, 'Lastprofil.txt', 'SzenarioAneu.txt', 'Qelww_CHR55025.txt',
-                         'Windetc20190804.txt', 'StrahlungBruck.txt',
-                         'EXAA_Day Ahead Preise & CO2-Intensität 2015-2022_1_2019.txt']
-
-            # source paths
-            src_file_list = file_list + [os.path.join('b18', self.b18_series[sim]),
-                                         os.path.join('Wetterdaten', self.weather_series[sim]),
-                                         os.path.join('mpc_code', 'main_mpc.py'),
-                                         os.path.join('mpc_code', 'MPCModule.py'),
-                                         os.path.join('mpc_code', 'settingsMPC.ini')]
-            # destination paths
-            dst_file_list = file_list + [self.b18_series[sim], self.weather_series[sim], 'main_mpc.py', 'MPCModule.py',
-                                         'settingsMPC.ini']
-
-            # Turn into absolute paths
-            src_file_list = [os.path.join(self.path.assets_dir, f) for f in src_file_list]
-            dst_file_list = [os.path.join(path_sim, f) for f in dst_file_list]
-
-            # copy specified files into simulation subdirectory
-            errors = utils.copy_files(src_file_list, dst_file_list)
-
-            if errors:
-                self.logger.error(f'FileNotFoundError: {", ".join(errors)}')
-                self.sim_ignore[index] = True  # simulation variant will be ignored
-                raise FileNotFoundError  # program will end if error is raised
-
-        def overwrite_dck_file_parameters():
-            """Overwrite parameters inside .dck File.
-
-            Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
-            the simulation variants Excel file.
-            """
-
-            # replace weather data file name in .dck file
-            utils.find_and_replace(
-                path_dck, pattern=r'(ASSIGN "tm2")', replacement=r'ASSIGN "' + self.weather_series[sim] + '"')
-
-            # replace .b17/.b18 file name in .dck file
-            utils.find_and_replace(
-                path_dck, pattern=r'(ASSIGN "b17")', replacement=r'ASSIGN "' + self.b18_series[sim] + '"')
-
-            # replace parameter values
-            utils.replace_parameter_values(path_dck, self.df_dck.loc[sim])
-
-        for index, sim in enumerate(self.sim_list):
-            path_sim = os.path.join(self.path.sim_series_dir, sim)  # path of simulation subdirectory
-            path_dck = os.path.join(path_sim, self.filename_dck_template)  # path of .dck file
-            path_mpc = os.path.join(path_sim, self.filename_mpc_settings)  # path of settingsMPC.ini file
-
-            create_sim_subdir()
-            overwrite_dck_file_parameters()
-
-            # replace parameters inside settingsMPC.ini file
-            utils.replace_parameter_values(path_mpc, self.df_mpc.loc[sim])
-
 
 class Simulation:
 
-    def __init__(self):
-        name: str  # name of simulation
-        success: bool = False  # True, if simulated successfully
-        ignore: bool = False  # if True, do not simulate
-        param: SimParameters
+    def __init__(self, name: str, params: SimParameters, configs: Configs, paths: Paths, logger: logging.Logger):
+        self.name = name  # name of simulation
+        self.params = params
+        self.path = paths
+        self.configs = configs
+        self.logger = logger
 
-    def start_sim(self, path_dck_file, lock=None):
+        self.success: bool = False  # True, if simulated successfully
+        self.ignore: bool = False  # if True, do not simulate
+
+    @property
+    def path_dck(self) -> str:
+        """Path to dck file."""
+        return os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.filename_dck_template)
+
+    def start_sim(self, lock: multiprocessing.Lock = None):  # todo rename "start"
         """Start simulation.
 
-        Starts a TRNSYS simulation using a specified dck-file. If multiprocessing is used, a lock is passed which
-        ensures no other simulation starts until a specific point is reached. In this case, the lock is released as soon
-        as the TRNSYS simulation window opens. Optionally, start_time_buffer acts as a time buffer before releasing the
-        lock.
+        Starts a TRNSYS simulation and uses a specified dck-file as input. If multiprocessing is used, a lock is passed
+        which ensures no other simulation starts until a specific point is reached. In this case, the lock is released
+        as soon as the TRNSYS simulation window opens. Optionally, start_time_buffer acts as a time buffer before
+        releasing the lock.
 
-        Parameters
-        ----------
-        path_dck_file : str
-            Path of the dck-File necessary for the TRNSYS simulation.
-        lock : multiprocessing.Lock
-            Lock object from the multiprocessing module.
+        :param multiprocessing.Lock lock:  Lock object from the multiprocessing module.
+        :return:
         """
 
-        def delete_redundant_files():
+        def delete_redundant_files():  # todo nicht mehr als nested function
             """Delete redundant files generated by TRNSYS, to save disk space."""
 
-            path_sim = os.path.dirname(path_dck_file)
+            path_sim = os.path.dirname(self.path_dck)
 
-            for redundant_file in self.filenames_redundant:
+            for redundant_file in self.configs.filenames.filenames_redundant:
                 try:
                     os.remove(os.path.join(path_sim, redundant_file))
                 except FileNotFoundError:
@@ -389,7 +321,7 @@ class Simulation:
 
         # start application
         app = Application(backend='uia')
-        app.start(self.path_exe)
+        app.start(self.configs.general.path_exe)
 
         try:
             app.connect(title="Öffnen", timeout=2)
@@ -397,7 +329,7 @@ class Simulation:
             app.Öffnen.set_focus()
 
             # insert .dck file path
-            app.Öffnen.FileNameEdit.set_edit_text(path_dck_file)
+            app.Öffnen.FileNameEdit.set_edit_text(self.path_dck)
 
             # press start button
             Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
@@ -407,7 +339,7 @@ class Simulation:
             app.Öffnen.wait_not('visible', timeout=10)
 
         except Exception:  # TimeoutError:  todo: Add specific exceptions
-            self.logger.error(f'Unknown error occured during simulation of {path_dck_file}.')
+            self.logger.error(f'Unknown error occured during simulation of {self.path_dck}.')
 
             # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
             app.kill()
@@ -416,16 +348,16 @@ class Simulation:
             return
 
         # add a time buffer before releasing the lock, which delays the next simulation
-        time.sleep(self.start_time_buffer)
+        time.sleep(self.configs.general.start_time_buffer)
         if lock is not None:
             lock.release()
 
-        window_title = 'TRNSYS: ' + path_dck_file
+        window_title = 'TRNSYS: ' + self.path_dck
         window_title = window_title.replace('documents', 'Documents')  # workaround, as search is case sensitive
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
         try:
-            success_message.wait('visible', timeout=self.timeout)
+            success_message.wait('visible', timeout=self.configs.general.timeout)
         except TimeoutError:
             pass  # goes ahead and closes window after time out
 
@@ -434,9 +366,9 @@ class Simulation:
 
         delete_redundant_files()
 
-    def check_success(self):  # todo anpassen
+    def check_success(self):
         # path of output file
-        path_output = os.path.join(self.path.sim_series_dir, self.sim_list[index], self.filename_trnsys_output)
+        path_output = os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.filename_trnsys_output)
 
         try:
             with open(path_output) as f:
@@ -449,13 +381,20 @@ class Simulation:
 
         return self.success
 
+    def overwrite_dck_file_parameters(self):
+        """Overwrite parameters inside .dck File.
 
-@dataclass
-class SimParameters:
-    dck: dict
-    mpc: dict
-    b18: str
-    weather: str
+        Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
+        the simulation variants Excel file.
+        """
 
-    def from_df(self):
-        pass
+        # replace weather data file name inside .dck file
+        utils.find_and_replace(
+            self.path_dck, pattern=r'(ASSIGN "tm2")', replacement=r'ASSIGN "' + self.params.weather + '"')
+
+        # replace .b17/.b18 file name inside .dck file
+        utils.find_and_replace(
+            self.path_dck, pattern=r'(ASSIGN "b17")', replacement=r'ASSIGN "' + self.params.b18 + '"')
+
+        # replace parameter values
+        utils.replace_parameter_values(self.path_dck, self.params.dck)  # todo vermutlich ist dict falscher Typ
