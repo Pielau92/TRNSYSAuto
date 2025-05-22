@@ -21,7 +21,7 @@ def get_root_dir() -> str:
         return os.path.dirname(os.path.dirname(__file__))
 
 
-def replace_parameter_values(path_file: str, parameters: Series) -> None:
+def replace_parameter_values(path_file: str, parameters: dict) -> None:
     """Find and replace parameter values within a .txt file.
 
     Finds parameter values within a .txt file, replaces them and overwrites the .txt file. For this, the following must
@@ -53,7 +53,7 @@ def replace_parameter_values(path_file: str, parameters: Series) -> None:
         parameter = match.group(1)  # parameter name
         misc = match.group(3)  # miscellaneous characters after the number value (typically comments)
 
-        if parameter in parameters.index:
+        if parameter in parameters.keys():
             return f"{parameter} = {parameters[parameter]} {misc}"  # replace, if parameter name matches
         else:
             return match.group(0)  # return unchanged text

@@ -57,7 +57,7 @@ class SimulationSeries:
         self.configs.runtime = Configs.Runtime(**kwargs)
 
         # todo: Zeilen ab hier verbesserungswürdig
-        self.setup()
+        # self.setup()
         # utils.set_env_and_paths(self.configs.general.conda_venv_name)
 
     def setup(self):
@@ -85,7 +85,7 @@ class SimulationSeries:
         # save SimulationSeries object
         self.save()
 
-    def init_logger(self, logs:list[str]=None):
+    def init_logger(self, logs: list[str] = None):
         """Initialize logging file.
 
         Optionally, logs that would have been due before the logger is initialized can be passed. Those are logged in
@@ -199,8 +199,8 @@ class SimulationSeries:
         anyway).
         """
 
-        sim_ignore = [sim.ignore for sim in self.simulations.items()]
-        self.sim_success = [sim.success for sim in self.simulations.items()]
+        sim_ignore = [sim.ignore for _, sim in self.simulations.items()]
+        self.sim_success = [sim.success for _, sim in self.simulations.items()]
 
         # if multiprocessing is enabled, initialize lock
         if self.configs.general.multiprocessing_max > 1:
@@ -210,7 +210,7 @@ class SimulationSeries:
 
         while not all(np.logical_or(self.sim_success, sim_ignore)):  # check for remaining simulations
 
-            # initialize progress bar   todo Klasse dafür erstellen
+            # initialize progress bar   todo Klasse für progress bar erstellen
             progress = 0
             total = len(self.sim_success) - sum(np.logical_or(self.sim_success, sim_ignore))
             utils.progress_bar(progress, total)
@@ -218,9 +218,9 @@ class SimulationSeries:
             self.logger.info(f'Starting simulation series "{self.configs.runtime.filename_sim_variants_excel}".')
 
             # for index in range(len(self.sim_list)):
-            for sim in self.simulations.items():
+            for _, sim in self.simulations.items():
 
-                # if already successfull or to be ignored, skip
+                # if already successful or to be ignored, skip
                 if sim.success or sim.ignore:
                     continue
 
@@ -230,7 +230,7 @@ class SimulationSeries:
 
                         # create a new process instance
                         process = multiprocessing.Process(target=sim.start_sim,
-                                                          args=lock)
+                                                          args=(lock,))
                         with lock:
                             start_time = time.time()
                             while len(multiprocessing.active_children()) >= self.configs.general.multiprocessing_max:
@@ -279,7 +279,7 @@ class SimulationSeries:
 
         self.logger.info('Checking for failed simulations.')
 
-        self.sim_success = [sim.check_success() for sim in self.simulations if not (sim.success and not reset)]
+        self.sim_success = [sim.check_success() for _, sim in self.simulations.items() if not (sim.success and not reset)]
 
         # log simulation success status
         if all(self.sim_success):
