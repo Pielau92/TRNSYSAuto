@@ -5,6 +5,7 @@ import csv
 import logging
 import shutil
 import pickle
+import mpccontroller
 
 import numpy as np
 # import pandas as pd
@@ -17,6 +18,8 @@ from pywinauto.application import Application
 from TRNSYSAuto.configs import Configs, Paths, load_from_ini
 # from TRNSYSAuto.evaluation import Evaluation
 from TRNSYSAuto.datalayer import ExcelData, SimParameters
+
+from importlib import resources
 
 
 class SimulationSeries:
@@ -58,7 +61,6 @@ class SimulationSeries:
 
         # todo: Zeilen ab hier verbesserungswürdig
         # self.setup()
-        # utils.set_env_and_paths(self.configs.general.conda_venv_name)
 
     def setup(self):
         """Set up simulation series, as preparation for the simulation process ."""
@@ -81,6 +83,8 @@ class SimulationSeries:
         self.init_simulations()
 
         self.create_sim_subdirectories()
+
+        utils.set_env_and_paths(self.configs.general.conda_venv_name)
 
         # save SimulationSeries object
         self.save()
@@ -151,6 +155,10 @@ class SimulationSeries:
 
         self.logger.info(f'Creating simulation subdirectories inside {self.path.sim_series_dir}.')
 
+        # path to MPCModule.py from mpccontroller package (necessary for CallingPythonFromTrnsys)
+        with resources.path(mpccontroller, "MPCModule.py") as path:
+            path_MPCModule = path.__str__()
+
         for key in self.simulations.keys():
             sim = self.simulations[key]
             path_sim = os.path.join(self.path.sim_series_dir, sim.name)
@@ -162,7 +170,8 @@ class SimulationSeries:
             src_file_list += [
                 self.configs.filenames.filename_dck_template,
                 os.path.join('b18', sim.params.b18),
-                os.path.join('Wetterdaten', sim.params.weather)
+                os.path.join('Wetterdaten', sim.params.weather),
+                path_MPCModule
             ]
 
             # (relative) destination paths for copying process
@@ -279,7 +288,8 @@ class SimulationSeries:
 
         self.logger.info('Checking for failed simulations.')
 
-        self.sim_success = [sim.check_success() for _, sim in self.simulations.items() if not (sim.success and not reset)]
+        self.sim_success = [sim.check_success() for _, sim in self.simulations.items() if
+                            not (sim.success and not reset)]
 
         # log simulation success status
         if all(self.sim_success):
