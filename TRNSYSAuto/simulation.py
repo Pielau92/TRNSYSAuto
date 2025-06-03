@@ -165,8 +165,11 @@ class SimulationSeries:
 
             os.makedirs(path_sim)  # create new empty simulation subdirectory
 
+            # todo Lösung finden, wo kein 'assets' und 'mpc' Ordner nötig sind
+            os.makedirs(os.path.join(path_sim,'assets'))  # create assets directory within it
+
             # (relative) source paths for copying process
-            src_file_list = self.configs.filenames.filenames_templates
+            src_file_list = self.configs.filenames.filenames_templates[:]
             src_file_list += [
                 self.configs.filenames.filename_dck_template,
                 os.path.join('b18', sim.params.b18),
@@ -176,6 +179,11 @@ class SimulationSeries:
 
             # (relative) destination paths for copying process
             dst_file_list = [os.path.basename(filename) for filename in src_file_list]
+
+            # add files to be copied inside assets directory
+            src_file_list += self.configs.filenames.filenames_templates_assets
+            dst_file_list += \
+                [os.path.join('assets', filename) for filename in self.configs.filenames.filenames_templates_assets]
 
             # turn into absolute paths
             src_file_list = [os.path.join(self.path.assets_dir, f) for f in src_file_list]

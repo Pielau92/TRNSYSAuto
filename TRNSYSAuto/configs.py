@@ -33,6 +33,7 @@ class Configs:
         filename_savefile: str
         filenames_redundant: list[str]
         filenames_templates : list [str]
+        filenames_templates_assets: list[str]
 
     @dataclass
     class SheetNames:
