@@ -34,7 +34,7 @@ def gui(root_dir: str) -> None:
         # for each simulation series...
         for sim_series in create_sim_queue(root_dir):
             sim_series.setup()  # set simulation up
-            sim_series.start_sim_series()  # start simulation series
+            sim_series.simulate()  # start simulation series
 
             sim_series.setup_evaluation()  # set evaluation up
             sim_series.start_evaluation()  # start evaluation
@@ -47,7 +47,7 @@ def gui(root_dir: str) -> None:
         # for each simulation series in the queue...
         for sim_series in create_sim_queue(root_dir):
             sim_series.setup()  # start simulation
-            sim_series.start_sim_series()  # start simulation series
+            sim_series.simulate()  # start simulation series
 
         window.quit()
 
@@ -64,7 +64,7 @@ def gui(root_dir: str) -> None:
         sim_series = load_sim_series()
 
         sim_series.check_sim_success(reset=True)
-        sim_series.start_sim_series()
+        sim_series.simulate()
 
         window.quit()
 
@@ -114,7 +114,7 @@ def create_sim_queue(root_dir: str) -> list[SimulationSeries]:
     additional instance of SimulationSeries is created and added to a list.
 
     :param str root_dir: root directory
-    :return:
+    :return: list of SimulationSeries instances
     """
 
     initial_dir = os.path.join(root_dir, '../data', 'input')
