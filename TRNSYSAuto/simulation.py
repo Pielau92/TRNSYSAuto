@@ -119,12 +119,9 @@ class SimulationSeries:
 
         variants = self.excel_data.parameters.keys()
         for variant in variants:
-            sim_params = SimParameters(
-                **self.excel_data.parameters[variant])  # todo entfernen (siehe todo aus datalayer)
-
             self.simulations[variant] = Simulation(
                 name=variant,
-                params=sim_params,
+                params=self.excel_data.parameters[variant],
                 configs=self.configs,
                 paths=self.path,
                 logger=self.logger

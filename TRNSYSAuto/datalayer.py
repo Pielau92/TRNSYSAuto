@@ -39,16 +39,17 @@ class ExcelData:
             'b18': {variant: str(self.raw_excel_df[variant]['b18']) for variant in self.raw_excel_df.columns[1:]}
         }
 
-        # restructure dictionary in a variant-wise manner   todo jetzt schon als SimParameters abspeichern, anstatt erst in simulation.py
+        # get simulation parameters, variant-wise
         variants = self.raw_excel_df.columns[1:]  # variant names
         parameters = {}
         for variant in variants:
-            parameters[variant] = {}
+            kwargs = {}
             for target in excel_dict.keys():
                 value = excel_dict[target][variant]
                 if len(value) == 0:  # if empty dict/str, set None
                     value = None
-                parameters[variant][target] = value
+                kwargs[target] = value
+            parameters[variant] = SimParameters(**kwargs)
 
         self.parameters = parameters
 
