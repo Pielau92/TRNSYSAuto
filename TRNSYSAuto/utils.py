@@ -281,3 +281,18 @@ def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_fo
     # wb.save()
     # wb.app.quit()
     pass
+
+
+def logical_or(boolean_lists: list[list[bool]]) -> list[bool]:
+    """Performs an element-wise logical or condition on all boolean lists passed inside boolean_lists.
+
+    :param list[list[bool]] lists: List of boolean lists
+    :return:
+    """
+
+    # check if all lists have the same length
+    lengths = [len(boolean_list) for boolean_list in boolean_lists]
+    if not lengths[:-1] == lengths[1:]:
+        raise ValueError('All boolean lists must have the same length.')
+
+    return [any(values) for values in zip(*boolean_lists)]
