@@ -200,34 +200,33 @@ def create_date_column(year: int, time_increment_profiles: int = 60) -> DataFram
 
 
 def set_env_and_paths(conda_venv_name: str) -> None:
-    """ Set environment variables and paths before launching TRNEXE using Calling Python From TRNSYS.
+    """Set required environment variables for the conda environment to be found and used by the TRNSYS Python Interface,
+    before launching TRNEXE using Calling Python From TRNSYS.
 
     Translation and adaptation of Calling Python From TRNSYS batch file "RunTrnsysStudioWithCondaEnvironment.bat", which
-    is used to run the TRNSYS Studio and use the Python (CFFI) interface with a miniconda environment.
+    is used to run the TRNSYS Studio and use the Python (CFFI) interface with a miniconda environment. The virtual
+    environment should have at least cffi and numpy installed.
 
-    Parameters
-    ----------
-    conda_venv_name : str
-        Name of the conda virtual environment (venv) to be used, should have at least cffi and numpy installed.
+    :param str conda_venv_name: Name of the conda virtual environment
     """
 
-    # set required environment variables for the conda environment to be found and used by the TRNSYS Python Interface
-    # add directory with python to the path (to the front of the path!)
     username = os.getlogin()  # get os username
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\condabin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name};" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\bin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\mingw-w64\\bin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\bin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\usr\\bin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Scripts;" \
-                         + os.environ["PATH"]
+
+    # list of paths to be added
+    add_paths = [
+        f"C:\\Users\\{username}\\miniconda3\\condabin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\bin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\mingw-w64\\bin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\bin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\usr\\bin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Scripts"
+    ]
+
+    # add directory with python to the path (to the front of the path!)
+    add_paths.reverse()
+    paths = ';'.join(add_paths)
+    os.environ["PATH"] = paths + os.environ["PATH"]
 
     # Set PYTHONHOME to the same directory
     os.environ["PYTHONHOME"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}"
