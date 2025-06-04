@@ -27,37 +27,37 @@ class Configs:
 
     @dataclass
     class Filenames:  # todo filename_/sheet_name_/... Präfixes loswerden
-        filename_dck_template: str
-        filename_logger: str
-        filename_trnsys_output: str
-        filename_savefile: str
-        filenames_redundant: list[str]
-        filenames_templates : list [str]
-        filenames_templates_assets: list[str]
+        dck_template: str
+        logger: str
+        trnsys_output: str
+        savefile: str
+        redundant: list[str]
+        templates: list[str]
+        templates_assets: list[str]
 
     @dataclass
     class SheetNames:
         """Excel sheet names"""
 
-        sheet_name_sim_variants: str
-        sheet_name_variant_input: str
-        sheet_name_calculation: str
-        sheet_name_cumulative_input: str
-        sheet_name_zone_1_input: str
-        sheet_name_zone_3_input: str
-        sheet_name_zone_1_with_operating_time: str
-        sheet_name_zone_1_without_operating_time: str
-        sheet_name_zone_3_with_operating_time: str
-        sheet_name_zone_3_without_operating_time: str
+        sim_variants: str
+        variant_input: str
+        calculation: str
+        cumulative_input: str
+        zone_1_input: str
+        zone_3_input: str
+        zone_1_with_operating_time: str
+        zone_1_without_operating_time: str
+        zone_3_with_operating_time: str
+        zone_3_without_operating_time: str
 
     @dataclass
     class ColumnHeaders:
-        var_list_zone1: list[str]
-        var_list_zone2: list[str]
-        var_list_zone3: list[str]
-        col_headers_result_column: list[str]
-        col_headers_trnsys_output: list[str]
-        col_headers_sim_variant: list[str]
+        zone1: list[str]
+        zone2: list[str]
+        zone3: list[str]
+        result_column: list[str]
+        trnsys_output: list[str]
+        sim_variant: list[str]
 
     @dataclass
     class Runtime:
@@ -67,7 +67,7 @@ class Configs:
 
         @property
         def dirname_sim_series(self) -> str:
-            return self.filename_sim_variants_excel + '_' + self.execution_time
+            return f'{self.filename_sim_variants_excel}_{self.execution_time}'
 
     # save each configuration section in own object
     general: General
@@ -77,8 +77,8 @@ class Configs:
     runtime: Runtime = None
 
     """Mapping between section names used to load configurations from .ini file. Sections that are not mapped here will
-        not be loaded from the .ini file and have to be filled elsewhere, which is recommended for runtime
-        configurations for example. The mapping is structured as a dictionary, where:
+       not be loaded from the .ini file and have to be filled elsewhere, which is recommended for runtime
+       configurations for example. The mapping is structured as a dictionary, where:
             key:    section name inside Configs dataclass
             value:  section name inside .ini configs file
     """
@@ -119,7 +119,7 @@ def get_ini_section(path: str, section: str, cls: Type[T]) -> T:
 
     :param str path: path to ini file
     :param str section: name of the section to be loaded used in the ini file
-    :param Type[T] cls: class (not instance of it) whose instance is used to save configurations
+    :param Type[T] cls: class (actual class, not an instance of it) whose instance is used to save configurations
     :return: class instance
     """
 
@@ -184,7 +184,7 @@ class Paths:
     @property
     def logfile(self) -> str:
         """Path to logfile."""
-        return join(self.sim_series_dir, self._configs.filenames.filename_logger)
+        return join(self.sim_series_dir, self._configs.filenames.logger)
 
     # todo ab da prüfen, ob die Pfade noch benötigt werden
 
@@ -232,4 +232,4 @@ class Paths:
     @property
     def savefile(self):
         """Path to savefile where the SimulationSeries object (and the simulation/evaluation progress) is saved."""
-        return os.path.join(self.sim_series_dir, self._configs.filenames.filename_savefile)
+        return os.path.join(self.sim_series_dir, self._configs.filenames.savefile)

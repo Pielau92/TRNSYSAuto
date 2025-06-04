@@ -6,11 +6,15 @@ from pandas import DataFrame
 
 @dataclass
 class ExcelData:
-    excel_df: DataFrame = None
+    raw_excel_df: DataFrame = None
     parameters: dict = None
 
     def import_excel(self, path: str, sheet_name: str) -> None:
-        """Import simulation variants Excel file."""
+        """Import simulation variants Excel file.
+
+        :param str path: Excel file path
+        :param str sheet_name: Name of Excel sheet with simulation variants information
+        """
 
         # read simulation variants Excel file
         excel_data = pd.ExcelFile(path)
@@ -21,21 +25,22 @@ class ExcelData:
         # make sure all column headers are string
         df.columns = [str(parameter) for parameter in df.columns]
 
-        self.excel_df = df
+        self.raw_excel_df = df
 
     def get_sim_params(self) -> None:
-        """Get simulation parameters from imported Excel data and save as dictionary."""
+        """Get simulation parameters from imported raw Excel data and save as dictionary."""
 
         # separate data by target file
-        excel_dict = {}
-        excel_dict['dck'] = self.excel_df[self.excel_df.index == 'dck'].set_index('Parameter').to_dict()
-        excel_dict['mpc'] = self.excel_df[self.excel_df.index == 'mpc'].set_index('Parameter').to_dict()
-        excel_dict['weather'] = \
-            {variant: str(self.excel_df[variant]['Wetterdaten']) for variant in self.excel_df.columns[1:]}
-        excel_dict['b18'] = {variant: str(self.excel_df[variant]['b18']) for variant in self.excel_df.columns[1:]}
+        excel_dict = {
+            'dck': self.raw_excel_df[self.raw_excel_df.index == 'dck'].set_index('Parameter').to_dict(),
+            'mpc': self.raw_excel_df[self.raw_excel_df.index == 'mpc'].set_index('Parameter').to_dict(),
+            'weather': {variant: str(self.raw_excel_df[variant]['Wetterdaten']) for variant in
+                        self.raw_excel_df.columns[1:]},
+            'b18': {variant: str(self.raw_excel_df[variant]['b18']) for variant in self.raw_excel_df.columns[1:]}
+        }
 
-        # restructure dictionary (variant wise)
-        variants = self.excel_df.columns[1:]
+        # restructure dictionary in a variant-wise manner   todo jetzt schon als SimParameters abspeichern, anstatt erst in simulation.py
+        variants = self.raw_excel_df.columns[1:]  # variant names
         parameters = {}
         for variant in variants:
             parameters[variant] = {}
