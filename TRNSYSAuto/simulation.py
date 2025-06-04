@@ -7,11 +7,11 @@ import shutil
 import pickle
 import mpccontroller
 
-import numpy as np
 import TRNSYSAuto.utils as utils
 
 from datetime import datetime
 from typing import Optional
+from tqdm import tqdm
 from pywinauto.application import Application
 from TRNSYSAuto.configs import Configs, Paths, load_from_ini
 from TRNSYSAuto.datalayer import ExcelData, SimParameters
@@ -214,13 +214,13 @@ class SimulationSeries:
         else:
             lock = None
 
+        # check which simulations are enabled for simulation
         sim_flags = check_sim_flags()
-        while not all(sim_flags):  # check for remaining simulations
 
-            # initialize progress bar   todo Klasse für progress bar erstellen
-            progress = 0
-            total = len(self.sim_success) - sum(sim_flags)
-            utils.progress_bar(progress, total)
+        # initialize progress bar
+        pbar = tqdm(total=len(self.sim_success) - sum(sim_flags))
+
+        while not all(sim_flags):  # check for remaining simulations
 
             self.logger.info(f'Starting simulation series "{self.configs.runtime.filename_sim_variants_excel}".')
 
@@ -256,8 +256,7 @@ class SimulationSeries:
 
                     self.logger.error(f'Error occurred during simulation of {sim.name}.')
 
-                progress += 1
-                utils.progress_bar(progress, total)
+                pbar.update(1)
 
             # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:
@@ -271,6 +270,8 @@ class SimulationSeries:
 
             # save progress
             self.save()
+
+        pbar.close()
 
     def check_sim_success(self, reset: bool = False) -> None:
         """Check simulation success.
