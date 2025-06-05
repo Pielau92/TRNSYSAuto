@@ -296,3 +296,16 @@ def logical_or(boolean_lists: list[list[bool]]) -> list[bool]:
         raise ValueError('All boolean lists must have the same length.')
 
     return [any(values) for values in zip(*boolean_lists)]
+
+
+def delete_files(paths:list[str])-> None:
+    """Delete multiple files.
+
+    :param paths: list of paths to files to be deleted
+    """
+
+    for path in paths:
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass
