@@ -186,50 +186,48 @@ class Paths:
         """Path to logfile."""
         return join(self.sim_series_dir, self._configs.filenames.logger)
 
-    # todo ab da prüfen, ob die Pfade noch benötigt werden
-
-    @property
-    def data_dir(self, dir_name='data'):
-        """Path to data directory (contains input directory and results directory)."""
-        return os.path.join(self.root, dir_name)
-
-    @property
-    def input_dir(self, dir_name='input'):
-        """Path to input directory (optional storage location for simulation variants Excel files, default initial
-        directory when asking to select a simulation variants Excel file)."""
-        return os.path.join(self.data_dir, dir_name)
-
-    @property
-    def assets_dir(self, dir_name='assets'):
-        """Path to assets directory (contains all files directly needed by TRNSYS)."""
-        return os.path.join(self.root, dir_name)
-
-    @property
-    def sim_variants_excel(self):
-        """Path to simulation series Excel file, copied from the base directory "Basisordner"."""
-        return os.path.join(self.sim_series_dir, self._configs.runtime.filename_sim_variants_excel) + '.xlsx'
-
-    @property
-    def evaluation_save_dir(self, dir_name='evaluation'):
-        """Path to directory, where evaluation results are saved."""
-        return os.path.join(self.sim_series_dir, dir_name)
-
-    @property
-    def cumulative_evaluation_save_file(self, filename='gesamt.xlsx'):
-        """Path to cumulative evaluation file."""
-        return os.path.join(self.evaluation_save_dir, filename)
-
-    @property
-    def cumulative_evaluation_template(self, filename='Auswertung_Gesamt.xlsx'):
-        """Path to cumulative evaluation template file."""
-        return os.path.join(self.assets_dir, filename)
-
-    @property
-    def variant_evaluation_template(self, filename='Auswertung_Variante.xlsx'):
-        """Path to variant evaluation template file."""
-        return os.path.join(self.assets_dir, filename)
-
     @property
     def savefile(self):
         """Path to savefile where the SimulationSeries object (and the simulation/evaluation progress) is saved."""
         return os.path.join(self.sim_series_dir, self._configs.filenames.savefile)
+
+    @property
+    def data_dir(self):
+        """Path to data directory (contains input directory and results directory)."""
+        return os.path.join(self.root, 'data')
+
+    @property
+    def input_dir(self):
+        """Path to input directory (optional storage location for simulation variants Excel files, default initial
+        directory when asking to select a simulation variants Excel file)."""
+        return os.path.join(self.data_dir, 'input')
+
+    @property
+    def assets_dir(self):
+        """Path to assets directory (contains all files directly needed by TRNSYS)."""
+        return os.path.join(self.root, 'assets')
+
+    @property
+    def sim_variants_excel(self):
+        """Path to simulation series Excel file copy."""
+        return os.path.join(self.sim_series_dir, self._configs.runtime.filename_sim_variants_excel) + '.xlsx'
+
+    @property
+    def evaluation_save_dir(self):
+        """Path to directory, where evaluation results are saved."""
+        return os.path.join(self.sim_series_dir, 'evaluation')
+
+    @property
+    def cumulative_evaluation_save_file(self):
+        """Path to cumulative evaluation file."""
+        return os.path.join(self.evaluation_save_dir, 'gesamt.xlsx')
+
+    @property
+    def cumulative_evaluation_template(self):
+        """Path to cumulative evaluation template file."""
+        return os.path.join(self.assets_dir, 'Auswertung_Gesamt.xlsx')
+
+    @property
+    def variant_evaluation_template(self):
+        """Path to variant evaluation template file."""
+        return os.path.join(self.assets_dir, 'Auswertung_Variante.xlsx')
