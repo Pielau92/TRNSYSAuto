@@ -10,8 +10,6 @@ from tkinter import filedialog  # explicit import required, as calling from tk.f
 from pandas import Series, DataFrame
 
 
-# todo: numpy docstrings durch reStructuredText ersetzen
-
 def get_root_dir() -> str:
     """Get root directory path."""
 
@@ -41,12 +39,8 @@ def replace_parameter_values(path_file: str, parameters: dict) -> None:
 
         # .txt file now shows "Parameter1=4; Parameter2=5; Parameter3=6."
 
-    Parameters
-    ----------
-    path_file : str
-        Path of the .txt file.
-    parameters : pandas.Series
-        Series with parameter values to be replaced, the parameter name has to be in the index name.
+    :param str path_file: path of txt file
+    :param dict parameters: dict with parameters as key value pairs
     """
 
     def replacer(match):
@@ -80,14 +74,9 @@ def find_and_replace(path_file: str, pattern: str, replacement: str) -> None:
     Reads text from a .txt file, searches for a defined string, replaces it by another string and overwrites the .txt
     file.
 
-    Parameters
-    ----------
-    path_file : str
-        Path of the .txt file.
-    pattern : str
-        Pattern which marks text to be replaced.
-    replacement : str
-        Text to be inserted instead.
+    :param str path_file: path to txt file
+    :param str pattern: pattern which marks the text to be replaced
+    :param str replacement: text to be inserted instead
     """
 
     with open(path_file, 'r') as file:
@@ -98,9 +87,11 @@ def find_and_replace(path_file: str, pattern: str, replacement: str) -> None:
 
 
 def update_excel_file(path_excel_file: str) -> None:
-    """Update calculations in excel file.
+    """Update calculations in Excel file.
 
     https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
+
+    :param str path_excel_file: path to Excel file
     """
 
     xlapp = win32com.client.DispatchEx("Excel.Application")
@@ -141,13 +132,12 @@ def to_single_column(df_input: DataFrame) -> Series:
     return single_column
 
 
-def progress_bar(progress: int | float, total: int | float) -> None:
-    percent = 100 * (progress / float(total))
-    bar = '█' * int(percent) + '-' * (100 - int(percent))
-    print(f"\r|{bar}| {percent:.2f}%", end="\r")
-
-
 def ask_filenames(initialdir: str = None) -> list[str]:
+    """Open explorer window and ask for a single or multiple files, return path(s) to file(s).
+
+    :param str initialdir: path to directory initially shown when opening the explorer window
+    :return: list of paths to files
+    """
     root = tk.Tk()
     root.withdraw()
 
@@ -160,6 +150,11 @@ def ask_filenames(initialdir: str = None) -> list[str]:
 
 
 def ask_filename(initialdir: str = None) -> str:
+    """Open explorer window and ask for a single file, return path to file.
+
+    :param str initialdir: path to directory initially shown when opening the explorer window
+    :return: path to file
+    """
     root = tk.Tk()
     root.withdraw()
 
@@ -171,15 +166,30 @@ def ask_filename(initialdir: str = None) -> str:
     return filename.replace("/", "\\")
 
 
-def ask_dir() -> str:
-    """CAUTION: Has compatibility issues with pywinauto (explorer does not open to ask directory location), look in
-    main.py for a fix."""
+def ask_dir(initialdir: str = None) -> str:
+    """Open explorer window and ask for a single directory, return path to directory.
+
+    CAUTION: Has compatibility issues with pywinauto (explorer does not open to ask directory location), look in main.py
+    for a fix.
+
+    :param str initialdir: path to directory initially shown when opening the explorer window
+    :return: path to directory
+    """
+
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askdirectory()
+
+    return filedialog.askdirectory(initialdir=initialdir)
 
 
 def create_date_column(year: int, time_increment_profiles: int = 60) -> DataFrame:
+    """Create date column as a DataFrame, for a specific year and time increment.
+
+    :param int year: year
+    :param int time_increment_profiles: time increment, in minutes
+    :return: DataFrame with date column
+    """
+
     date = pd.date_range(
         start=str(year) + '-01-01',
         end=str(year + 1) + '-01-01',
@@ -207,10 +217,10 @@ def set_env_and_paths(conda_venv_name: str) -> None:
     is used to run the TRNSYS Studio and use the Python (CFFI) interface with a miniconda environment. The virtual
     environment should have at least cffi and numpy installed.
 
-    :param str conda_venv_name: Name of the conda virtual environment
+    :param str conda_venv_name: name of the conda virtual environment
     """
 
-    username = os.getlogin()  # get os username
+    username = os.getlogin()  # get operating system username
 
     # list of paths to be added
     add_paths = [
@@ -240,18 +250,9 @@ def copy_files(source_path: str | list[str], destination_path: str | list[str]) 
 
     The number of source paths must match the number of destination paths.
 
-    Parameters
-    ----------
-    source_path : str | list(str)
-        path (or list of paths) of file to be copied.
-    destination_path : str | list(str)
-        path (or list of paths) where source file is to be copied.
-
-    Returns
-    -------
-    files_not_found list
-        Returns the path of the file that caused the function to raise a FileNotFoundError exception, returns None on
-        success.
+    :param str | list[str] source_path: path (or list of paths) of file to be copied
+    :param str | list[str] destination_path: path (or list of paths) where source file is to be copied
+    :return: list of paths to files that raised a FileNotFoundError exception, returns None on success
     """
 
     files_not_found = []
@@ -269,25 +270,11 @@ def copy_files(source_path: str | list[str], destination_path: str | list[str]) 
         return files_not_found
 
 
-def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_folder, variant_output_file,
-                                    variant_parameter_df):
-    """Output routine for variant excel file."""
-
-    # wb = xw.Book(variant_output_file)
-    # ws = wb.sheets[sheet_name_variant_input]
-    # ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
-    #     ['File', 'Parameter', variant_folder]]
-    # ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
-    # wb.save()
-    # wb.app.quit()
-    pass
-
-
 def logical_or(boolean_lists: list[list[bool]]) -> list[bool]:
     """Performs an element-wise logical or condition on all boolean lists passed inside boolean_lists.
 
-    :param list[list[bool]] lists: List of boolean lists
-    :return:
+    :param list[list[bool]] boolean_lists: List of boolean lists
+    :return: boolean list after element-wise logical or operation
     """
 
     # check if all lists have the same length
@@ -298,7 +285,7 @@ def logical_or(boolean_lists: list[list[bool]]) -> list[bool]:
     return [any(values) for values in zip(*boolean_lists)]
 
 
-def delete_files(paths:list[str])-> None:
+def delete_files(paths: list[str]) -> None:
     """Delete multiple files.
 
     :param paths: list of paths to files to be deleted

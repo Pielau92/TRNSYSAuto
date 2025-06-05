@@ -410,4 +410,4 @@ class Simulation:
             self.path_dck, pattern=r'(ASSIGN "b17")', replacement=r'ASSIGN "' + self.params.b18 + '"')
 
         # replace parameter values
-        utils.replace_parameter_values(self.path_dck, self.params.dck)  # todo vermutlich ist dict falscher Typ
+        utils.replace_parameter_values(self.path_dck, self.params.dck)

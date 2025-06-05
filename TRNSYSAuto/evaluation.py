@@ -242,6 +242,19 @@ class Evaluation:
 
         self.logger.info(f'Exported cumulative evaluation successfully to {self.path.cumulative_evaluation_save_file}.')
 
+    def excel_export_variant_evaluation(self, sheet_name_variant_input, result, variant_folder, variant_output_file,
+                                        variant_parameter_df):
+        """Output routine for variant excel file."""
+
+        # wb = xw.Book(variant_output_file)
+        # ws = wb.sheets[sheet_name_variant_input]
+        # ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
+        #     ['File', 'Parameter', variant_folder]]
+        # ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
+        # wb.save()
+        # wb.app.quit()
+        pass
+
 
 class SchweikerDataFrame:
     """Modified pandas Dataframe for the Schweiker-Model."""
