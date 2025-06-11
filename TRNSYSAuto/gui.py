@@ -1,8 +1,8 @@
 import os
-import utils
 import pickle
 
 import tkinter as tk
+import TRNSYSAuto.utils as utils
 
 from typing import Callable
 from TRNSYSAuto.simulation import SimulationSeries

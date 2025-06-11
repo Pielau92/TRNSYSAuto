@@ -138,6 +138,14 @@ class SimulationSeries:
         # path to MPCModule.py from mpccontroller package (necessary for CallingPythonFromTrnsys)
         with resources.path(mpccontroller, "MPCModule.py") as path:
             path_MPCModule = path.__str__()
+        if not os.path.isfile(path_MPCModule):
+            # todo: Workaround mit hardcoded path_MPCModule entfernen.
+            """ ACHTUNG: bis dahin nicht vergessen MPCModule.py in
+            "C:/Users/pierre/PycharmProjects/TRNSYSAuto/dist/assets" aktuell zu halten, wenn im Projekt "mpccontroller"
+            Änderungen vorgenommen werden! """
+            alt_path = os.path.join(self.path.assets_dir, 'MPCModule.py')
+            self.logger.warning(f'No file found inside {path_MPCModule}, will look at {alt_path} instead.')
+            path_MPCModule = alt_path
 
         for key in self.simulations.keys():
             sim = self.simulations[key]
