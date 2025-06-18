@@ -14,6 +14,7 @@ xcopy %PROJECT_PATH%\requirements%VENV_NAME_MAIN%.txt %PROJECT_PATH%\dist\ /y
 xcopy %PROJECT_PATH%\requirements%VENV_NAME_TRNSYS%.txt %PROJECT_PATH%\dist\ /y
 xcopy %PROJECT_PATH%\misc\Installationsanleitung.pdf %PROJECT_PATH%\dist\ /y
 xcopy %PROJECT_PATH%\scripts %PROJECT_PATH%\dist\scripts /i /y
+xcopy %VENV_PATH_MAIN%\Lib\site-packages\mpccontroller\MPCModule.py %PROJECT_PATH%\dist\assets\ /y
 
 if %errorlevel% neq 0 (
     echo An error occured while creating executable .exe-file, setup aborted!
