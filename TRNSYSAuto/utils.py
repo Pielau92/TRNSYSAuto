@@ -1,16 +1,25 @@
-import os
-import win32com.client
-import pandas as pd
-# import xlwings as xw
-import tkinter as tk
+import sys, os
 import re
-import pickle
 import shutil
+import win32com.client
+
+import pandas as pd
+import tkinter as tk
 
 from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
+from pandas import Series, DataFrame
 
 
-def replace_parameter_values(path_file, parameters):
+def get_root_dir() -> str:
+    """Get root directory path."""
+
+    if getattr(sys, 'frozen', False):  # if program is run from an executable .exe file
+        return os.path.dirname(os.path.dirname(sys.executable))
+    else:  # if program is run from IDE or command window
+        return os.path.dirname(os.path.dirname(__file__))
+
+
+def replace_parameter_values(path_file: str, parameters: dict) -> None:
     """Find and replace parameter values within a .txt file.
 
     Finds parameter values within a .txt file, replaces them and overwrites the .txt file. For this, the following must
@@ -30,19 +39,15 @@ def replace_parameter_values(path_file, parameters):
 
         # .txt file now shows "Parameter1=4; Parameter2=5; Parameter3=6."
 
-    Parameters
-    ----------
-    path_file : str
-        Path of the .txt file.
-    parameters : pandas.Series
-        Series with parameter values to be replaced, the parameter name has to be in the index name.
+    :param str path_file: path of txt file
+    :param dict parameters: dict with parameters as key value pairs
     """
 
     def replacer(match):
         parameter = match.group(1)  # parameter name
         misc = match.group(3)  # miscellaneous characters after the number value (typically comments)
 
-        if parameter in parameters.index:
+        if parameter in parameters.keys():
             return f"{parameter} = {parameters[parameter]} {misc}"  # replace, if parameter name matches
         else:
             return match.group(0)  # return unchanged text
@@ -63,20 +68,15 @@ def replace_parameter_values(path_file, parameters):
         file.write(new_text)
 
 
-def find_and_replace(path_file, pattern, replacement):
+def find_and_replace(path_file: str, pattern: str, replacement: str) -> None:
     """Find string in text and replace by another string.
 
     Reads text from a .txt file, searches for a defined string, replaces it by another string and overwrites the .txt
     file.
 
-    Parameters
-    ----------
-    path_file : str
-        Path of the .txt file.
-    pattern : str
-        Pattern which marks text to be replaced.
-    replacement : str
-        Text to be inserted instead.
+    :param str path_file: path to txt file
+    :param str pattern: pattern which marks the text to be replaced
+    :param str replacement: text to be inserted instead
     """
 
     with open(path_file, 'r') as file:
@@ -86,10 +86,12 @@ def find_and_replace(path_file, pattern, replacement):
         file.write(new_text)  # overwrite file
 
 
-def update_excel_file(path_excel_file):
-    """Update calculations in excel file.
+def update_excel_file(path_excel_file: str) -> None:
+    """Update calculations in Excel file.
 
     https://stackoverflow.com/questions/40893870/refresh-excel-external-data-with-python
+
+    :param str path_excel_file: path to Excel file
     """
 
     xlapp = win32com.client.DispatchEx("Excel.Application")
@@ -100,21 +102,7 @@ def update_excel_file(path_excel_file):
     xlapp.Quit()
 
 
-def excel_export_variant_evaluation(sheet_name_variant_input, result, variant_folder, variant_output_file,
-                                    variant_parameter_df):
-    """Output routine for variant excel file."""
-
-    # wb = xw.Book(variant_output_file)
-    # ws = wb.sheets[sheet_name_variant_input]
-    # ws["A2"].options(pd.DataFrame, header=1, index=False, expand='table').value = variant_parameter_df[
-    #     ['File', 'Parameter', variant_folder]]
-    # ws["B60"].options(pd.DataFrame, header=1, index=False, expand='table').value = result
-    # wb.save()
-    # wb.app.quit()
-    pass
-
-
-def to_single_column(df_input):
+def to_single_column(df_input: DataFrame) -> Series:
     """Turn pandas DataFrame into one single column.
 
     All columns of df_input are stacked over each other with one free row inbetween and the column headers on top.
@@ -126,7 +114,7 @@ def to_single_column(df_input):
         'col3': [7, 8, 9]
         })
 
-        result = functions.to_single_column(df)
+        result = utils.to_single_column(df)
         print(result)
         """
 
@@ -144,18 +132,12 @@ def to_single_column(df_input):
     return single_column
 
 
-def progress_bar(progress, total):
-    percent = 100 * (progress / float(total))
-    bar = '█' * int(percent) + '-' * (100 - int(percent))
-    print(f"\r|{bar}| {percent:.2f}%", end="\r")
+def ask_filenames(initialdir: str = None) -> list[str]:
+    """Open explorer window and ask for a single or multiple files, return path(s) to file(s).
 
-
-def load(savefile_path):
-    with open(savefile_path, 'rb') as file:
-        return pickle.load(file)
-
-
-def ask_filenames(initialdir=None):
+    :param str initialdir: path to directory initially shown when opening the explorer window
+    :return: list of paths to files
+    """
     root = tk.Tk()
     root.withdraw()
 
@@ -167,7 +149,12 @@ def ask_filenames(initialdir=None):
     return [path.replace("/", "\\") for path in filenames]
 
 
-def ask_filename(initialdir=None):
+def ask_filename(initialdir: str = None) -> str:
+    """Open explorer window and ask for a single file, return path to file.
+
+    :param str initialdir: path to directory initially shown when opening the explorer window
+    :return: path to file
+    """
     root = tk.Tk()
     root.withdraw()
 
@@ -179,15 +166,30 @@ def ask_filename(initialdir=None):
     return filename.replace("/", "\\")
 
 
-def ask_dir():
-    """CAUTION: Has compatibility issues with pywinauto (explorer does not open to ask directory location), look in
-    main.py for a fix."""
+def ask_dir(initialdir: str = None) -> str:
+    """Open explorer window and ask for a single directory, return path to directory.
+
+    CAUTION: Has compatibility issues with pywinauto (explorer does not open to ask directory location), look in main.py
+    for a fix.
+
+    :param str initialdir: path to directory initially shown when opening the explorer window
+    :return: path to directory
+    """
+
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askdirectory()
+
+    return filedialog.askdirectory(initialdir=initialdir)
 
 
-def create_date_column(year, time_increment_profiles=60):
+def create_date_column(year: int, time_increment_profiles: int = 60) -> DataFrame:
+    """Create date column as a DataFrame, for a specific year and time increment.
+
+    :param int year: year
+    :param int time_increment_profiles: time increment, in minutes
+    :return: DataFrame with date column
+    """
+
     date = pd.date_range(
         start=str(year) + '-01-01',
         end=str(year + 1) + '-01-01',
@@ -207,35 +209,34 @@ def create_date_column(year, time_increment_profiles=60):
     return date_df
 
 
-def set_env_and_paths(conda_venv_name):
-    """ Set environment variables and paths before launching TRNEXE using Calling Python From TRNSYS.
+def set_env_and_paths(conda_venv_name: str) -> None:
+    """Set required environment variables for the conda environment to be found and used by the TRNSYS Python Interface,
+    before launching TRNEXE using Calling Python From TRNSYS.
 
     Translation and adaptation of Calling Python From TRNSYS batch file "RunTrnsysStudioWithCondaEnvironment.bat", which
-    is used to run the TRNSYS Studio and use the Python (CFFI) interface with a miniconda environment.
+    is used to run the TRNSYS Studio and use the Python (CFFI) interface with a miniconda environment. The virtual
+    environment should have at least cffi and numpy installed.
 
-    Parameters
-    ----------
-    conda_venv_name : str
-        Name of the conda virtual environment (venv) to be used, should have at least cffi and numpy installed.
+    :param str conda_venv_name: name of the conda virtual environment
     """
 
-    # set required environment variables for the conda environment to be found and used by the TRNSYS Python Interface
+    username = os.getlogin()  # get operating system username
+
+    # list of paths to be added
+    add_paths = [
+        f"C:\\Users\\{username}\\miniconda3\\condabin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\bin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\mingw-w64\\bin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\bin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\usr\\bin",
+        f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Scripts"
+    ]
+
     # add directory with python to the path (to the front of the path!)
-    username = os.getlogin()  # get os username
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\condabin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name};" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\bin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\mingw-w64\\bin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\bin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Library\\usr\\bin;" \
-                         + os.environ["PATH"]
-    os.environ["PATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Scripts;" \
-                         + os.environ["PATH"]
+    add_paths.reverse()
+    paths = ';'.join(add_paths)
+    os.environ["PATH"] = paths + os.environ["PATH"]
 
     # Set PYTHONHOME to the same directory
     os.environ["PYTHONHOME"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}"
@@ -244,23 +245,14 @@ def set_env_and_paths(conda_venv_name):
     os.environ["PYTHONPATH"] = f"C:\\Users\\{username}\\miniconda3\\envs\\{conda_venv_name}\\Lib\\site-packages"
 
 
-def copy_files(source_path, destination_path):
+def copy_files(source_path: str | list[str], destination_path: str | list[str]) -> list[str] | None:
     """Copy file(s) from source path(s) to destination path(s).
 
     The number of source paths must match the number of destination paths.
 
-    Parameters
-    ----------
-    source_path : str | list(str)
-        path (or list of paths) of file to be copied.
-    destination_path : str | list(str)
-        path (or list of paths) where source file is to be copied.
-
-    Returns
-    -------
-    files_not_found list
-        Returns the path of the file that caused the function to raise a FileNotFoundError exception, returns None on
-        success.
+    :param str | list[str] source_path: path (or list of paths) of file to be copied
+    :param str | list[str] destination_path: path (or list of paths) where source file is to be copied
+    :return: list of paths to files that raised a FileNotFoundError exception, returns None on success
     """
 
     files_not_found = []
@@ -276,3 +268,31 @@ def copy_files(source_path, destination_path):
 
     if files_not_found:
         return files_not_found
+
+
+def logical_or(boolean_lists: list[list[bool]]) -> list[bool]:
+    """Performs an element-wise logical or condition on all boolean lists passed inside boolean_lists.
+
+    :param list[list[bool]] boolean_lists: List of boolean lists
+    :return: boolean list after element-wise logical or operation
+    """
+
+    # check if all lists have the same length
+    lengths = [len(boolean_list) for boolean_list in boolean_lists]
+    if not lengths[:-1] == lengths[1:]:
+        raise ValueError('All boolean lists must have the same length.')
+
+    return [any(values) for values in zip(*boolean_lists)]
+
+
+def delete_files(paths: list[str]) -> None:
+    """Delete multiple files.
+
+    :param paths: list of paths to files to be deleted
+    """
+
+    for path in paths:
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass

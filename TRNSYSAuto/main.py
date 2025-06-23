@@ -11,140 +11,21 @@
 # endregion
 
 import multiprocessing
-import os
-import sys
-import tkinter as tk
-import TRNSYSAuto.classes as classes
-import TRNSYSAuto.functions as functions
+
+import TRNSYSAuto.utils as utils
+
+from TRNSYSAuto.gui import gui
 
 """For some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
 directory/file is asked multiple times), freeze_support() prevents this."""
 multiprocessing.freeze_support()
 
 
-def get_root_dir():
-    """Get root directory path."""
-
-    if getattr(sys, 'frozen', False):  # if program is run from an executable .exe file
-        return os.path.dirname(os.path.dirname(sys.executable))
-    else:  # if program is run from IDE or command window
-        return os.path.dirname(os.path.dirname(__file__))
-
-
-root_dir = get_root_dir()
-
-
 def main():
-    """Main method.
+    root_dir = utils.get_root_dir()
 
-    GUI guide: https://realpython.com/python-gui-tkinter/"""
-
-    def simulate_and_evaluate():
-        window.destroy()  # close GUI window
-
-        # for each simulation series...
-        for sim_series in create_sim_queue():
-            sim_series.setup_simulation()  # set simulation up
-            sim_series.start_sim_series()  # start simulation series
-
-            sim_series.setup_evaluation()  # set evaluation up
-            sim_series.start_evaluation()  # start evaluation
-
-        window.quit()
-
-    def simulate():
-        window.destroy()  # close GUI window
-
-        # for each simulation series in the queue...
-        for sim_series in create_sim_queue():
-            sim_series.setup_simulation()  # start simulation
-            sim_series.start_sim_series()  # start simulation series
-
-        window.quit()
-
-    def evaluate():
-        window.destroy()  # close GUI window
-
-        initialdir = os.path.join(root_dir, '../data', 'results')
-        path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
-        sim_series = functions.load(path_savefile)  # load SimulationSeries object
-
-        # initialize logging file
-        sim_series.initialize_logging()
-
-        # start evaluation
-        sim_series.setup_evaluation()  # set evaluation up
-        sim_series.start_evaluation()  # start evaluation
-
-        window.quit()
-
-    def continue_simulation():
-        window.destroy()  # close GUI window
-
-        initialdir = os.path.join(root_dir, '../data', 'results')
-        path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
-        sim_series = functions.load(path_savefile)  # load SimulationSeries object
-
-        # initialize logging file
-        sim_series.initialize_logging()
-
-        sim_series.check_sim_success(reset=True)
-        sim_series.start_sim_series()
-
-        window.quit()
-
-    def continue_evaluation():
-        window.destroy()  # close GUI window
-
-        initialdir = os.path.join(root_dir, '../data', 'results')
-        path_savefile = functions.ask_filename(initialdir=initialdir)  # ask for pickle savefile
-        sim_series = functions.load(path_savefile)  # load SimulationSeries object
-
-        # initialize logging file
-        sim_series.initialize_logging()
-
-        sim_series.start_evaluation()
-
-        window.quit()
-
-    def add_button(button_text, button_command):
-
-        button = tk.Button(
-            window,
-            text=button_text,
-            width=25,
-            height=5,
-            command=button_command,
-        )
-        button.pack()
-
-    # Start GUI ()
-    window = tk.Tk()
-    label = tk.Label(text="Aktion auswählen")
-    label.pack()
-
-    button_dict = {"Simulate and evaluate": simulate_and_evaluate,
-                   "Simulate only": simulate,
-                   "Evaluate only": evaluate,
-                   "Continue incomplete simulation": continue_simulation,
-                   "Continue incomplete evaluation": continue_evaluation,
-                   }
-
-    for text, command in button_dict.items():
-        add_button(text, command)
-
-    window.mainloop()
-
-
-def create_sim_queue():
-    """Ask for simulation variants Excel files and create list of SimulationSeries objects accordingly.
-
-    Opens the explorer and asks for one or multiple simulation variants Excel files. For each selected Excel file, an
-    additional SimulationSeries object is created and added a list."""
-
-    initialdir = os.path.join(root_dir, '../data', 'input')
-
-    return [classes.SimulationSeries(path, root_dir) for path in functions.ask_filenames(initialdir=initialdir)]
+    # start GUI
+    gui(root_dir)
 
 
 if __name__ == '__main__':
