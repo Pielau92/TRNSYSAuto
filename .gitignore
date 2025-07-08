@@ -21,10 +21,14 @@ data/
 *.csv
 *.spec
 
-/docs
 /assets
 /tests
 /misc
 
 *.lnk
 *.pdf
+
+# docs directory
+/docs/_build/
+/docs/_static/
+/docs/_templates/
