@@ -14,6 +14,7 @@ from typing import Optional
 from tqdm import tqdm
 from pywinauto.application import Application
 from TRNSYSAuto.configs import Configs, Paths, load_from_ini
+from config.loader import load_from_ini
 from config.sections import Runtime
 from TRNSYSAuto.datalayer import ExcelData, SimParameters
 
