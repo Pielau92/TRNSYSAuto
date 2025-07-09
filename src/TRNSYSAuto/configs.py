@@ -1,14 +1,10 @@
-import os
 import configparser
 
-from os.path import join
+from os.path import join, expanduser
 from typing import Type, TypeVar, List
 from dataclasses import dataclass, fields
 
 T = TypeVar("T")  # type placeholder
-
-filename_configs = 'configs.ini'
-
 
 @dataclass
 class Configs:
@@ -148,14 +144,19 @@ def get_ini_section(path: str, section: str, cls: Type[T]) -> T:
             value = int(raw)
         elif typ == float:
             value = float(raw)
-        elif typ == bool:
-            value = raw.lower() in ['true', '1', 'yes', 'on', 'false', '0', 'no']
         elif typ == str:
             value = raw
-        elif typ == List[str] or typ == list[str]:
-            value = [x.strip() for x in raw.split(',')]
+        elif typ in {List[str], list[str]}:
+            value = [x.strip() for x in raw.split(',') if x.strip()]
+        elif typ == bool:
+            if raw.lower() in {'true', '1', 'yes', 'on'}:
+                value = True
+            elif raw.lower() in {'false', '0', 'no', 'off'}:
+                value = False
+            else:
+                raise ValueError(f"Invalid boolean value: {raw}")
         else:
-            raise TypeError(f'Unsupported field type: {typ}')
+            raise TypeError(f'Unsupported field type {typ} with value "{raw}" in section "{section}" inside {path}.')
 
         kwargs[name] = value
 
@@ -169,12 +170,12 @@ class Paths:
     config: str  # path to configuration ini file
     original_sim_variants_excel: str  # path to original simulation variants Excel file
 
-    results_dir: str = join(os.path.expanduser('~'), 'documents', 'TRNSYSAuto')  # path to results output directory
+    results_dir: str = join(expanduser('~'), 'documents', 'TRNSYSAuto')  # path to results output directory
 
     @property
     def configs(self) -> str:
         """Path to configs.ini file."""
-        return join(self.root, filename_configs)
+        return join(self.root, 'configs.ini')
 
     @property
     def sim_series_dir(self) -> str:
@@ -189,45 +190,45 @@ class Paths:
     @property
     def savefile(self):
         """Path to savefile where the SimulationSeries object (and the simulation/evaluation progress) is saved."""
-        return os.path.join(self.sim_series_dir, self._configs.filenames.savefile)
+        return join(self.sim_series_dir, self._configs.filenames.savefile)
 
     @property
     def data_dir(self):
         """Path to data directory (contains input directory and results directory)."""
-        return os.path.join(self.root, 'data')
+        return join(self.root, 'data')
 
     @property
     def input_dir(self):
         """Path to input directory (optional storage location for simulation variants Excel files, default initial
         directory when asking to select a simulation variants Excel file)."""
-        return os.path.join(self.data_dir, 'input')
+        return join(self.data_dir, 'input')
 
     @property
     def assets_dir(self):
         """Path to assets directory (contains all files directly needed by TRNSYS)."""
-        return os.path.join(self.root, 'assets')
+        return join(self.root, 'assets')
 
     @property
     def sim_variants_excel(self):
         """Path to simulation series Excel file copy."""
-        return os.path.join(self.sim_series_dir, self._configs.runtime.filename_sim_variants_excel) + '.xlsx'
+        return join(self.sim_series_dir, self._configs.runtime.filename_sim_variants_excel) + '.xlsx'
 
     @property
     def evaluation_save_dir(self):
         """Path to directory, where evaluation results are saved."""
-        return os.path.join(self.sim_series_dir, 'evaluation')
+        return join(self.sim_series_dir, 'evaluation')
 
     @property
     def cumulative_evaluation_save_file(self):
         """Path to cumulative evaluation file."""
-        return os.path.join(self.evaluation_save_dir, 'gesamt.xlsx')
+        return join(self.evaluation_save_dir, 'gesamt.xlsx')
 
     @property
     def cumulative_evaluation_template(self):
         """Path to cumulative evaluation template file."""
-        return os.path.join(self.assets_dir, 'Auswertung_Gesamt.xlsx')
+        return join(self.assets_dir, 'Auswertung_Gesamt.xlsx')
 
     @property
     def variant_evaluation_template(self):
         """Path to variant evaluation template file."""
-        return os.path.join(self.assets_dir, 'Auswertung_Variante.xlsx')
+        return join(self.assets_dir, 'Auswertung_Variante.xlsx')
