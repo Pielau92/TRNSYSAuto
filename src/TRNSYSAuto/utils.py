@@ -17,11 +17,9 @@ def get_root_dir() -> str:
     """
 
     if getattr(sys, 'frozen', False):  # if program is run from an executable .exe file
-        filepath = sys.executable
+        return parent_dir(path= sys.executable, levels=2)
     else:  # if program is run from IDE or command window
-        filepath = __file__
-
-    return parent_dir(path=filepath, levels=3)
+        return parent_dir(path= __file__, levels=3)
 
 
 def parent_dir(path: str, levels: int = 1) -> str:
