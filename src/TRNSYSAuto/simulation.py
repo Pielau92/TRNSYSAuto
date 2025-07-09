@@ -14,6 +14,7 @@ from typing import Optional
 from tqdm import tqdm
 from pywinauto.application import Application
 from TRNSYSAuto.configs import Configs, Paths, load_from_ini
+from config.sections import Runtime
 from TRNSYSAuto.datalayer import ExcelData, SimParameters
 
 from importlib import resources
@@ -38,7 +39,7 @@ class SimulationSeries:
             'execution_time': datetime.now().strftime('%d.%m.%Y_%H.%M'),
             'filename_sim_variants_excel': os.path.basename(self.path.original_sim_variants_excel).split('.')[0],
         }
-        self.configs.runtime = Configs.Runtime(**kwargs)
+        self.configs.runtime = Runtime(**kwargs)
 
         # self.evaluation = Evaluation()
 
