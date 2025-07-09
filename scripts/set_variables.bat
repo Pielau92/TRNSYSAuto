@@ -21,7 +21,8 @@ rem Set path variables
 
 for %%i in ("%CD%\..") do set PROJECT_PATH=%%~fi
 for %%i in ("%CD%\..") do set PROJECT_NAME=%%~nxi
-set MAIN_PATH=%PROJECT_PATH%\%PROJECT_NAME%\main.py
+set SRC_PATH=%PROJECT_PATH%\src
+set MAIN_PATH=%SRC_PATH%\%PROJECT_NAME%\main.py
 set CONDA_PATH=%USERPROFILE%\%CONDA%
 set VENV_PATH_MAIN=%CONDA_PATH%\envs\%VENV_NAME_MAIN%
 set VENV_PATH_TRNSYS=%CONDA_PATH%\envs\%VENV_NAME_TRNSYS%

@@ -11,12 +11,28 @@ from pandas import Series, DataFrame
 
 
 def get_root_dir() -> str:
-    """Get root directory path."""
+    """Get root directory path.
+
+    :return: root directory path
+    """
 
     if getattr(sys, 'frozen', False):  # if program is run from an executable .exe file
-        return os.path.dirname(os.path.dirname(sys.executable))
+        return parent_dir(path= sys.executable, levels=2)
     else:  # if program is run from IDE or command window
-        return os.path.dirname(os.path.dirname(__file__))
+        return parent_dir(path= __file__, levels=3)
+
+
+def parent_dir(path: str, levels: int = 1) -> str:
+    """Get parent directory.
+
+    :param str path: starting path
+    :param int levels: specifies how many directory levels to move upwards from the starting path
+    :return: parent directory path
+    """
+
+    for _ in range(levels):
+        path = os.path.dirname(path)
+    return path
 
 
 def replace_parameter_values(path_file: str, parameters: dict) -> None:

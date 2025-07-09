@@ -18,8 +18,8 @@ if %errorlevel% neq 0 (
 
 rem --collect-all xml.parsers.expat --hidden-import=pyexpat --collect-all pyexpat --hidden-import=openpyxl.cell._writer --hidden-import=win32timezone --hidden-import=tkinter 
 
-echo Copying executable into %PROJECT_PATH%\%PROJECT_NAME%
-xcopy %PROJECT_PATH%\dist\main.exe %PROJECT_PATH%\%PROJECT_NAME% /y || (exit /b %errorlevel%)
+rem echo Copying executable into %SRC_PATH%\%PROJECT_NAME%
+rem xcopy %PROJECT_PATH%\dist\main.exe %SRC_PATH%\%PROJECT_NAME% /y || (exit /b %errorlevel%)
 
 echo Executable created successfully!
 endlocal

@@ -1,0 +1,59 @@
+"""Contains a dataclass for each section inside the .ini file. Each dataclass consists of configurations with a
+given name and datatype.
+
+"""
+from dataclasses import dataclass
+
+@dataclass
+class General:
+    path_exe: str  # path to TRNSYS executable file
+    timeout: int  # if timeout is reached without starting another simulation, stop program [s]
+    start_time_buffer: int  # time buffer between two simulations, for increased stability [s] (optional)
+    multiprocessing_max: int  # maximum number of simulations performed simultaneously
+    multiprocessing_autodetect: bool  # if true, override multiprocessing_max with number of cpu cores
+    eval_save_interval: int  # the evaluation progress is saved after each save interval
+    conda_venv_name: str  # name of the conda virtual environment (venv) to be used
+
+@dataclass
+class Filenames:
+    dck_template: str
+    logger: str
+    trnsys_output: str
+    savefile: str
+    redundant: list[str]
+    templates: list[str]
+    templates_assets: list[str]
+
+@dataclass
+class SheetNames:
+    """Excel sheet names"""
+
+    sim_variants: str
+    variant_input: str
+    calculation: str
+    cumulative_input: str
+    zone_1_input: str
+    zone_3_input: str
+    zone_1_with_operating_time: str
+    zone_1_without_operating_time: str
+    zone_3_with_operating_time: str
+    zone_3_without_operating_time: str
+
+@dataclass
+class ColumnHeaders:
+    zone1: list[str]
+    zone2: list[str]
+    zone3: list[str]
+    result_column: list[str]
+    trnsys_output: list[str]
+    sim_variant: list[str]
+
+@dataclass
+class Runtime:
+    """Contains configurations set at runtime."""
+    execution_time: str
+    filename_sim_variants_excel: str
+
+    @property
+    def dirname_sim_series(self) -> str:
+        return f'{self.filename_sim_variants_excel}_{self.execution_time}'
