@@ -187,6 +187,8 @@ class SimulationSeries:
                 raise FileNotFoundError  # program will end if error is raised
 
             sim.overwrite_dck_file_parameters()
+            sim.overwrite_mpc_settings_parameters()
+
 
     def save(self):
         """Pickle save SimulationSeries instance."""
@@ -324,6 +326,11 @@ class Simulation:
         """Path to dck file."""
         return os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.dck_template)
 
+    @property
+    def path_mpc_settings(self) -> str:
+        """Path to settingsMPC.ini file."""
+        return os.path.join(self.path.sim_series_dir, self.name, 'settingsMPC.ini')
+
     def start(self, lock: multiprocessing.Lock = None):
         """Start simulation.
 
@@ -420,4 +427,15 @@ class Simulation:
             self.path_dck, pattern=r'ASSIGN\s+"[^\.]*\.b(17|18)"', replacement=r'ASSIGN "' + self.params.b18 + '"')
 
         # replace parameter values
-        utils.replace_parameter_values(self.path_dck, self.params.dck)
+        if self.params.dck:
+            utils.replace_parameter_values(self.path_dck, self.params.dck)
+
+    def overwrite_mpc_settings_parameters(self):
+        """Overwrite parameters inside settingsMPC.ini File.
+
+        Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
+        the simulation variants Excel file.
+        """
+
+        if self.params.mpc:
+            utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc)
