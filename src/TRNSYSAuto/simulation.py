@@ -413,11 +413,11 @@ class Simulation:
 
         # replace weather data file name inside .dck file
         utils.find_and_replace(
-            self.path_dck, pattern=r'(ASSIGN "tm2")', replacement=r'ASSIGN "' + self.params.weather + '"')
+            self.path_dck, pattern=r'ASSIGN\s+"[^\.]*\.tm2"', replacement=r'ASSIGN "' + self.params.weather + '"')
 
         # replace .b17/.b18 file name inside .dck file
         utils.find_and_replace(
-            self.path_dck, pattern=r'(ASSIGN "b17")', replacement=r'ASSIGN "' + self.params.b18 + '"')
+            self.path_dck, pattern=r'ASSIGN\s+"[^\.]*\.b(17|18)"', replacement=r'ASSIGN "' + self.params.b18 + '"')
 
         # replace parameter values
         utils.replace_parameter_values(self.path_dck, self.params.dck)
