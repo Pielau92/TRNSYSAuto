@@ -48,7 +48,12 @@ class ExcelData:
                 value = excel_dict[target][variant]
                 if len(value) == 0:  # if empty dict/str, set None
                     value = None
+                elif isinstance(value, dict):
+                    # remove key value pairs with value "nan"
+                    value = {key: item for key, item in value.items() if not pd.isna(item)}
+
                 kwargs[target] = value
+
             parameters[variant] = SimParameters(**kwargs)
 
         self.parameters = parameters
