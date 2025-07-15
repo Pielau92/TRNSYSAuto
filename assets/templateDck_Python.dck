@@ -237,7 +237,7 @@ etavertc = 0.9
 etavertww = 0.7
 
 
-MBTAspezges = 16  !kg/h/m≤ 22 bei fuﬂbodenheizung, 16 bei BTA
+MBTAspezges = 18  !kg/h/m≤ 22 bei fuﬂbodenheizung, 16 bei BTA
 qv1 = [56,19]/anutz1/3.6	!ms250310 das ist "QVENT_ZONE1", macht keinen Sinn
 
 *------------------------------------------------------------------------------
