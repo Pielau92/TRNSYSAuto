@@ -47,6 +47,32 @@ ASSIGN "SzenarioAneu.txt" 135		! unit 132
 
 assign "Qelww_CHR55025.txt" 62   	! Lasten und Elektro neu
 
+*------------------------------------------------------------------------------
+
+
+* EQUATIONS "Flaechen"
+* 
+EQUATIONS 9
+Vol1 = max([56,210],1)
+Vol2 = max([56,211],1)
+Vol3 = max([56,212],1)
+Vol4 = max([56,213],1)	!ms250310
+Anutz1 = max([56,214],1)   !Nutzfläche in m²
+Anutz2 = max([56,215],1)
+Anutz3 = max([56,216],1)
+Anutz4 = max([56,217],1)	!ms250310
+anutzges = Anutz1 + Anutz2 + Anutz3 + Anutz4	!ms250310
+
+*$UNIT_NAME Flaechen
+*$LAYER Main
+*$POSITION 712 487
+
+*$UNIT_NAME Inf
+*$LAYER Main
+*$POSITION 596 1501
+
+*------------------------------------------------------------------------------
+
 Equations 11  		! Varianten Arbeitshilfen, Beleuchtung, Personen
 
 Persanz1 = 2
@@ -860,30 +886,6 @@ qmaschabw = [3,3]*1000
 *$POSITION 199 794
 
                                                                          
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Flaechen"
-* 
-EQUATIONS 9
-Vol1 = max([56,210],1)
-Vol2 = max([56,211],1)
-Vol3 = max([56,212],1)
-Vol4 = max([56,213],1)	!ms250310
-Anutz1 = max([56,214],1)   !Nutzfläche in m²
-Anutz2 = max([56,215],1)
-Anutz3 = max([56,216],1)
-Anutz4 = max([56,217],1)	!ms250310
-anutzges = Anutz1 + Anutz2 + Anutz3 + Anutz4	!ms250310
-
-*$UNIT_NAME Flaechen
-*$LAYER Main
-*$POSITION 712 487
-
-*$UNIT_NAME Inf
-*$LAYER Main
-*$POSITION 596 1501
-
 *------------------------------------------------------------------------------
 
 
