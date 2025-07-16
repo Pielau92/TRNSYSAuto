@@ -5,6 +5,7 @@ import csv
 import logging
 import shutil
 import pickle
+import re
 import mpccontroller
 
 import TRNSYSAuto.utils as utils
@@ -16,7 +17,7 @@ from pywinauto.application import Application
 from config.configs import Configs, Paths
 from config.loader import load_from_ini
 from config.sections import Runtime
-from TRNSYSAuto.datalayer import ExcelData, SimParameters
+from TRNSYSAuto.datalayer import ExcelData, SimParameters, B18Data
 
 from importlib import resources
 
@@ -188,7 +189,7 @@ class SimulationSeries:
 
             sim.overwrite_dck_file_parameters()
             sim.overwrite_mpc_settings_parameters()
-
+            sim.overwrite_floor_area()
 
     def save(self):
         """Pickle save SimulationSeries instance."""
@@ -317,6 +318,7 @@ class Simulation:
         self.path = paths
         self.configs = configs
         self.logger = logger
+        self.b18_data = B18Data(path_b18=os.path.join(self.path.sim_series_dir, self.name, params.b18))
 
         self.success: bool = False  # True, if simulated successfully
         self.ignore: bool = False  # if True, do not simulate
@@ -439,3 +441,29 @@ class Simulation:
 
         if self.params.mpc:
             utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc)
+
+    def overwrite_floor_area(self):
+        """"""
+
+        def replacer(match):
+            return (f"{match.group(1)} "  # parameter name
+                    f"= {ref_area}")  # reference area
+
+        self.b18_data.read_ref_areas()
+
+        with open(self.path_dck, 'r') as file:
+            text = file.read()
+
+        new_text = text
+        for zone, ref_area in enumerate(self.b18_data.ref_areas):
+            pattern = re.compile(rf'^(Anutz{zone + 1})'  # "Anutz" followed by zone number (e.g Anutz1, Anutz99, ...)
+                                 + r'[\s\t]*=[\s\t]*'  # equal sign (=), with any number of white spaces/tabs before and after
+                                 + r'(.*)$',
+                                 # any characters, until the end of the line is reached (typically comments)
+                                 re.MULTILINE)
+
+            new_text = pattern.sub(replacer, new_text)
+
+            # overwrite file
+            with open(self.path_dck, 'w') as file:
+                file.write(new_text)
