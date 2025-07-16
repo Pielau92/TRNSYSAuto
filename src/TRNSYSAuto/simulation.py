@@ -333,6 +333,26 @@ class Simulation:
         """Path to settingsMPC.ini file."""
         return os.path.join(self.path.sim_series_dir, self.name, 'settingsMPC.ini')
 
+    @property
+    def sim_hours(self) -> int:
+        """Number of simulated hours."""
+
+        # find simulation start parameter, if set by user, otherwise start = 0 (start of year)
+        start = 0
+        for key in list(self.params.dck.keys()):
+            if str.lower(key) == 'start':
+                start = self.params.dck[key]
+                break
+
+        # find simulation stop parameter, if set by user, otherwise stop = 8760 (end of year)
+        stop = 8760
+        for key in list(self.params.dck.keys()):
+            if str.lower(key) == 'stop':
+                stop = self.params.dck[key]
+                break
+
+        return stop - start
+
     def start(self, lock: multiprocessing.Lock = None):
         """Start simulation.
 
@@ -407,7 +427,7 @@ class Simulation:
                 data = list(csv.reader(f, delimiter="\t"))
 
             # simulation was successful, if hourly data is complete (8760 entries)
-            self.success = not len(data) < 8762
+            self.success = not len(data) < self.sim_hours + 2
         except FileNotFoundError:  # no file found
             self.success = False
 
