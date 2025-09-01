@@ -3803,13 +3803,13 @@ STOP		! 3 Stop time
 -1		! 8 Print header
 0		! 9 Delimiter
 1		! 10 Print labels
-INPUTS 61
-ta tzone1 tzone2 tzone3 top1 top2 top3 
+INPUTS 68
+ta tzone1 tzone2 tzone3 tzone4 top1 top2 top3 top4
 B2Grid_frei 
 tsystem 
-tinbta1 tinbta2 tinbta3
-tinbtao1 tinbtao2 tinbtao3
-minbta1 minbta2 minbta3 
+tinbta1 tinbta2 tinbta3 tinbta4
+tinbtao1 tinbtao2 tinbtao3 tinbtao4
+minbta1 minbta2 minbta3 minbta4
 
 tbtasoll 
 bta1schalt
@@ -3821,7 +3821,7 @@ Qcomi1u Qcomi1o Qcomi2u Qcomi2o Qcomi3u Qcomi3o !34
 
 Qhges qbefgesraum qvolgesh Qvbefges qcges Qventfges qvolgesc Qventfges qkuehlges  qheizges Qwwnutz Qel
 qhend qwwend qendwaerme qcend qelges PVprod queber
-qh1 qh2 qh3 qc1 qc2 qc3 qbtamax1 queber1  !27
+qh1 qh2 qh3 qh4 qc1 qc2 qc3 qc4 qbtamax1 queber1  !27
 
 
 
@@ -3829,12 +3829,12 @@ qh1 qh2 qh3 qc1 qc2 qc3 qbtamax1 queber1  !27
 *Qelnetzges Qelüberschussges PEBelnetz PEBelüberschuss PEB PEBakkum 
 
 
-ta tzone1 tzone2 tzone3 top1 top2 top3 
+ta tzone1 tzone2 tzone3 tzone4 top1 top2 top3 top4 
 B2Grid_frei 
 tsystem 
-tinbta1 tinbta2 tinbta3
-tinbtao1 tinbtao2 tinbtao3
-minbta1 minbta2 minbta3 
+tinbta1 tinbta2 tinbta3 tinbta4
+tinbtao1 tinbtao2 tinbtao3 tinbtao4
+minbta1 minbta2 minbta3 minbta4 
 tbtasoll 
 bta1schalt
 bta2schalt
@@ -3845,7 +3845,7 @@ Qcomi1u Qcomi1o Qcomi2u Qcomi2o Qcomi3u Qcomi3o !34
 
 Qhges qbefgesraum qvolgesh Qvbefges qcges Qventfges qvolgesc Qventfges qkuehlges  qheizges Qwwnutz Qel
 qhend qwwend qendwaerme qcend qelges PVprod queber
-qh1 qh2 qh3 qc1 qc2 qc3 qbtamax1 queber1  !31
+qh1 qh2 qh3 qh4 qc1 qc2 qc3 qc4 qbtamax1 queber1  !31
 
 
 
