@@ -27,7 +27,7 @@ class SimulationSeries:
 
     def __init__(self, path_config: str, path_root: str, path_original_sim_variants_excel: str):
         self.simulations: dict[Simulation] = {}  # simulations within simulation series
-        self.excel_data = ExcelData()
+        self.excel_data: ExcelData|None = None
         self.configs: Configs = load_from_ini(path=path_config)
         self.path = Paths(_configs=self.configs,
                           root=path_root,
@@ -112,13 +112,10 @@ class SimulationSeries:
         """Initialize simulations based on the simulation variants Excel file."""
 
         self.logger.info(f'Importing simulation variants Excel file from {self.path.original_sim_variants_excel}.')
-        self.excel_data.import_excel(
-            path=self.path.original_sim_variants_excel,
+        self.excel_data = ExcelData(
+            path_excel=self.path.original_sim_variants_excel,
             sheet_name=self.configs.sheetnames.sim_variants
         )
-
-        # get simulation parameters from imported Excel data
-        self.excel_data.get_sim_params()
 
         variants = self.excel_data.parameters.keys()
         for variant in variants:
