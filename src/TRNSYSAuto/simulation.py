@@ -241,7 +241,7 @@ class SimulationSeries:
                     if lock:
 
                         # create a new process instance
-                        process = multiprocessing.Process(target=sim.start,
+                        process = multiprocessing.Process(target=sim.simulate,
                                                           args=(lock,))
                         with lock:
                             start_time = time.time()
@@ -255,7 +255,7 @@ class SimulationSeries:
                         lock.acquire()
 
                     else:  # no lock
-                        sim.start()
+                        sim.simulate()
 
                 except Exception:
 
@@ -355,11 +355,11 @@ class Simulation:
         definition.
         """
 
-        self.overwrite_dck_file_parameters()
-        self.overwrite_floor_area()
-        self.overwrite_mpc_settings_parameters()
+        self._overwrite_dck_file_parameters()
+        self._overwrite_floor_area()
+        self._overwrite_mpc_settings_parameters()
 
-    def start(self, lock: multiprocessing.Lock = None):
+    def simulate(self, lock: multiprocessing.Lock = None):
         """Start simulation.
 
         Starts a TRNSYS simulation and uses a specified dck-file as input. If multiprocessing is used, a lock is passed
@@ -370,7 +370,7 @@ class Simulation:
         :param multiprocessing.Lock lock:  lock object from the multiprocessing module.
         """
 
-        app = self.start_application()
+        app = self._start_application()
 
         if not app:  # if an exception/error occurs, abort (and release any lock so the next simulation may start)
 
@@ -400,7 +400,26 @@ class Simulation:
         redundant_file_paths = [os.path.join(path_sim, file) for file in self.configs.filenames.redundant]
         utils.delete_files(redundant_file_paths)
 
-    def start_application(self) -> Application | None:
+    def check_success(self) -> bool:
+        """Check if simulation was calculated successfully, based on the TRNSYS output file(s).
+
+        :return: success flag as boolean
+        """
+        # path of output file
+        path_output = os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.trnsys_output)
+
+        try:
+            with open(path_output) as f:
+                data = list(csv.reader(f, delimiter="\t"))
+
+            # simulation was successful, if hourly data is complete (8760 entries)
+            self.success = not len(data) < self.sim_hours + 2
+        except FileNotFoundError:  # no file found
+            self.success = False
+
+        return self.success
+
+    def _start_application(self) -> Application | None:
         """Start simulation application and return Application object.
 
         Performs all necessary steps to start the simulation application. If an error occures, log error message and
@@ -461,26 +480,7 @@ class Simulation:
 
         return app
 
-    def check_success(self) -> bool:
-        """Check if simulation was calculated successfully, based on the TRNSYS output file(s).
-
-        :return: success flag as boolean
-        """
-        # path of output file
-        path_output = os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.trnsys_output)
-
-        try:
-            with open(path_output) as f:
-                data = list(csv.reader(f, delimiter="\t"))
-
-            # simulation was successful, if hourly data is complete (8760 entries)
-            self.success = not len(data) < self.sim_hours + 2
-        except FileNotFoundError:  # no file found
-            self.success = False
-
-        return self.success
-
-    def overwrite_dck_file_parameters(self):
+    def _overwrite_dck_file_parameters(self):
         """Overwrite parameters inside .dck File.
 
         Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
@@ -499,7 +499,7 @@ class Simulation:
         if self.params.dck:
             utils.replace_parameter_values(self.path_dck, self.params.dck)
 
-    def overwrite_mpc_settings_parameters(self):
+    def _overwrite_mpc_settings_parameters(self):
         """Overwrite parameters inside settingsMPC.ini File.
 
         Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
@@ -509,7 +509,7 @@ class Simulation:
         if self.params.mpc:
             utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc)
 
-    def overwrite_floor_area(self):
+    def _overwrite_floor_area(self):
         """Read floor areas from b17/18 file and overwrite floor area values inside dck file."""
 
         def replacer(match):
