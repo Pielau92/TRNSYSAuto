@@ -184,9 +184,7 @@ class SimulationSeries:
                 self.simulations[key].ignore = True  # simulation variant will be ignored
                 raise FileNotFoundError  # program will end if error is raised
 
-            sim.overwrite_dck_file_parameters()
-            sim.overwrite_mpc_settings_parameters()
-            sim.overwrite_floor_area()
+            sim.setup()
 
     def save(self):
         """Pickle save SimulationSeries instance."""
@@ -349,6 +347,17 @@ class Simulation:
                 break
 
         return stop - start
+
+    def setup(self):
+        """Setup simulation.
+
+        Overwrites content of simulation files (like templates or configuration files) according to the simulation
+        definition.
+        """
+
+        self.overwrite_dck_file_parameters()
+        self.overwrite_floor_area()
+        self.overwrite_mpc_settings_parameters()
 
     def start(self, lock: multiprocessing.Lock = None):
         """Start simulation.
