@@ -460,27 +460,29 @@ class Simulation:
             utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc)
 
     def overwrite_floor_area(self):
-        """"""
+        """Read floor areas from b17/18 file and overwrite floor area values inside dck file."""
 
         def replacer(match):
             return (f"{match.group(1)} "  # parameter name
                     f"= {ref_area}")  # reference area
 
+        # read floor areas
         self.b18_data.read_ref_areas()
 
+        # read content of dck file
         with open(self.path_dck, 'r') as file:
-            text = file.read()
+            dck_content = file.read()
 
-        new_text = text
+        # create new content for dck file by overwriting floor area values
+        new_dck_content = dck_content
         for zone, ref_area in enumerate(self.b18_data.ref_areas):
             pattern = re.compile(rf'^(Anutz{zone + 1})'  # "Anutz" followed by zone number (e.g Anutz1, Anutz99, ...)
-                                 + r'[\s\t]*=[\s\t]*'  # equal sign (=), with any number of white spaces/tabs before and after
-                                 + r'(.*)$',
-                                 # any characters, until the end of the line is reached (typically comments)
+                                 + r'[\s\t]*=[\s\t]*'  # equal sign with any number of white spaces/tabs before or after
+                                 + r'(.*)$',  # any characters until  end of line is reached (typically comments)
                                  re.MULTILINE)
 
-            new_text = pattern.sub(replacer, new_text)
+            new_dck_content = pattern.sub(replacer, new_dck_content)
 
-            # overwrite file
-            with open(self.path_dck, 'w') as file:
-                file.write(new_text)
+        # overwrite dck file
+        with open(self.path_dck, 'w') as file:
+            file.write(new_dck_content)
