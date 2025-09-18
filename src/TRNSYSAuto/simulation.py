@@ -247,9 +247,9 @@ class SimulationSeries:
                             start_time = time.time()
                             while len(multiprocessing.active_children()) >= self.configs.general.multiprocessing_max:
                                 time.sleep(5)  # pause until number of active simulations drops below maximum
-                                if time.time() - start_time > self.configs.general.timeout:
+                                if time.time() - start_time > self.configs.time.timeout_sim:
                                     sys.exit(
-                                        f'Timeout of {str(self.configs.general.timeout)} sec reached, program ended.')
+                                        f'Timeout of {str(self.configs.time.timeout_sim)} sec reached, program ended.')
                             time.sleep(5)
                             process.start()
                         lock.acquire()
@@ -266,8 +266,8 @@ class SimulationSeries:
             # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:
                 time.sleep(5)
-                if time.time() - start_time > self.configs.general.timeout:
-                    sys.exit(f'Timeout of {str(self.configs.general.timeout)} sec reached, program ended.')
+                if time.time() - start_time > self.configs.time.timeout_sim:
+                    sys.exit(f'Timeout of {str(self.configs.time.timeout_sim)} sec reached, program ended.')
 
             # check for each simulation if it was successful
             self.check_sim_success()
@@ -379,7 +379,7 @@ class Simulation:
             return
 
         # add a time buffer before releasing the lock, which delays the next simulation
-        time.sleep(self.configs.general.start_time_buffer)
+        time.sleep(self.configs.time.buffer_sim_start)
         if lock is not None:
             lock.release()
 
@@ -388,7 +388,7 @@ class Simulation:
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
         try:
-            success_message.wait('visible', timeout=self.configs.general.timeout)
+            success_message.wait('visible', timeout=self.configs.time.timeout_sim)
         except TimeoutError:
             pass  # goes ahead and closes window after time out
 
@@ -434,14 +434,14 @@ class Simulation:
 
         # open .dck file selection window
         try:
-            app.connect(title="Öffnen", timeout=2)
+            app.connect(title="Öffnen", timeout=self.configs.time.timeout_open_dck_window)
             app.Öffnen.wait('visible')
             app.Öffnen.set_focus()
         except Exception as e:  # if error occurs, abort
             msg = f'{e} error occured while opening .dck file selection window for simulation {self.name}.'
 
             if isinstance(e, TimeoutError):
-                msg += f' Timeout is set to {2} sec.'
+                msg += f' Timeout is set to {self.configs.time.timeout_open_dck_window} sec.'
 
             self.logger.error(msg=msg)  # log error message
             app.kill()  # close window
@@ -467,12 +467,12 @@ class Simulation:
 
         # wait for the simulation window to open
         try:
-            app.Öffnen.wait_not('visible', timeout=10)
+            app.Öffnen.wait_not('visible', timeout=self.configs.time.timeout_open_sim_window)
         except Exception as e:  # if error occurs, abort
             msg = f'{e} error occured while waiting for simulation window to open for simulation {self.name}.'
 
             if isinstance(e, TimeoutError):
-                msg += f' Timeout is set to {10} sec.'
+                msg += f' Timeout is set to {self.configs.time.timeout_open_sim_window} sec.'
 
             self.logger.error(msg=msg)  # log error message
             app.kill()  # close window

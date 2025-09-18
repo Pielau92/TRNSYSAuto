@@ -7,8 +7,6 @@ from dataclasses import dataclass
 @dataclass
 class General:
     path_exe: str  # path to TRNSYS executable file
-    timeout: int  # if timeout is reached without starting another simulation, stop program [s]
-    start_time_buffer: int  # time buffer between two simulations, for increased stability [s] (optional)
     multiprocessing_max: int  # maximum number of simulations performed simultaneously
     multiprocessing_autodetect: bool  # if true, override multiprocessing_max with number of cpu cores
     eval_save_interval: int  # the evaluation progress is saved after each save interval
@@ -47,6 +45,13 @@ class ColumnHeaders:
     result_column: list[str]
     trnsys_output: list[str]
     sim_variant: list[str]
+
+@dataclass
+class Time:
+    timeout_sim: int  # if timeout is reached without starting another simulation, stop whole program [s]
+    timeout_open_dck_window: int  # if timeout is reached without opening dck selection window, stop defective simulation [s]
+    timeout_open_sim_window: int  # if timeout is reached without opening simulation window, stop defective simulation [s]
+    buffer_sim_start: int  # time buffer between two simulations, for increased stability [s]
 
 @dataclass
 class Runtime:
