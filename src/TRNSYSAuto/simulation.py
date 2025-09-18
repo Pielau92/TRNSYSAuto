@@ -27,7 +27,7 @@ class SimulationSeries:
 
     def __init__(self, path_config: str, path_root: str, path_original_sim_variants_excel: str):
         self.simulations: dict[Simulation] = {}  # simulations within simulation series
-        self.excel_data: ExcelData|None = None
+        self.excel_data: ExcelData | None = None
         self.configs: Configs = load_from_ini(path=path_config)
         self.path = Paths(_configs=self.configs,
                           root=path_root,
@@ -370,30 +370,10 @@ class Simulation:
         :param multiprocessing.Lock lock:  lock object from the multiprocessing module.
         """
 
-        # start application
-        app = Application(backend='uia')
-        app.start(self.configs.general.path_exe)
+        app = self.start_application()
 
-        try:
-            app.connect(title="Öffnen", timeout=2)
-            app.Öffnen.wait('visible')
-            app.Öffnen.set_focus()
+        if not app:  # if an exception/error occurs, abort (and release any lock so the next simulation may start)
 
-            # insert .dck file path
-            app.Öffnen.FileNameEdit.set_edit_text(self.path_dck)
-
-            # press start button
-            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
-            Button.click_input()
-
-            # wait for the simulation window to open
-            app.Öffnen.wait_not('visible', timeout=10)
-
-        except Exception as e:  # TimeoutError:  todo: Add specific exceptions
-            self.logger.error(f'{e} error occured during simulation of {self.path_dck}.')
-
-            # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
-            app.kill()
             if lock is not None:
                 lock.release()
             return
@@ -419,6 +399,67 @@ class Simulation:
         path_sim = os.path.dirname(self.path_dck)
         redundant_file_paths = [os.path.join(path_sim, file) for file in self.configs.filenames.redundant]
         utils.delete_files(redundant_file_paths)
+
+    def start_application(self) -> Application | None:
+        """Start simulation application and return Application object.
+
+        Performs all necessary steps to start the simulation application. If an error occures, log error message and
+        return None instead.
+
+        :return: Application object
+        """
+
+        # start application
+        app = Application(backend='uia')
+        app.start(self.configs.general.path_exe)
+
+        # open .dck file selection window
+        try:
+            app.connect(title="Öffnen", timeout=2)
+            app.Öffnen.wait('visible')
+            app.Öffnen.set_focus()
+        except Exception as e:  # if error occurs, abort
+            msg = f'{e} error occured while opening .dck file selection window for simulation {self.name}.'
+
+            if isinstance(e, TimeoutError):
+                msg += f' Timeout is set to {2} sec.'
+
+            self.logger.error(msg=msg)  # log error message
+            app.kill()  # close window
+            return None
+
+        # insert .dck file path
+        try:
+            app.Öffnen.FileNameEdit.set_edit_text(self.path_dck)
+        except Exception as e:
+            self.logger.error(f'{e} error occured while inserting .dck file path for simulation {self.name}.')
+            app.kill()  # close window
+            return None
+
+        # press start button
+        try:
+            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
+            Button.click_input()
+        except Exception as e:
+            self.logger.error(f'{e} error occured while pressing confirmation button of .dck file selection window for'
+                              f' simulation {self.name}.')
+            app.kill()  # close window
+            return None
+
+        # wait for the simulation window to open
+        try:
+            app.Öffnen.wait_not('visible', timeout=10)
+        except Exception as e:  # if error occurs, abort
+            msg = f'{e} error occured while waiting for simulation window to open for simulation {self.name}.'
+
+            if isinstance(e, TimeoutError):
+                msg += f' Timeout is set to {10} sec.'
+
+            self.logger.error(msg=msg)  # log error message
+            app.kill()  # close window
+            return None
+
+        return app
 
     def check_success(self) -> bool:
         """Check if simulation was calculated successfully, based on the TRNSYS output file(s).
