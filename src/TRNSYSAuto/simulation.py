@@ -41,6 +41,7 @@ class SimulationSeries:
             'execution_time': datetime.now().strftime('%d.%m.%Y_%H.%M'),
             'filename_sim_variants_excel': os.path.basename(self.path.original_sim_variants_excel).split('.')[0],
         }
+        kwargs = kwargs | {'dirname_sim_series': f'{kwargs['filename_sim_variants_excel']}_{kwargs['execution_time']}',}
         self.configs.runtime = Runtime(**kwargs)
 
         # self.evaluation = Evaluation()

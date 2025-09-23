@@ -58,7 +58,4 @@ class Runtime:
     """Contains configurations set at runtime."""
     execution_time: str
     filename_sim_variants_excel: str
-
-    @property
-    def dirname_sim_series(self) -> str:
-        return f'{self.filename_sim_variants_excel}_{self.execution_time}'
+    dirname_sim_series: str
