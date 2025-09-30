@@ -27,7 +27,7 @@ class SimulationSeries:
 
     def __init__(self, path_config: str, path_root: str, path_original_sim_variants_excel: str):
         self.simulations: dict[Simulation] = {}  # simulations within simulation series
-        self.excel_data = ExcelData()
+        self.excel_data: ExcelData | None = None
         self.configs: Configs = load_from_ini(path=path_config)
         self.path = Paths(_configs=self.configs,
                           root=path_root,
@@ -41,6 +41,7 @@ class SimulationSeries:
             'execution_time': datetime.now().strftime('%d.%m.%Y_%H.%M'),
             'filename_sim_variants_excel': os.path.basename(self.path.original_sim_variants_excel).split('.')[0],
         }
+        kwargs = kwargs | {'dirname_sim_series': f'{kwargs['filename_sim_variants_excel']}_{kwargs['execution_time']}',}
         self.configs.runtime = Runtime(**kwargs)
 
         # self.evaluation = Evaluation()
@@ -112,13 +113,10 @@ class SimulationSeries:
         """Initialize simulations based on the simulation variants Excel file."""
 
         self.logger.info(f'Importing simulation variants Excel file from {self.path.original_sim_variants_excel}.')
-        self.excel_data.import_excel(
-            path=self.path.original_sim_variants_excel,
+        self.excel_data = ExcelData(
+            path_excel=self.path.original_sim_variants_excel,
             sheet_name=self.configs.sheetnames.sim_variants
         )
-
-        # get simulation parameters from imported Excel data
-        self.excel_data.get_sim_params()
 
         variants = self.excel_data.parameters.keys()
         for variant in variants:
@@ -187,9 +185,7 @@ class SimulationSeries:
                 self.simulations[key].ignore = True  # simulation variant will be ignored
                 raise FileNotFoundError  # program will end if error is raised
 
-            sim.overwrite_dck_file_parameters()
-            sim.overwrite_mpc_settings_parameters()
-            sim.overwrite_floor_area()
+            sim.setup()
 
     def save(self):
         """Pickle save SimulationSeries instance."""
@@ -246,21 +242,21 @@ class SimulationSeries:
                     if lock:
 
                         # create a new process instance
-                        process = multiprocessing.Process(target=sim.start,
+                        process = multiprocessing.Process(target=sim.simulate,
                                                           args=(lock,))
                         with lock:
                             start_time = time.time()
                             while len(multiprocessing.active_children()) >= self.configs.general.multiprocessing_max:
                                 time.sleep(5)  # pause until number of active simulations drops below maximum
-                                if time.time() - start_time > self.configs.general.timeout:
+                                if time.time() - start_time > self.configs.time.timeout_sim:
                                     sys.exit(
-                                        f'Timeout of {str(self.configs.general.timeout)} sec reached, program ended.')
+                                        f'Timeout of {str(self.configs.time.timeout_sim)} sec reached, program ended.')
                             time.sleep(5)
                             process.start()
                         lock.acquire()
 
                     else:  # no lock
-                        sim.start()
+                        sim.simulate()
 
                 except Exception:
 
@@ -271,8 +267,8 @@ class SimulationSeries:
             # after all simulations were triggered, wait until all are done before proceeding
             while len(multiprocessing.active_children()) > 0:
                 time.sleep(5)
-                if time.time() - start_time > self.configs.general.timeout:
-                    sys.exit(f'Timeout of {str(self.configs.general.timeout)} sec reached, program ended.')
+                if time.time() - start_time > self.configs.time.timeout_sim:
+                    sys.exit(f'Timeout of {str(self.configs.time.timeout_sim)} sec reached, program ended.')
 
             # check for each simulation if it was successful
             self.check_sim_success()
@@ -353,7 +349,18 @@ class Simulation:
 
         return stop - start
 
-    def start(self, lock: multiprocessing.Lock = None):
+    def setup(self):
+        """Setup simulation.
+
+        Overwrites content of simulation files (like templates or configuration files) according to the simulation
+        definition.
+        """
+
+        self._overwrite_dck_file_parameters()
+        self._overwrite_floor_area()
+        self._overwrite_mpc_settings_parameters()
+
+    def simulate(self, lock: multiprocessing.Lock = None):
         """Start simulation.
 
         Starts a TRNSYS simulation and uses a specified dck-file as input. If multiprocessing is used, a lock is passed
@@ -364,36 +371,16 @@ class Simulation:
         :param multiprocessing.Lock lock:  lock object from the multiprocessing module.
         """
 
-        # start application
-        app = Application(backend='uia')
-        app.start(self.configs.general.path_exe)
+        app = self._start_application()
 
-        try:
-            app.connect(title="Öffnen", timeout=2)
-            app.Öffnen.wait('visible')
-            app.Öffnen.set_focus()
+        if not app:  # if an exception/error occurs, abort (and release any lock so the next simulation may start)
 
-            # insert .dck file path
-            app.Öffnen.FileNameEdit.set_edit_text(self.path_dck)
-
-            # press start button
-            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
-            Button.click_input()
-
-            # wait for the simulation window to open
-            app.Öffnen.wait_not('visible', timeout=10)
-
-        except Exception as e:  # TimeoutError:  todo: Add specific exceptions
-            self.logger.error(f'{e} error occured during simulation of {self.path_dck}.')
-
-            # if an exception/error occurs, the window closes and the lock is released so the next simulation can start
-            app.kill()
             if lock is not None:
                 lock.release()
             return
 
         # add a time buffer before releasing the lock, which delays the next simulation
-        time.sleep(self.configs.general.start_time_buffer)
+        time.sleep(self.configs.time.buffer_sim_start)
         if lock is not None:
             lock.release()
 
@@ -402,7 +389,7 @@ class Simulation:
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
         try:
-            success_message.wait('visible', timeout=self.configs.general.timeout)
+            success_message.wait('visible', timeout=self.configs.time.timeout_sim)
         except TimeoutError:
             pass  # goes ahead and closes window after time out
 
@@ -433,7 +420,68 @@ class Simulation:
 
         return self.success
 
-    def overwrite_dck_file_parameters(self):
+    def _start_application(self) -> Application | None:
+        """Start simulation application and return Application object.
+
+        Performs all necessary steps to start the simulation application. If an error occures, log error message and
+        return None instead.
+
+        :return: Application object
+        """
+
+        # start application
+        app = Application(backend='uia')
+        app.start(self.configs.general.path_exe)
+
+        # open .dck file selection window
+        try:
+            app.connect(title="Öffnen", timeout=self.configs.time.timeout_open_dck_window)
+            app.Öffnen.wait('visible')
+            app.Öffnen.set_focus()
+        except Exception as e:  # if error occurs, abort
+            msg = f'{e} error occured while opening .dck file selection window for simulation {self.name}.'
+
+            if isinstance(e, TimeoutError):
+                msg += f' Timeout is set to {self.configs.time.timeout_open_dck_window} sec.'
+
+            self.logger.error(msg=msg)  # log error message
+            app.kill()  # close window
+            return None
+
+        # insert .dck file path
+        try:
+            app.Öffnen.FileNameEdit.set_edit_text(self.path_dck)
+        except Exception as e:
+            self.logger.error(f'{e} error occured while inserting .dck file path for simulation {self.name}.')
+            app.kill()  # close window
+            return None
+
+        # press start button
+        try:
+            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
+            Button.click_input()
+        except Exception as e:
+            self.logger.error(f'{e} error occured while pressing confirmation button of .dck file selection window for'
+                              f' simulation {self.name}.')
+            app.kill()  # close window
+            return None
+
+        # wait for the simulation window to open
+        try:
+            app.Öffnen.wait_not('visible', timeout=self.configs.time.timeout_open_sim_window)
+        except Exception as e:  # if error occurs, abort
+            msg = f'{e} error occured while waiting for simulation window to open for simulation {self.name}.'
+
+            if isinstance(e, TimeoutError):
+                msg += f' Timeout is set to {self.configs.time.timeout_open_sim_window} sec.'
+
+            self.logger.error(msg=msg)  # log error message
+            app.kill()  # close window
+            return None
+
+        return app
+
+    def _overwrite_dck_file_parameters(self):
         """Overwrite parameters inside .dck File.
 
         Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
@@ -452,7 +500,7 @@ class Simulation:
         if self.params.dck:
             utils.replace_parameter_values(self.path_dck, self.params.dck)
 
-    def overwrite_mpc_settings_parameters(self):
+    def _overwrite_mpc_settings_parameters(self):
         """Overwrite parameters inside settingsMPC.ini File.
 
         Overwrites the parameters inside the .dck File, according to the corresponding simulation description in
@@ -462,28 +510,30 @@ class Simulation:
         if self.params.mpc:
             utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc)
 
-    def overwrite_floor_area(self):
-        """"""
+    def _overwrite_floor_area(self):
+        """Read floor areas from b17/18 file and overwrite floor area values inside dck file."""
 
         def replacer(match):
             return (f"{match.group(1)} "  # parameter name
                     f"= {ref_area}")  # reference area
 
+        # read floor areas
         self.b18_data.read_ref_areas()
 
+        # read content of dck file
         with open(self.path_dck, 'r') as file:
-            text = file.read()
+            dck_content = file.read()
 
-        new_text = text
+        # create new content for dck file by overwriting floor area values
+        new_dck_content = dck_content
         for zone, ref_area in enumerate(self.b18_data.ref_areas):
             pattern = re.compile(rf'^(Anutz{zone + 1})'  # "Anutz" followed by zone number (e.g Anutz1, Anutz99, ...)
-                                 + r'[\s\t]*=[\s\t]*'  # equal sign (=), with any number of white spaces/tabs before and after
-                                 + r'(.*)$',
-                                 # any characters, until the end of the line is reached (typically comments)
+                                 + r'[\s\t]*=[\s\t]*'  # equal sign with any number of white spaces/tabs before or after
+                                 + r'(.*)$',  # any characters until  end of line is reached (typically comments)
                                  re.MULTILINE)
 
-            new_text = pattern.sub(replacer, new_text)
+            new_dck_content = pattern.sub(replacer, new_dck_content)
 
-            # overwrite file
-            with open(self.path_dck, 'w') as file:
-                file.write(new_text)
+        # overwrite dck file
+        with open(self.path_dck, 'w') as file:
+            file.write(new_dck_content)

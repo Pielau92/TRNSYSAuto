@@ -11,6 +11,24 @@ from TRNSYSAuto.simulation import SimulationSeries
 def gui(root_dir: str) -> None:
     """Graphical user interface (see GUI guide: https://realpython.com/python-gui-tkinter/)."""
 
+    def simulate() -> None:
+        window.destroy()  # close GUI window
+
+        # for each simulation series in the queue...
+        for sim_series in create_sim_queue(root_dir):
+            sim_series.setup()  # start simulation
+            sim_series.simulate()  # start simulation series
+
+        window.quit()
+
+    def continue_simulation() -> None:
+        sim_series = load_sim_series()
+
+        sim_series.check_sim_success(reset=True)
+        sim_series.simulate()
+
+        window.quit()
+
     def load_sim_series() -> SimulationSeries:
         """Load simulation series from pickle savefile."""
 
@@ -41,30 +59,12 @@ def gui(root_dir: str) -> None:
 
         window.quit()
 
-    def simulate() -> None:
-        window.destroy()  # close GUI window
-
-        # for each simulation series in the queue...
-        for sim_series in create_sim_queue(root_dir):
-            sim_series.setup()  # start simulation
-            sim_series.simulate()  # start simulation series
-
-        window.quit()
-
     def evaluate() -> None:
         sim_series = load_sim_series()
 
         # start evaluation
         sim_series.setup_evaluation()  # set evaluation up
         sim_series.start_evaluation()  # start evaluation
-
-        window.quit()
-
-    def continue_simulation() -> None:
-        sim_series = load_sim_series()
-
-        sim_series.check_sim_success(reset=True)
-        sim_series.simulate()
 
         window.quit()
 
@@ -92,11 +92,11 @@ def gui(root_dir: str) -> None:
     label.pack()
 
     # define buttons
-    button_dict = {"Simulate and evaluate": simulate_and_evaluate,
-                   "Simulate only": simulate,
-                   "Evaluate only": evaluate,
-                   "Continue incomplete simulation": continue_simulation,
-                   "Continue incomplete evaluation": continue_evaluation,
+    button_dict = {"Simulate": simulate,
+                   "Continue simulation series": continue_simulation,
+                   # "Simulate and evaluate": simulate_and_evaluate,
+                   # "Evaluate only": evaluate,
+                   # "Continue incomplete evaluation": continue_evaluation,
                    }
 
     # add all buttons to gui

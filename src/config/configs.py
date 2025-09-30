@@ -1,6 +1,6 @@
 from os.path import join, expanduser
 from dataclasses import dataclass
-from config.sections import General, Filenames, SheetNames, ColumnHeaders, Runtime
+from config import sections
 
 @dataclass
 class Configs:
@@ -9,11 +9,12 @@ class Configs:
     Each field within this dataclass contains a dataclass defined in sections.py. Each of those dataclasses contains
     static (imported from .ini file) and/or runtime (set automatically at runtime) configurations."""
 
-    general: General
-    filenames: Filenames
-    sheetnames: SheetNames
-    col_headers: ColumnHeaders
-    runtime: Runtime = None
+    general: sections.General
+    filenames: sections.Filenames
+    sheetnames: sections.SheetNames
+    col_headers: sections.ColumnHeaders
+    time: sections.Time
+    runtime: sections.Runtime = None
 
     """Mapping between: 1) the name of the configuration sections to be imported from the .ini file and 2) the name of
     their corresponding field name. Sections/fields that are not mapped here will not be loaded from the .ini file and
@@ -28,6 +29,7 @@ class Configs:
         'filenames': 'Filenames',
         'sheetnames': 'Excel sheet names',
         'col_headers': 'Column headers',
+        'time': 'Time',
     }
 
 @dataclass

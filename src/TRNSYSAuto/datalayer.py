@@ -7,33 +7,52 @@ from pandas import DataFrame
 
 
 @dataclass
-class ExcelData:
-    raw_excel_df: DataFrame = None
-    parameters: dict = None
+class SimParameters:
+    """Data container for simulation parameters used to overwrite simulation file templates."""
 
-    def import_excel(self, path: str, sheet_name: str) -> None:
+    dck: dict | None  # parameters to be overwritten inside .dck file
+    mpc: dict | None  # parameters to be overwritten inside mpc controller settings file
+    b18: str  # b17/b18 file name, inside .dck file
+    weather: str  # weather data file name, inside .dck file
+
+
+class ExcelData:
+    """Data container for data read from simulation variant Excel file."""
+
+    def __init__(self, path_excel: str, sheet_name: str):
+        self.path_excel: str = path_excel  # Excel file path
+        self.sheet_name: str = sheet_name  # name of Excel sheet with simulation variants information
+
+        self.raw_excel_df: DataFrame = self.import_excel()
+        self.excel_df: DataFrame = self.transform_excel_data()
+        self.parameters: dict[SimParameters] = self.get_sim_params()
+
+    def import_excel(self) -> DataFrame:
         """Import simulation variants Excel file.
 
-        :param str path: Excel file path
-        :param str sheet_name: Name of Excel sheet with simulation variants information
+        :return: DataFrame with raw dataset.
         """
 
         # read simulation variants Excel file
-        excel_data = pd.ExcelFile(path)
+        excel_data = pd.ExcelFile(self.path_excel)
 
         # convert Excel data into pandas DataFrame
-        df = excel_data.parse(sheet_name, index_col=0)
+        df = excel_data.parse(self.sheet_name, index_col=0)
 
         # make sure all column headers are string
         df.columns = [str(parameter) for parameter in df.columns]
 
-        self.raw_excel_df = df
+        return df
 
-    def get_sim_params(self) -> None:
-        """Get simulation parameters from imported raw Excel data and save as dictionary."""
+    def transform_excel_data(self) -> DataFrame:
+        """Transform raw Excel dataset and return as DataFrame.
 
-        # separate data by target file
-        excel_dict = {
+        Separates simulation parameters by target file (columns) for each simulation variant (rows).
+
+        :return: DataFrame with transformed dataset.
+        """
+
+        excel_data = {
             'dck': self.raw_excel_df[self.raw_excel_df.index == 'dck'].set_index('Parameter').to_dict(),
             'mpc': self.raw_excel_df[self.raw_excel_df.index == 'mpc'].set_index('Parameter').to_dict(),
             'weather': {variant: str(self.raw_excel_df[variant]['Wetterdaten']) for variant in
@@ -41,32 +60,29 @@ class ExcelData:
             'b18': {variant: str(self.raw_excel_df[variant]['b18']) for variant in self.raw_excel_df.columns[1:]}
         }
 
-        # get simulation parameters, variant-wise
-        variants = self.raw_excel_df.columns[1:]  # variant names
-        parameters = {}
-        for variant in variants:
-            kwargs = {}
-            for target in excel_dict.keys():
-                value = excel_dict[target][variant]
-                if len(value) == 0:  # if empty dict/str, set None
-                    value = None
-                elif isinstance(value, dict):
-                    # remove key value pairs with value "nan"
-                    value = {key: item for key, item in value.items() if not pd.isna(item)}
+        return DataFrame(excel_data)
 
-                kwargs[target] = value
+    def get_sim_params(self) -> dict[SimParameters]:
+        """Get simulation parameters from Excel dataset."""
 
-            parameters[variant] = SimParameters(**kwargs)
+        def manage_empty_entries(entry):
+            if isinstance(entry, dict):  # if
+                entry = {key: item for key, item in entry.items()
+                         if not str(item) == 'nan'}  # remove "nan" values from dict
 
-        self.parameters = parameters
+            if len(entry) == 0 or entry == 'nan':  # if empty dict/str, set None
+                entry = None
 
+            return entry
 
-@dataclass
-class SimParameters:
-    dck: dict | None
-    mpc: dict | None
-    b18: str
-    weather: str
+        # replace empty cells with None
+        data = self.excel_df.map(manage_empty_entries)
+
+        # convert into dict[SimParameters]
+        data = data.transpose().to_dict()
+        data = {key: SimParameters(**data[key]) for key, item in data.items()}
+
+        return data
 
 
 @dataclass
@@ -89,7 +105,7 @@ class B18Data:
                 break
 
         # extract zone names from row
-        zones = lines[progress+2].split()[1:]
+        zones = lines[progress + 2].split()[1:]
 
         for zone in zones:
             # find zone definition start

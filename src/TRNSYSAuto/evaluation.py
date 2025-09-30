@@ -1,3 +1,5 @@
+"""CAUTION: Evaluation code is outdated and does not work with the current implementation of the Tool!"""
+
 import os
 import shutil
 import math
