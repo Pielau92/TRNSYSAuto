@@ -8,18 +8,17 @@ import pickle
 import re
 import mpccontroller
 
-import TRNSYSAuto.utils as utils
-
 from datetime import datetime
 from typing import Optional
 from tqdm import tqdm
 from pywinauto.application import Application
-from config.configs import Configs, Paths
-from config.loader import load_from_ini
-from config.sections import Runtime
-from TRNSYSAuto.datalayer import ExcelData, SimParameters, B18Data
-
 from importlib import resources
+
+import TRNSYSAuto.utils as utils
+
+from TRNSYSAuto.paths import Paths
+from TRNSYSAuto.datalayer import ExcelData, SimParameters, B18Data
+from TRNSYSAuto.configs import Configs, Runtime
 
 
 class SimulationSeries:
@@ -28,7 +27,7 @@ class SimulationSeries:
     def __init__(self, path_config: str, path_root: str, path_original_sim_variants_excel: str):
         self.simulations: dict[Simulation] = {}  # simulations within simulation series
         self.excel_data: ExcelData | None = None
-        self.configs: Configs = load_from_ini(path=path_config)
+        self.configs = Configs(path_config)
         self.path = Paths(_configs=self.configs,
                           root=path_root,
                           config=path_config,
@@ -41,7 +40,7 @@ class SimulationSeries:
             'execution_time': datetime.now().strftime('%d.%m.%Y_%H.%M'),
             'filename_sim_variants_excel': os.path.basename(self.path.original_sim_variants_excel).split('.')[0],
         }
-        kwargs = kwargs | {'dirname_sim_series': f'{kwargs['filename_sim_variants_excel']}_{kwargs['execution_time']}',}
+        kwargs.update({'dirname_sim_series': f'{kwargs['filename_sim_variants_excel']}_{kwargs['execution_time']}'})
         self.configs.runtime = Runtime(**kwargs)
 
         # self.evaluation = Evaluation()
