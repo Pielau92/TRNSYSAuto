@@ -8,17 +8,17 @@ import pickle
 import re
 import mpccontroller
 
-import TRNSYSAuto.utils as utils
-
 from datetime import datetime
 from typing import Optional
 from tqdm import tqdm
 from pywinauto.application import Application
+from importlib import resources
+
+import TRNSYSAuto.utils as utils
+
 from TRNSYSAuto.paths import Paths
 from TRNSYSAuto.datalayer import ExcelData, SimParameters, B18Data
-from configs import Configs, Runtime
-
-from importlib import resources
+from TRNSYSAuto.configs import Configs, Runtime
 
 
 class SimulationSeries:
@@ -40,7 +40,7 @@ class SimulationSeries:
             'execution_time': datetime.now().strftime('%d.%m.%Y_%H.%M'),
             'filename_sim_variants_excel': os.path.basename(self.path.original_sim_variants_excel).split('.')[0],
         }
-        kwargs = kwargs | {'dirname_sim_series': f'{kwargs['filename_sim_variants_excel']}_{kwargs['execution_time']}',}
+        kwargs.update({'dirname_sim_series': f'{kwargs['filename_sim_variants_excel']}_{kwargs['execution_time']}'})
         self.configs.runtime = Runtime(**kwargs)
 
         # self.evaluation = Evaluation()

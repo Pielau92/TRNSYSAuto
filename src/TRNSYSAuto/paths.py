@@ -1,7 +1,7 @@
 from os.path import join, expanduser
 from dataclasses import dataclass
 
-from configs import Configs
+from TRNSYSAuto.configs import Configs
 
 
 @dataclass
