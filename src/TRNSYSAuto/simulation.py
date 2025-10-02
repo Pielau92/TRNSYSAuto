@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Optional
 from tqdm import tqdm
 from pywinauto.application import Application
-from config.configs import Paths
+from TRNSYSAuto.paths import Paths
 from TRNSYSAuto.datalayer import ExcelData, SimParameters, B18Data
 from configs import Configs, Runtime
 
