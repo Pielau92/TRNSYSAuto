@@ -5,4 +5,5 @@ pycparser>=2.22
 scipy>=1.15.1
 setuptools>=75.8.0
 wheel>=0.44.0
-git+https://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@github.com/Pielau92/mpccontroller
+git+https://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@github.com/Pielau92/mpccontroller.git@main#egg=mpccontroller
+git+https://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@github.com/Pielau92/simple_config_manager.git@main#egg=simple_config_manager
