@@ -79,6 +79,9 @@ class ExcelData:
                 entry = {key: item for key, item in entry.items()
                          if not str(item) == 'nan'}  # remove "nan" values from dict
 
+            if isinstance(entry, bool):
+                return entry
+
             if len(entry) == 0 or entry == 'nan':  # if empty dict/str, set None
                 entry = None
 
