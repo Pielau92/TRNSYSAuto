@@ -11,9 +11,10 @@ class SimParameters:
     """Data container for simulation parameters used to overwrite simulation file templates."""
 
     dck: dict | None  # parameters to be overwritten inside .dck file
-    mpc: dict | None  # parameters to be overwritten inside mpc controller settings file
+    mpc_settings: dict | None  # parameters to be overwritten inside mpc controller settings file
     b18: str  # b17/b18 file name, inside .dck file
     weather: str  # weather data file name, inside .dck file
+    mpc_enabled: bool  # if True, use TRNSYS/Python coupling to access MPC controller from inside TRNSYS simulation
 
 
 class ExcelData:
@@ -54,10 +55,11 @@ class ExcelData:
 
         excel_data = {
             'dck': self.raw_excel_df[self.raw_excel_df.index == 'dck'].set_index('Parameter').to_dict(),
-            'mpc': self.raw_excel_df[self.raw_excel_df.index == 'mpc'].set_index('Parameter').to_dict(),
+            'mpc_settings': self.raw_excel_df[self.raw_excel_df.index == 'mpc_settings'].set_index('Parameter').to_dict(),
             'weather': {variant: str(self.raw_excel_df[variant]['Wetterdaten']) for variant in
                         self.raw_excel_df.columns[1:]},
-            'b18': {variant: str(self.raw_excel_df[variant]['b18']) for variant in self.raw_excel_df.columns[1:]}
+            'b18': {variant: str(self.raw_excel_df[variant]['b18']) for variant in self.raw_excel_df.columns[1:]},
+            'mpc_enabled': {variant: bool(self.raw_excel_df[variant]['mpc_enabled']) for variant in self.raw_excel_df.columns[1:]},
         }
 
         return DataFrame(excel_data)

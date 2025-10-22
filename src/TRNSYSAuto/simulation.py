@@ -506,8 +506,8 @@ class Simulation:
         the simulation variants Excel file.
         """
 
-        if self.params.mpc:
-            utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc)
+        if self.params.mpc_settings:
+            utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc_settings)
 
     def _overwrite_floor_area(self):
         """Read floor areas from b17/18 file and overwrite floor area values inside dck file."""
