@@ -53,13 +53,20 @@ class ExcelData:
         :return: DataFrame with transformed dataset.
         """
 
+        # conversion function, from DataFrame to dict with values converted to a specific type
+        convert = lambda df, name, dtype: {variant: dtype(df[variant][name]) for variant in df.columns[1:]}
+
         excel_data = {
-            'dck': self.raw_excel_df[self.raw_excel_df.index == 'dck'].set_index('Parameter').to_dict(),
-            'mpc_settings': self.raw_excel_df[self.raw_excel_df.index == 'mpc_settings'].set_index('Parameter').to_dict(),
-            'weather': {variant: str(self.raw_excel_df[variant]['Wetterdaten']) for variant in
-                        self.raw_excel_df.columns[1:]},
-            'b18': {variant: str(self.raw_excel_df[variant]['b18']) for variant in self.raw_excel_df.columns[1:]},
-            'mpc_enabled': {variant: bool(self.raw_excel_df[variant]['mpc_enabled']) for variant in self.raw_excel_df.columns[1:]},
+            'dck':
+                self.raw_excel_df[self.raw_excel_df.index == 'dck'].set_index('Parameter').to_dict(),
+            'mpc_settings':
+                self.raw_excel_df[self.raw_excel_df.index == 'mpc_settings'].set_index('Parameter').to_dict(),
+            'weather':
+                convert(self.raw_excel_df, 'Wetterdaten', str),
+            'b18':
+                convert(self.raw_excel_df, 'b18', str),
+            'mpc_enabled':
+                convert(self.raw_excel_df, 'mpc_enabled', bool),
         }
 
         return DataFrame(excel_data)
