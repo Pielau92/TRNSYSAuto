@@ -499,6 +499,22 @@ class Simulation:
         if self.params.dck:
             utils.replace_parameter_values(self.path_dck, self.params.dck)
 
+        # enable/disable python coupling
+        with open(self.path_dck, 'r') as file:
+            text = file.read()
+        pattern = r'^(\*?\s*)(INCLUDE "Python_coupling\.dck")'
+
+        if self.params.mpc_enabled:
+            repl = r'\2'    # no comment sign
+        else:
+            repl = r'* \2'  # add comment sign to disable lign
+
+        new_text = re.sub(pattern, repl, text, flags=re.MULTILINE)
+
+        # overwrite file
+        with open(self.path_dck, 'w') as file:
+            file.write(new_text)
+
     def _overwrite_mpc_settings_parameters(self):
         """Overwrite parameters inside settingsMPC.ini File.
 
