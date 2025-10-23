@@ -162,6 +162,7 @@ class SimulationSeries:
                 self.configs.filenames.dck_template,
                 os.path.join('b18', sim.params.b18),
                 os.path.join('Wetterdaten', sim.params.weather),
+                sim.params.mpc,
                 path_MPCModule
             ]
 
@@ -500,20 +501,8 @@ class Simulation:
             utils.replace_parameter_values(self.path_dck, self.params.dck)
 
         # enable/disable python coupling
-        with open(self.path_dck, 'r') as file:
-            text = file.read()
-        pattern = r'^(\*?\s*)(INCLUDE "Python_coupling\.dck")'
-
-        if self.params.mpc_enabled:
-            repl = r'\2'  # no comment sign
-        else:
-            repl = r'* \2'  # add comment sign to disable lign
-
-        new_text = re.sub(pattern, repl, text, flags=re.MULTILINE)
-
-        # overwrite file
-        with open(self.path_dck, 'w') as file:
-            file.write(new_text)
+        utils.find_and_replace(
+            self.path_dck, pattern=r'INCLUDE\s+"[^\.]*\.dck"', replacement=r'INCLUDE "' + self.params.mpc + '"')
 
     def _overwrite_mpc_settings_parameters(self):
         """Overwrite parameters inside settingsMPC.ini File.

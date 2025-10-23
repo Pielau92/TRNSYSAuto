@@ -14,7 +14,7 @@ class SimParameters:
     mpc_settings: dict | None  # parameters to be overwritten inside mpc controller settings file
     b18: str  # b17/b18 file name, inside .dck file
     weather: str  # weather data file name, inside .dck file
-    mpc_enabled: bool  # if True, use TRNSYS/Python coupling to access MPC controller from inside TRNSYS simulation
+    mpc: str  # auxiliary .dck file name for the mpc controller code
 
 
 class ExcelData:
@@ -65,8 +65,8 @@ class ExcelData:
                 convert(self.raw_excel_df, 'Wetterdaten', str),
             'b18':
                 convert(self.raw_excel_df, 'b18', str),
-            'mpc_enabled':
-                convert(self.raw_excel_df, 'mpc_enabled', bool),
+            'mpc':
+                convert(self.raw_excel_df, 'mpc', str),
         }
 
         return DataFrame(excel_data)
