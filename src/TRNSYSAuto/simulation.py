@@ -40,7 +40,7 @@ class SimulationSeries:
             'execution_time': datetime.now().strftime('%d.%m.%Y_%H.%M'),
             'filename_sim_variants_excel': os.path.basename(self.path.original_sim_variants_excel).split('.')[0],
         }
-        kwargs.update({'dirname_sim_series': f'{kwargs['filename_sim_variants_excel']}_{kwargs['execution_time']}'})
+        kwargs.update({'dirname_sim_series': f'{kwargs["filename_sim_variants_excel"]}_{kwargs["execution_time"]}'})
         self.configs.runtime = Runtime(**kwargs)
 
         # self.evaluation = Evaluation()
@@ -162,6 +162,7 @@ class SimulationSeries:
                 self.configs.filenames.dck_template,
                 os.path.join('b18', sim.params.b18),
                 os.path.join('Wetterdaten', sim.params.weather),
+                sim.params.mpc,
                 path_MPCModule
             ]
 
@@ -384,7 +385,7 @@ class Simulation:
             lock.release()
 
         window_title = 'TRNSYS: ' + self.path_dck
-        window_title = window_title.replace('documents', 'Documents')  # workaround, as search is case sensitive
+        window_title = window_title.replace('documents', 'Documents')  # workaround, as search is case-sensitive
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
         try:
@@ -422,7 +423,7 @@ class Simulation:
     def _start_application(self) -> Application | None:
         """Start simulation application and return Application object.
 
-        Performs all necessary steps to start the simulation application. If an error occures, log error message and
+        Performs all necessary steps to start the simulation application. If an error occurs, log error message and
         return None instead.
 
         :return: Application object
@@ -438,7 +439,7 @@ class Simulation:
             app.Öffnen.wait('visible')
             app.Öffnen.set_focus()
         except Exception as e:  # if error occurs, abort
-            msg = f'{e} error occured while opening .dck file selection window for simulation {self.name}.'
+            msg = f'{e} error occurred while opening .dck file selection window for simulation {self.name}.'
 
             if isinstance(e, TimeoutError):
                 msg += f' Timeout is set to {self.configs.time.timeout_open_dck_window} sec.'
@@ -451,7 +452,7 @@ class Simulation:
         try:
             app.Öffnen.FileNameEdit.set_edit_text(self.path_dck)
         except Exception as e:
-            self.logger.error(f'{e} error occured while inserting .dck file path for simulation {self.name}.')
+            self.logger.error(f'{e} error occurred while inserting .dck file path for simulation {self.name}.')
             app.kill()  # close window
             return None
 
@@ -460,7 +461,7 @@ class Simulation:
             Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
             Button.click_input()
         except Exception as e:
-            self.logger.error(f'{e} error occured while pressing confirmation button of .dck file selection window for'
+            self.logger.error(f'{e} error occurred while pressing confirmation button of .dck file selection window for'
                               f' simulation {self.name}.')
             app.kill()  # close window
             return None
@@ -469,7 +470,7 @@ class Simulation:
         try:
             app.Öffnen.wait_not('visible', timeout=self.configs.time.timeout_open_sim_window)
         except Exception as e:  # if error occurs, abort
-            msg = f'{e} error occured while waiting for simulation window to open for simulation {self.name}.'
+            msg = f'{e} error occurred while waiting for simulation window to open for simulation {self.name}.'
 
             if isinstance(e, TimeoutError):
                 msg += f' Timeout is set to {self.configs.time.timeout_open_sim_window} sec.'
@@ -499,6 +500,10 @@ class Simulation:
         if self.params.dck:
             utils.replace_parameter_values(self.path_dck, self.params.dck)
 
+        # enable/disable python coupling
+        utils.find_and_replace(
+            self.path_dck, pattern=r'INCLUDE\s+"[^\.]*\.dck"', replacement=r'INCLUDE "' + self.params.mpc + '"')
+
     def _overwrite_mpc_settings_parameters(self):
         """Overwrite parameters inside settingsMPC.ini File.
 
@@ -506,8 +511,8 @@ class Simulation:
         the simulation variants Excel file.
         """
 
-        if self.params.mpc:
-            utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc)
+        if self.params.mpc_settings:
+            utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc_settings)
 
     def _overwrite_floor_area(self):
         """Read floor areas from b17/18 file and overwrite floor area values inside dck file."""

@@ -48,34 +48,34 @@ def gui(root_dir: str) -> None:
 
         return sim_series
 
-    def simulate_and_evaluate() -> None:
-        window.destroy()  # close GUI window
-
-        # for each simulation series...
-        for sim_series in create_sim_queue(root_dir):
-            sim_series.setup()  # set simulation up
-            sim_series.simulate()  # start simulation series
-
-            sim_series.setup_evaluation()  # set evaluation up
-            sim_series.start_evaluation()  # start evaluation
-
-        window.quit()
-
-    def evaluate() -> None:
-        sim_series = load_sim_series()
-
-        # start evaluation
-        sim_series.setup_evaluation()  # set evaluation up
-        sim_series.start_evaluation()  # start evaluation
-
-        window.quit()
-
-    def continue_evaluation() -> None:
-        sim_series = load_sim_series()
-
-        sim_series.start_evaluation()
-
-        window.quit()
+    # def simulate_and_evaluate() -> None:
+    #     window.destroy()  # close GUI window
+    #
+    #     # for each simulation series...
+    #     for sim_series in create_sim_queue(root_dir):
+    #         sim_series.setup()  # set simulation up
+    #         sim_series.simulate()  # start simulation series
+    #
+    #         sim_series.setup_evaluation()  # set evaluation up
+    #         sim_series.start_evaluation()  # start evaluation
+    #
+    #     window.quit()
+    #
+    # def evaluate() -> None:
+    #     sim_series = load_sim_series()
+    #
+    #     # start evaluation
+    #     sim_series.setup_evaluation()  # set evaluation up
+    #     sim_series.start_evaluation()  # start evaluation
+    #
+    #     window.quit()
+    #
+    # def continue_evaluation() -> None:
+    #     sim_series = load_sim_series()
+    #
+    #     sim_series.start_evaluation()
+    #
+    #     window.quit()
 
     def add_button(button_text: str, button_command: Callable) -> None:
 
