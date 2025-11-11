@@ -22,6 +22,7 @@ class Filenames:
     logger: str
     trnsys_output: str
     savefile: str
+    mpc_configs: str
     redundant: list[str]
     templates: list[str]
     templates_assets: list[str]

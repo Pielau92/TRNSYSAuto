@@ -327,7 +327,7 @@ class Simulation:
     @property
     def path_mpc_settings(self) -> str:
         """Path to settingsMPC.ini file."""
-        return os.path.join(self.path.sim_series_dir, self.name, 'settingsMPC.ini')
+        return os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.mpc_configs)
 
     @property
     def sim_hours(self) -> int:
