@@ -1,28 +1,15 @@
-# region FIX askdirectory window does not open
-"""There are compatibility issues between filedialog.askdirectory() and pywinauto, which cause the askdirectory window
- not to open. To fix this, use the following lines. This must happen before importing pywinauto and tkinter."""
-# import sys
-# import warnings
+import TRNSYSAuto.fixes as fixes
 
-# deactivate warnings as workaround for higher stability, but it is not optimal as other warnings are also suppressed
-# warnings.simplefilter("ignore", UserWarning)
+fixes.fix_askdirectory_pywinauto_compatibility()
 
-# sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
-# endregion
-
-import multiprocessing
-
-import TRNSYSAuto.utils as utils
-
+from TRNSYSAuto.utils import get_root_dir
 from TRNSYSAuto.gui import gui
 
-"""For some unknown reason (when producing an exe-File), main is also affected by multiprocessing (therefore
-directory/file is asked multiple times), freeze_support() prevents this."""
-multiprocessing.freeze_support()
+fixes.fix_multiprocessing_pyinstaller_compatibility()
 
 
 def main():
-    root_dir = utils.get_root_dir()
+    root_dir = get_root_dir()
 
     # start GUI
     gui(root_dir)

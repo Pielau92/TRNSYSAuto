@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TRNSYSAuto"
-#define MyAppVersion "2.0"
+#define MyAppVersion "3.0"
 #define MyAppExeName "main.exe"
 
 [Setup]
