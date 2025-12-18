@@ -645,12 +645,14 @@ QUnterschuss_2050 = [131,25]	![???]
 *------------------------------------------------------------------------------
 * EQUATIONS "BTA"
 * 
-EQUATIONS 29
+EQUATIONS 30
 
 area_BTA1 = anutz1*0.9	![m2]
 area_BTA2 = anutz2*0.9	![m2]
 area_BTA3 = anutz3*0.9	![m2]
 area_BTA4 = anutz3*0.9	![m2]
+
+Py_ein = 1
 
 tbtasoll1 = (kuehlperiode1*tkuehlsollmin+heizperiode1*theizsollmin)*(1-gt(queber,0))+(kuehlperiode1*tkuehlsollmax+heizperiode1*theizsollmax)*gt(queber,0)	![°C]
 tbtasoll = Py_ein*(kuehlperiode1*tkuehlsollmin+heizperiode1*theizsollmin)+(1-Py_ein)*tbtasoll1   ![°C] hier nur die beiden Mindesttemperaturen, Einfluss Netzdienlichkeit müßte in MPC kommen
