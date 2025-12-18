@@ -22,8 +22,8 @@ VERSION 18
 *******************************************************************************
 * START, STOP and STEP
 CONSTANTS 3
-START = 0  !13127
-STOP = 8760  !23375   !39384   !35040  !10176 !8760+744+28*24+744    1.7.2016, achtung auf Schaltjahr 13128.0 bis 31.8.2017   23375.0
+START = 0
+STOP = 8760
 STEP = 0.25
 SIMULATION 	 START	 STOP	 STEP	! Start time	End time	Time step
 TOLERANCES 0.001 0.001			! Integration	 Convergence
@@ -39,390 +39,1217 @@ TIME_REPORT 0				! disable time report
 EQSOLVER 0				! EQUATION SOLVER statement
 * User defined CONSTANTS 
 
-ASSIGN "Bruckverdichtet_3Zonen31cc_BestbetstatTabsV1_westloch_PFA_7_2_57.b17" 32				! hier werden die b17, bzw. b18 files eingelesen
-ASSIGN "Mannheim2-hour.tm2" 30				! hier werden die Wetterdatenfiles eingelesen, bevorzugt tm2
+ASSIGN "Bruckverdichtet_3Zonen31cc_BestbetstatTabsV1_westloch_PFA_7_2_57.b17" 32				! Unit 56, building files (.b17, .b18)
+ASSIGN "Wetterdaten.tm2" 30				! Unit 109, Wetterdatenfiles (bevorzugt .tm2)
 
-ASSIGN "Windetc20190804.txt" 134   	! unit 131
-ASSIGN "SzenarioAneu.txt" 135		! unit 132
-
-assign "Qelww_CHR55025.txt" 62   	! Lasten und Elektro neu
+ASSIGN "Windetc20190804.txt" 134   	! Unit 131, Signale
+ASSIGN "SzenarioAneu.txt" 135		! Unit 132, ???
+ASSIGN "Qelww_CHR55025.txt" 62   	! Unit 334, Lasten und Elektro neu
+ASSIGN "lastprofil.txt" 31			! Unit 3, Lastprofil
+ASSIGN "StrahlungBruck.txt" 60		! Unit 333, ???
 
 *------------------------------------------------------------------------------
-
-
-* EQUATIONS "Flaechen"
+* EQUATIONS "Geometrie"
 * 
-EQUATIONS 9
-Vol1 = max([56,210],1)
-Vol2 = max([56,211],1)
-Vol3 = max([56,212],1)
-Vol4 = max([56,213],1)	!ms250310
-Anutz1 = max([56,214],1)   !Nutzfläche in m²
-Anutz2 = max([56,215],1)
-Anutz3 = max([56,216],1)
-Anutz4 = max([56,217],1)	!ms250310
-anutzges = Anutz1 + Anutz2 + Anutz3 + Anutz4	!ms250310
+EQUATIONS 10
 
-*$UNIT_NAME Flaechen
-*$LAYER Main
-*$POSITION 712 487
+Vol1 = max([56,210],1)	![m3]
+Vol2 = max([56,211],1)	![m3]
+Vol3 = max([56,212],1)	![m3]
+Vol4 = max([56,213],1)	![m3]
+Anutz1 = 40.99	![m2]
+Anutz2 = 11.35	![m2]
+Anutz3 = 11.26	![m2]
+Anutz4 = 5.99	![m2]
+anutzges = Anutz1 + Anutz2 + Anutz3 + Anutz4	![m2]
 
-*$UNIT_NAME Inf
-*$LAYER Main
-*$POSITION 596 1501
+label = 0	![-] Platzhalter zur Verwendung bei Printern, um Reihenfolge beizubehalten
 
 *------------------------------------------------------------------------------
-
-Equations 11  		! Varianten Arbeitshilfen, Beleuchtung, Personen
-
-Persanz1 = 2
-Persanz2 = 0 
-Persanz3 = 2 
-Persanz4 = 2 !ms250310
-Companz1 = 15  		! A0  5 !A2  W/m²
-Companz2 = 0   		! gang
-Companz3 = 15  		! A0  5 !A2  W/m²
-Companz4 = 15 		! A0  5 !A2  W/m² !ms250310
-TQ1 = 0.03 		! gut  
-TQ3 = 0.03  		! gut
-LichtLeistung = 8.29 	! Licht0  10 !Licht1 [W/m²]
-
-
-Equations 4  			! Varianten Lüftung L Nachtlüftung
-
-fen1 = 0.4615384615384615     	! 0.461538461538462 gekippt oder 3 ganz geöffnet
-fen2 = 0   			! Anzahl öffenbar Fenster Zone 2, wenn vorhanden
-fen3 = 0.4615384615384615 
-fen4 = 0.4615384615384615 !ms250310
-
-
-Equations 6 		!Luftwechsel, Infiltration, Wirkungsgrad
-
-fugenLuft = 0.14  		! Simulationsrandbedingungen
-Vent1var = 1.24 		! in Anlehnung an neues pdf am 9.5. von Lukas
-Vent2var = 0  
-Vent3var = 1.24 
-Vent4var = 1.24  !ms250310
-waermerueckgimpuls = 0 	! 0.75  !gilt auch für ohne Impuls
-
-
-Equations 9  				! Varianten Sonnenschutz
-schattschaltaussen = 1
-schattzu = 0.75    			! S0  0 !S1 0 !S4
-Schattschaltinnen = 1   
-Schatti = 0  !S0  0,5 			! S1 Achtung, ist Transmission 0   !S4
-Schatti1 = Schatti*schattschaltinnen 
-Schatti2 = Schatti*schattschaltinnen 
-Schatti3 = Schatti*schattschaltinnen 
-Schatti4 = Schatti*schattschaltinnen  !ms250310
-strahlungsgrenze = 200   			! R0
-
-
-Equations 1  				! Wärmeschutz, wenn nur mittlere Einheit, dann egal, da keine erdberührten Bauteile
-terd1 = 10.4+[19,2]*(15.4-10.4)  	! Bestand: 9.9+[19,2]*(20.7-9.9) OIB:6.1+[19,2]*(19.6-6.1)  NEH:  9.6+[19,2]*(16.3-9.6) PH: 10.4+[19,2]*(15.4-10.4)  !ta+(heizperiode1*21+26*(1-heizperiode1)-ta)/2 !9.5+[19,2]*15.1  !EG, Temperaturfaktor ca. 0.5
-
-
-Equations 18 						! Heizen Kühlen befeuchten entfeuchten
-qheizmax = 50 
-qkuehlmax = 40 
-qbtamax = qheizmax*anutzges  				! wenn impuls = 0, wird über Vorlauftemperaturauswahl geregelt
-qbtamaxs = qkuehlmax*anutzges				! wenn impuls = 0, wird über Vorlauftemperaturauswahl geregelt
-
-theizsollminideal = 21   					! 20
-theizsollmaxideal = 25   					! 25
-tkuehlsollminideal = 50    					! 25  !Thomas angepasst, um auch Kühlung zu prüfen
-tkuehlsollmaxideal = 50    				! 23
-humsoll = 0  !0.012*(1-BTAmodellein)*0+0*BTAmodellein	! BBSR
-relmin = 0   						! 40*(1-BTAmodellein)*0+0*BTAmodellein !BBSR
-abshumgrenzo = 0.1  !0.009					! [g/kg] Grenze fur Entfeuchtung Lüftung, achtung dazu muss man dann noch abszu ändern
-abshumgrenzu = 0 						! [g/kg] Grenze fur Befeuchtung
-tzukuehl = 50   						! lt(tzuquellmin,20)*20+(1-lt(tzuquellmin,20))*tzuquellmin  Ausschalten mit hohen Temperaturen
-tzuheiz = 0   						! wenn kein Nachheizen, auf 0 setzen
-
-absmax = 0.1   						! Grenze für ideale Entfeuchtung Raum
-
-Py_ein = 1 							! Thomas neuer Input 1 wenn mit MPC Regler, Py_ein = 1, sonst = 0 wenn ohne  
-BTAmodellein = Py_ein+(1-Py_ein)*0  						! Thomas bei Py_ein = 1 (Rechnen mit MPC regler), wird Bauteilaktivierung fix eingeschalten und läuft durch für Heizen und Kühlen. Wenn Py_ein aus ( = 0), dann BTA ein-1 und ausschalten-0
-FlagTraumsoll = 0    					! 0 - wenn fixe Temperatur, 1 wenn nach Kat I. Achtung auf Klimadaten
-
-
-Equations 57
-tcomfneutr_MannInnSom = [3,78]   		! neutrale Temperatur Mannheim Innenstadt Sommer min Temp 25°C, sonst Kat I
-tcomfneutr_PotsInnSom = [3,79]   		! neutrale Temperatur Potsdam Innenstadt Sommer
-tcomfneutr_MannVorSom = [3,80]   		! neutrale Temperatur Mannheim Vorort Sommer
-tcomfneutr = eql(FlagTraumsoll,0)*tkuehlsollminideal+eql(FlagTraumsoll,1)*tcomfneutr_MannInnSom+eql(FlagTraumsoll,2)*tcomfneutr_PotsInnSom+eql(FlagTraumsoll,3)*tcomfneutr_MannVorSom
-*tcomfneutr = tcomfneutr_MannInnSom
-tkuehlsollminidealcomf = tcomfneutr
-tkuehlsollmaxidealcomf = tcomfneutr
-
-impuls = 0   !0-normale Simulation, 1-Impuls
-
-Windfreigabe = 0 ! 1-freigegeben
-*Flexfreigabe = Flexibilitaet
-*WindstromvonAnlagen = gt(ueberschuss2050,0)*Windfreigabe !gt(WindPV,(4.53*0.4)) !4530 kW ist Nennleistung; 40 % Schwelle
-Windleistungmaxfreigabe = 19.0994152*0.4  !
-*heizidealfrei = heiz4wo
-*kuehlidealfrei = kuehl4wo
-heizidealfrei = 1 !gt(bilanz2050,0)
-kuehlidealfrei = 1 !gt(bilanz2050,0)
-wwidealfrei = 1 !wwwo
-nutzidealfrei = 1 ! nutz24h
-
-WindstromvonAnlagen = gt(wind2050,Windleistungmaxfreigabe)*Windfreigabe  !Ausgangsvariante 2050 Streicher 19.0994152 GW, APG Brainpool 34 GW sind installiert 
-Windnutzbar = WindstromvonAnlagen * (WindPV-(4.53*0.3)) * Windfreigabe*0
-*waermerueckgimpuls = 0.75  !gilt auch für ohne
-B2Grid_frei = 0  !dsm Signal
-WBTA = 1 !BTA_Schedule !Zeitsignal für Freischaltung (vor allem Büros etc.)
-
+* EQUATIONS "Nutzung/IW"
 *
-*terd1 = 10.4+[19,2]*(15.4-10.4)  ! Bestand: 9.9+[19,2]*(20.7-9.9) OIB:6.1+[19,2]*(19.6-6.1)  NEH:  9.6+[19,2]*(16.3-9.6) PH: 10.4+[19,2]*(15.4-10.4)  !ta+(heizperiode1*21+26*(1-heizperiode1)-ta)/2 !9.5+[19,2]*15.1  !EG, Temperaturfaktor ca. 0.5
-qpvmm = igm*0.3125*0   !Siehe Annahmen, Ansatz maximierend, W/m² EBF: 4 Geschosse: 0.3125, 2 Geschosse 0.625
+Equations 47  		! Varianten Arbeitshilfen, Beleuchtung, Personen
 
-kuehlperiode1 = (gt(time,5000)*lt(time,10000))*impuls+(1-impuls)*(lt(time,6552)*gt(time,2880)+lt(time,6552+8760)*gt(time,2880+8760)+lt(time,6552+8760*2)*gt(time,2880+8760*2)+lt(time,6552+8760*3)*gt(time,2880+8760*3))
-heizperiode1 = 1-kuehlperiode1 !besser mit gleitender außenluftemperatur regeln
-zeitmax = [210,2]
-qbtamaxw1 = 50+10*(gt(time,700)+gt(time,1300)+gt(time,1900)+gt(time,2500)+gt(time,3100)+gt(time,3700)+gt(time,4300)+gt(time,4900))  !gtheizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1  !W/m²
-qbtamaxs1 = 10+10*(gt(time,5700)+gt(time,6200)+gt(time,6300)+gt(time,6900)+gt(time,7500)+gt(time,8100)+gt(time,8700)+gt(time,9300))  !gtheizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1  !W/m²
-qbtamax1 = qbtamaxw1*heizperiode1-qbtamaxs1*kuehlperiode1
-qbtamax2 = qbtamax1 !heizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1
-qbtamax3 = qbtamax1 !heizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1
-qbtamax4 = qbtamax1 !heizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1  !ms250310
-*qbtamax = 50*anutzges  !wenn impuls = 0, wird über Vorlauftemperaturauswahl geregelt
-*qbtamaxs = 40*anutzges  !wenn impuls = 0, wird über Vorlauftemperaturauswahl geregelt
-tbtahysges = 0.1
-*theizsollminideal = 21  !20
-*theizsollmaxideal = 25  !25
-*tkuehlsollminideal = 50  !25
-*tkuehlsollmaxideal = 50   !23
-*humsoll = 0 !0.012*(1-BTAmodellein)*0+0*BTAmodellein  !BBSR
-*relmin = 0  !40*(1-BTAmodellein)*0+0*BTAmodellein !BBSR
-*abshumgrenzo = 0.1  !0.009	! [g/kg] Grenze fur Entfeuchtung Lüftung, achtung dazu muss man dann noch abszu ändern
-*abshumgrenzu = 0.0	! [g/kg] Grenze fur Befeuchtung
-*tzukuehl = 50  !lt(tzuquellmin,20)*20+(1-lt(tzuquellmin,20))*tzuquellmin  Ausschalten mit hohen Temperaturen
-*tzuheiz = 0  !wenn kein Nachheizen, auf 0 setzen
+use = [3,77] 			![-] Nutzungs-Schedule
 
-theizsollmin = theizsollminideal-tbtahysges/2
-theizsollmax = theizsollmaxideal-tbtahysges/2
-tkuehlsollmin = tkuehlsollminidealcomf-tbtahysges/2
-tkuehlsollmax = tkuehlsollmaxidealcomf-tbtahysges/2
-queber1w = gt(time,100)*lt(time,301)+gt(time,700)*lt(time,901)+gt(time,1300)*lt(time,1501)+gt(time,1900)*lt(time,2101)+gt(time,2500)*lt(time,2701)+gt(time,3100)*lt(time,3301)+gt(time,3700)*lt(time,3901)+gt(time,4300)*lt(time,4501)+gt(time,4900)*lt(time,5001)  
-queber1s = gt(time,5100)*lt(time,5301)+gt(time,5700)*lt(time,5901)+gt(time,6300)*lt(time,6501)+gt(time,6900)*lt(time,7101)+gt(time,7500)*lt(time,7701)+gt(time,8100)*lt(time,8301)+gt(time,8700)*lt(time,8901)+gt(time,9300)*lt(time,9501)+gt(time,9900)*lt(time,10101)  
-queber1 = queber1w*heizperiode1+queber1s*kuehlperiode1
-queber2 = queber1
-queber3 = queber1  
-queber4 = queber1  !ms250310
-zeit1impuls = 24
-zeit2impuls = 300
-heizleistmaxideal = 20+10*zeitmax
-kuehlleistmaxideal = 10+10*zeitmax
+*Personen
+Persanz1 = 2		![???]
+Persanz2 = 0 		![???]
+Persanz3 = 2 		![???]
+Persanz4 = 2 		![???]
+
+redukpers = 1	![-] Relativer Reduktionsfaktor Personen NOT-IN-USE
+
+Pers1 = use*Persanz1	![-] BUILDING-INPUT
+Pers2 = use*Persanz2	![-] BUILDING-INPUT
+Pers3 = use*Persanz3	![-] BUILDING-INPUT
+Pers4 = use*Persanz4	![-] BUILDING-INPUT
+
+*elektrische Geraete
+Companz1 = 15  		![W/m2]
+Companz2 = 0   		![W/m2]
+Companz3 = 15  		![W/m2]
+Companz4 = 15 		![W/m2]
+
+Comp1 = companz1*use	![W/m2] BUILDING-INPUT
+Comp2 = companz2*use	![W/m2] BUILDING-INPUT	
+Comp3 = companz3*use 	![W/m2] BUILDING-INPUT
+Comp4 = companz4*use	![W/m2] BUILDING-INPUT
+
+*Beleuchtung
+TQ1 = 0.03			![???]
+TQ2 = 0.06			![???]
+TQ3 = 0.03			![???]
+TQ4 = 0.01			![???]
+
+LichtLeistung = 8.29 	![W/m2]
+
+Iglobal1 = 100*TQ1*idh	![lux] [Umrechnung von Watt in Lux]
+Iglobal2 = 100*TQ2*idh	![lux]
+Iglobal3 = 100*TQ3*idh	![lux]
+Iglobal4 = 100*TQ4*igh	![lux]
+
+lichtcontr1 = lt(iglobal1,300)	![-]
+lichtcontr2 = lt(iglobal2,300)	![-] 
+lichtcontr3 = lt(iglobal3,300)	![-]
+lichtcontr4 = lt(iglobal4,300)	![-]
+
+dimfakt = 1	![-]
+
+Licht1 = LichtLeistung*(lichtcontr1)*use*dimfakt	![W/m2] BUILDING-INPUT Achtung, Sonnenschutz berücksichtigen bei hohen Helligkeitsanforderungen
+Licht2 = LichtLeistung*0.25*use*dimfakt				![W/m2] BUILDING-INPUT
+Licht3 = LichtLeistung*(lichtcontr3)*use*dimfakt	![W/m2] BUILDING-INPUT
+Licht4 = LichtLeistung*(lichtcontr4)*use*dimfakt	![W/m2] BUILDING-INPUT
+
+*Feuchtelasten
+ifeuchtm2 = 0	![W/m2] Pflanzen, Wäsche ist noch extra zu berücksichtigen
+
+ilf1 = ifeuchtm2	![???] BUILDING-INPUT
+ilf2 = ifeuchtm2	![???] BUILDING-INPUT
+ilf3 = ifeuchtm2	![???] BUILDING-INPUT
+ilf4 = ifeuchtm2	![???] BUILDING-INPUT
+
+*alternative IW aus Input-File (logical number 62)
+QelHH = [334,1]*1000/anutzges				![W/m2]
+QelflexHH = [334,2]*1000/anutzges			![W/m2]
+QelabwteilHH = [334,3]*1000/anutzges		![W/m2]
+QelabwHH = [334,4]*1000/anutzges			![W/m2]
+QWW_HH = [334,5]*4.19/3.6*(38-10)/anutzges	![W/m2]
+PersHH = [334,6]	![???]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Lueftung/Infiltration"
+*
+Equations 28
+
+*Lueftung
+nluft1 = (100*(abs(tzone1-ta))**0.5*(fen1*1.23*1.9*1.9**0.5))/vol1	![1/h]
+nluft2 = (100*(abs(tzone2-ta))**0.5*(fen2*1.23*1.9*1.9**0.5))/vol2	![1/h]
+nluft3 = (100*(abs(tzone3-ta))**0.5*(fen3*1.23*1.9*1.9**0.5))/vol3	![1/h]
+nluft4 = (100*(abs(tzone4-ta))**0.5*(fen4*1.23*1.9*1.9**0.5))/vol4	![1/h]
+
+winterUnterGrenze = -2 ![K]
+sommerUnterGrenze = -2 ![K]
+querhyst = winterUnterGrenze*(1-somm)+sommerUnterGrenze*somm ![K]
+winterOberGrenze = 25 ![°C]
+sommerOberGrenze = 24 ![°C]
+querob = winterOberGrenze*(1-somm)+sommerOberGrenze*somm ![°C]
+
+tcontr1 = [20,1]	![-]
+tcontr2 = [21,1]	![-]
+tcontr3 = [22,1]	![-]
+tcontr4 = 0	![22,1] ![-]
+
+Vent1var = 1.24  		![1/h] BUILDING-INPUT 
+Vent2var = 0  			![1/h] BUILDING-INPUT
+Vent3var = 1.24  		![1/h] BUILDING-INPUT
+Vent4var = 1.24   		![1/h] BUILDING-INPUT
+
+*Infiltration inkl. Nachstroemung ABL-Anlage bzw. Fensterlueftung
+fugenLuft = 0.14  		![1/h]
+
+wnatluft = [56,47]		![-] Schedule
+
+Inf1 = fugenLuft+(nluft1*somm*tcontr1*wnatluft)+(nluft1*(1-somm)*tcontr1*wnatluft)*fenluftsomm ![1/h]
+Inf2 = fugenLuft+(nluft2*somm*tcontr2*wnatluft)+(nluft2*(1-somm)*tcontr2*wnatluft)*fenluftsomm ![1/h]
+Inf3 = fugenLuft+(nluft3*somm*tcontr3*wnatluft)+(nluft3*(1-somm)*tcontr3*wnatluft)*fenluftsomm ![1/h]
+Inf4 = fugenLuft+(nluft4*somm*tcontr4*wnatluft)+(nluft4*(1-somm)*tcontr4*wnatluft)*fenluftsomm ![1/h]
+
+*Fensterlüftung
+fen1 = 0.4615384615384615     	![1/h] 0 geschlossen, 0.461538461538462 gekippt, 3 ganz geöffnet
+fen2 = 0     					![1/h]
+fen3 = 0.4615384615384615     	![1/h] 
+fen4 = 0.4615384615384615     	![1/h] 
+
+*------------------------------------------------------------------------------
+* EQUATIONS "H/K/Bef/Entf"
+*
+Equations 17
+
+qheizmax = 50					![W/m2]
+qkuehlmax = 40 					![W/m2]
+qbtamax = qheizmax*anutzges  	![W]
+qbtamaxs = qkuehlmax*anutzges	![W]
+
+theizsollminideal = 21   		![°C]
+theizsollmaxideal = 25   		![°C]
+tkuehlsollminideal = 50    		![°C]
+tkuehlsollmaxideal = 50    		![°C]
+humsoll = 0  					![???]
+relmin = 0   					![%???]
+abshumgrenzo = 0.1  			![g/kg] Grenze fur Entfeuchtung Lüftung, achtung dazu muss man dann noch abszu ändern
+abshumgrenzu = 0 				![g/kg] Grenze fur Befeuchtung
+tzukuehl = 50   				![???]
+tzuheiz = 0   					![???] wenn kein Nachheizen, auf 0 setzen
+
+absmax = 0.1   					![g/kg]	Grenze für ideale Entfeuchtung Raum
+  
+BTAmodellein = 0				![-] 1=BTA, 0=ideal
+FlagTraumsoll = 0    			![-] 0 - wenn fixe Temperatur, 1 wenn nach Kat I. Achtung auf Klimadaten
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Allerhand"
+*
+Equations 49
+
+tcomfneutr_MannInnSom = [3,78]   ![°C] neutrale Temperatur Mannheim Innenstadt Sommer min Temp 25°C, sonst Kat I
+tcomfneutr_PotsInnSom = [3,79]   ![°C] neutrale Temperatur Potsdam Innenstadt Sommer
+tcomfneutr_MannVorSom = [3,80]   ![°C] neutrale Temperatur Mannheim Vorort Sommer
+tcomfneutr = eql(FlagTraumsoll,0)*tkuehlsollminideal+eql(FlagTraumsoll,1)*tcomfneutr_MannInnSom+eql(FlagTraumsoll,2)*tcomfneutr_PotsInnSom+eql(FlagTraumsoll,3)*tcomfneutr_MannVorSom	![°C]
+tkuehlsollminidealcomf = tcomfneutr		![°C]
+tkuehlsollmaxidealcomf = tcomfneutr		![°C]
+
+heizidealfrei = 1	![-]
+kuehlidealfrei = 1	![-]
+wwidealfrei = 1		![-]
+nutzidealfrei = 1	![-]
+
+costfunction = 0	![-] hier Signal, aktuell diskret als 0/1-Signal verwendet (0/1)
+
+qpvmm = igm*0.3125*0   ![W/m2] Siehe Annahmen, Ansatz maximierend, EBF: 4 Geschosse: 0.3125, 2 Geschosse 0.625
+
+kuehlperiode1 = (lt(time,6552)*gt(time,2880)+lt(time,6552+8760)*gt(time,2880+8760)+lt(time,6552+8760*2)*gt(time,2880+8760*2)+lt(time,6552+8760*3)*gt(time,2880+8760*3))	![-]
+heizperiode1 = 1-kuehlperiode1	![-]
+
+zeitmax = [210,2]	![???]
+
+qbtamaxw1 = 50+10*(gt(time,700)+gt(time,1300)+gt(time,1900)+gt(time,2500)+gt(time,3100)+gt(time,3700)+gt(time,4300)+gt(time,4900))  ![W/m2]
+qbtamaxs1 = 10+10*(gt(time,5700)+gt(time,6200)+gt(time,6300)+gt(time,6900)+gt(time,7500)+gt(time,8100)+gt(time,8700)+gt(time,9300))	![W/m2]
+qbtamax1 = qbtamaxw1*heizperiode1-qbtamaxs1*kuehlperiode1								![W/m2]
+qbtamax2 = qbtamax1 !heizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1	![W/m2]
+qbtamax3 = qbtamax1 !heizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1	![W/m2]
+qbtamax4 = qbtamax1 !heizperiode1*heizleistmaxideal+kuehlleistmaxideal*kuehlperiode1	![W/m2]
+tbtahysges = 0.1	![K]
+
+theizsollmin = theizsollminideal-tbtahysges/2		![°C]
+theizsollmax = theizsollmaxideal-tbtahysges/2		![°C]
+tkuehlsollmin = tkuehlsollminidealcomf-tbtahysges/2	![°C]
+tkuehlsollmax = tkuehlsollmaxidealcomf-tbtahysges/2	![°C]
+
+queber1w = gt(time,100)*lt(time,301)+gt(time,700)*lt(time,901)+gt(time,1300)*lt(time,1501)+gt(time,1900)*lt(time,2101)+gt(time,2500)*lt(time,2701)+gt(time,3100)*lt(time,3301)+gt(time,3700)*lt(time,3901)+gt(time,4300)*lt(time,4501)+gt(time,4900)*lt(time,5001)		![???]
+queber1s = gt(time,5100)*lt(time,5301)+gt(time,5700)*lt(time,5901)+gt(time,6300)*lt(time,6501)+gt(time,6900)*lt(time,7101)+gt(time,7500)*lt(time,7701)+gt(time,8100)*lt(time,8301)+gt(time,8700)*lt(time,8901)+gt(time,9300)*lt(time,9501)+gt(time,9900)*lt(time,10101)	![???] 
+queber1 = queber1w*heizperiode1+queber1s*kuehlperiode1	![???]
+queber2 = queber1	![???]
+queber3 = queber1  	![???]
+queber4 = queber1  	![???]
+
+heizleistmaxideal = 20+10*zeitmax	![???]
+kuehlleistmaxideal = 10+10*zeitmax	![???]
 
 *sonstige Var
-fenluftsomm = 1
-*Schattschaltaussen = 0.8
-*Schattschaltinnen = 0
-*Vent1var = 0.5 
-*Vent2var = 0. 
-*Vent3var = 0.5 
-Qelvar = QelHH*0.5 !(Qel1*anutz1+Qel2*anutz2+Qel3*anutz3+Qel4*anutz4)/anutzges  !([3,44]+[3,45]+[3,46]+[3,47]+[3,48]+(licht3*anutz3)/1000+[3,50]+[3,51]+[3,52])*1000/anutz3 !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-Qwwnutzvar = QWW_HH*0.5 !12.75/0.8*1000/8760 ![3,40]*1000/anutz3 !WWprofil in W/m²
-QelAbwvar = Qel*0.8 !QelabwHH !Abwärme von Haushaltsgeräten in W/m²
-SpeicherWW = 1  !1-es gibt WW Speicher, 0- es gibt keinen
-Qww_Speichermaxvar = 120    !liter
-qwwwpmaxvar = 50  !W/m²
-JAZh = 3
-JAZc = 3
-JAZww = 2.5
-etaverth = 0.9
-etavertc = 0.9
-etavertww = 0.7
+fenluftsomm = 1			![???]
+Qelvar = QelHH*0.5  	![W/m2] Geräte pro Haushalt Profil mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen
+Qwwnutzvar = QWW_HH*0.5 ![W/m2] WWprofil
+QelAbwvar = Qel*0.8 	![W/m2] Abwärme von Haushaltsgeräten
+SpeicherWW = 1  		![-] 1-es gibt WW Speicher, 0- es gibt keinen
+Qww_Speichermaxvar = 120	![Liter]
+qwwwpmaxvar = 50  ![W/m2]
+JAZh = 3	![-]
+JAZc = 3	![-]
+JAZww = 2.5	![-]
+etaverth = 0.9	![-]
+etavertc = 0.9	![-]
+etavertww = 0.7	![-]
 
-
-MBTAspezges = 18  !kg/h/m² 22 bei fußbodenheizung, 16 bei BTA
-qv1 = [56,19]/anutz1/3.6	!ms250310 das ist "QVENT_ZONE1", macht keinen Sinn
+MBTAspezges = 18  ![kg/m2h] 22 bei Fußbodenheizung, 16 bei BTA
+qv1 = [56,19]/anutz1/3.6	![???]
 
 *------------------------------------------------------------------------------
-
-
-* EQUATIONS "Schedule"
-* 
-EQUATIONS 11
-wluft = [3,76]  ![56,50] Profil geändert, 6 bis 18 Uhr durchgehend
-use = [3,77] ![56,45]  !Büronutzung, 0.5 am Anfang und Ende
-lichtuse = use
-wohnwoche = [56,46]
-wrestaurante = [56,56]
-wveranstaltung = [56,57]
-wseminar = [56,58]
-wkueche = [56,60]
-wnatluft = [56,47]
-BTA_Schedule = [56,59]
-wschlaf = [56,61]
-*$UNIT_NAME Schedule
-*$LAYER Main
-*$POSITION 199 194
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Inf"
-* 
-EQUATIONS 21
-*fugenLuft = 0.042
-nluft1 = (100*(abs(tzone1-ta))**0.5*(fen1*1.23*1.9*1.9**0.5))/vol1  !nach Lukas. Kippstellung bei fen1 berücksichtigen 
-nluft2 = (100*(abs(tzone2-ta))**0.5*(fen2*1.23*1.9*1.9**0.5))/vol2
-nluft3 = (100*(abs(tzone3-ta))**0.5*(fen3*1.23*1.9*1.9**0.5))/vol3
-nluft4 = (100*(abs(tzone4-ta))**0.5*(fen4*1.23*1.9*1.9**0.5))/vol4	!ms250310
-*nluft1 = (0.7*100*(abs(tzone1-ta))**0.5*(fen1*0.8*1.3*1.3**0.5))/vol1  !10cm Rahmen umseitig abgezogen
-*nluft2 = (0.7*100*(abs(tzone2-ta))**0.5*(fen2*0.8*1.3*1.3**0.5))/vol2
-*nluft3 = (0.7*100*(abs(tzone3-ta))**0.5*(fen3*0.8*1.3*1.3**0.5))/vol3
-*nluft4 = (0.7*100*(abs(tzone4-ta))**0.5*(fen4*0.8*1.3*1.3**0.5))/vol4	!ms250310
-fugenLuftBestand = 0.042
-nluftstand = 0
-nluftbuero = 0
-tcontr1 = [20,1]
-tcontr2 = [21,1]
-tcontr3 = [22,1]
-tcontr4 = 0	![22,1] !ms250310
-Inf1 = fugenLuft + (nluft1*somm*tcontr1*wnatluft)+(nluft1*(1-somm)*tcontr1*wnatluft)*fenluftsomm ! 1/h hier noch an regelung von Lukas anpassen: Entscheidung immer von Stand 18 Uhr abhängig, Taussen > = 26°C
-Inf2 = fugenLuft + (nluft2*somm*tcontr2*wnatluft)+(nluft2*(1-somm)*tcontr2*wnatluft)*fenluftsomm ! 1/h
-Inf3 = fugenLuft + (nluft3*somm*tcontr3*wnatluft)+(nluft3*(1-somm)*tcontr3*wnatluft)*fenluftsomm ! 1/h
-Inf4 = fugenLuft + (nluft4*somm*tcontr4*wnatluft)+(nluft4*(1-somm)*tcontr4*wnatluft)*fenluftsomm ! 1/h !ms250310
-winterUnterGrenze = -2
-sommerUnterGrenze = -2
-querhyst = winterUnterGrenze*(1-somm)+sommerUnterGrenze*somm
-winterOberGrenze = 25
-sommerOberGrenze = 24
-querob = winterOberGrenze*(1-somm)+sommerOberGrenze*somm  !49
-
-*------------------------------------------------------------------------------
-
-* EQUATIONS "IW"
-* 
-EQUATIONS 39
-QelHH = [334,1]*1000/anutzges
-QelflexHH = [334,2]*1000/anutzges
-QelabwteilHH = [334,3]*1000/anutzges
-QelabwHH = [334,4]*1000/anutzges
-QWW_HH = [334,5]*4.19/3.6*(38-10)/anutzges
-PersHH = [334,6]
-
-redukpers = 1
-*Persanz1 = 2 !Annahme, dass Personen gleich auf die beiden Zonen des Haushalts aufgeteilt werden
-*Persanz2 = 0 
-*Persanz3 = 2 
-*Persanz4 = 2	!ms250310
-Pers1 = 0*impuls+(1-impuls)*use*Persanz1 ![3,11]*Persanz1
-Pers2 = 0*impuls+(1-impuls)*use*Persanz2
-Pers3 = 0*impuls+(1-impuls)*use*Persanz3 ![3,53]*Persanz3
-Pers4 = 0*impuls+(1-impuls)*use*Persanz4	!ms250310
-*Pers1 = 0*impuls+(1-impuls)*PersHH/2 ![3,11]*Persanz1
-*Pers2 = 0 ![3,25]*Persanz2
-*Pers3 = 0*impuls+(1-impuls)*PersHH/2 ![3,53]*Persanz3
-*Pers4 = 0*impuls+(1-impuls)*PersHH/2	!ms250310
-
-*Companz1 = 15 !A0  5 !A2
-*Companz2 = 0
-*Companz3 = 15 !A0  5 !A2
-*Companz4 = 15	!ms250310
-
-Comp1 = companz1*use !A0  5*use !A2 (2.78-0.5*qdampf*ilf1/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf1/3.6) ! 2.78-0.5*qdampf*ilf1/3.6 !qelabw1	!Wichtig: Bezieht sich auf 1W/m²!!!		, 2,78 bleiben netto übrig, halbe Feuchte sind Personen
-Comp2 = companz2*0 !(2.78-0.5*qdampf*ilf2/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf2/3.6) !2.78-0.5*qdampf*ilf2/3.6 !qelabw2			
-Comp3 = companz3*use !A0  5*use !A2  (2.78-0.5*qdampf*ilf3/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf3/3.6) !2.78-0.5*qdampf*ilf3/3.6 !qelabw3
-Comp4 = companz4*use	!ms250310
-
-*Comp1 = (2.78-0.5*qdampf*ilf1/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf1/3.6) ! 2.78-0.5*qdampf*ilf1/3.6 !qelabw1	!Wichtig: Bezieht sich auf 1W/m²!!!		, 2,78 bleiben netto übrig, halbe Feuchte sind Personen
-*Comp2 = (2.78-0.5*qdampf*ilf2/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf2/3.6) !2.78-0.5*qdampf*ilf2/3.6 !qelabw2			
-*Comp3 = (2.78-0.5*qdampf*ilf3/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf3/3.6) !2.78-0.5*qdampf*ilf3/3.6 !qelabw3
-*Comp4 = (2.78-0.5*qdampf*ilf4/3.6)*impuls+(1-impuls)*(QelAbw-0.5*qdampf*ilf4/3.6)	!ms250310
-
-*TQ1 = 0.03	!gut  !BBSR für unterschiedliche Fenstergrößen anpassen
-TQ2 = 0.06	!mittel
-*TQ3 = 0.03 !gut
-TQ4 = 0.01	!schlecht
-Iglobal1 = 100*TQ1*idh	! [Umrechnung von Watt in Lux]
-Iglobal2 = 100*TQ2*idh
-Iglobal3 = 100*TQ3*idh
-Iglobal4 = 100*TQ4*igh
-Iglobal42 = 100*TQ4*igh*(1-Schatth2)
-
-lichtcontr1 = lt(iglobal1,300) 
-lichtcontr2 = lt(iglobal2,300) 
-lichtcontr3 = lt(iglobal3,300)
-lichtcontr4 = lt(iglobal4,300)	!ms250310
-dimfakt = 1 	!nicht implementiert, siehe Post
-dimfaktInnen = 1
-*LichtLeistung = 5	!Licht0  10 !Licht1 [W/m²]
-LichtLeistungBestand = 20	!W/m²
-Licht1 = LichtLeistung*(lichtcontr1)*use*dimfakt	! [W/m²] Achtung, Sonnenschutz berücksichtigen bei hohen Helligkeitsanforderungen
-Licht2 = LichtLeistung*0.25*use*dimfakt
-Licht3 = LichtLeistung*(lichtcontr3)*use*dimfakt
-Licht4 = LichtLeistung*(lichtcontr4)*use*dimfakt	!ms250310
-*Licht1 = Lichtbasis*(lichtcontr1)*pers1*(1-wschlaf)*dimfakt	! [W/m²] Achtung, Sonnenschutz berücksichtigen bei hohen Helligkeitsanforderungen
-*Licht2 = Lichtbasis*(lichtcontr2)*pers2*(1-wschlaf)*dimfakt
-*Licht3 = Lichtbasis*(lichtcontr3)*pers3*(1-wschlaf)*dimfakt
-*Licht4 = Lichtbasis*(lichtcontr4)*pers4*(1-wschlaf)*dimfakt	!ms250310
-Lichtbasis = 1 !2.5 !LichtLeistung*lichtuse
-ifeuchtm2 = 0! 0.002 !(0.05*gt(igh,5)+(1-gt(igh,5))*0.005*(lt(time,3624)+gt(time,7296)))/25  !Pflanzen, Wäsche ist noch extra zu berücksichtigen
-ilf1 = ifeuchtm2
-ilf2 = ifeuchtm2
-ilf3 = ifeuchtm2
-ilf4 = ifeuchtm2	!ms250310
-
 * EQUATIONS "heiz"
 * 
 EQUATIONS 21
-GSC = 1
-Theiz = (impuls*(tbtasoll)+(1-impuls)*theizsollminideal)*(1-BTAmodellein)+BTAmodellein*0
-theizsom = 15*(1-BTAmodellein)+BTAmodellein*0
-Heiz1 = Theiz*heizperiode1+(1-heizperiode1)*theizsom*0	
-Heiz2 = Theiz*heizperiode1+(1-heizperiode1)*theizsom*0 
-Heiz3 = Theiz*heizperiode1+(1-heizperiode1)*theizsom*0
-Heiz4 = Theiz*heizperiode1+(1-heizperiode1)*theizsom*0	!ms250310
-mheiz = 7
-dheiz = -5
-mheizp = 4.4
-dheizp = -2
-theizvormit = 28
-hfakreduk = 0.85 !Faktor für Flächenreduktion etc. global
-HEIZMAX1 = (impuls*qbtamax1+(1-impuls)*(1000*(1-GSC)+33.75*heizidealfrei*GSC))*anutz1 ! Anutz1*(mheiz*(theizvormit-TZone1)+dheiz)*hfakreduk
-HEIZMAX2 = (impuls*qbtamax2+(1-impuls)*(1000*(1-GSC)+33.75*heizidealfrei*GSC))*anutz2 ! Anutz2*(mheizp*(theizvormit-TZone2)+dheizp)*hfakreduk
-HEIZMAX3 = (impuls*qbtamax3+(1-impuls)*(1000*(1-GSC)+33.75*heizidealfrei*GSC))*anutz3 ! Anutz3*(mheizp*(theizvormit-TZone3)+dheizp)*hfakreduk
-HEIZMAX4 = (impuls*qbtamax4+(1-impuls)*(1000*(1-GSC)+33.75*heizidealfrei*GSC))*anutz4 ! Anutz4*(mheizp*(theizvormit-TZone4)+dheizp)*hfakreduk	!ms250310
-relmin1 = relmin
-relmin2 = relmin
-relmin3 = relmin
-relmin4 = relmin	!ms250310
 
+GSC = 1	![???]
+Theiz = theizsollminideal*(1-BTAmodellein)+BTAmodellein*0	![°C]
+theizsom = 15*(1-BTAmodellein)+BTAmodellein*0	![°C]
+
+Heiz1 = Theiz*heizperiode1+(1-heizperiode1)*theizsom*0	![°C] BUILDING-INPUT
+Heiz2 = Theiz*heizperiode1+(1-heizperiode1)*theizsom*0	![°C] BUILDING-INPUT
+Heiz3 = Theiz*heizperiode1+(1-heizperiode1)*theizsom*0	![°C] BUILDING-INPUT
+Heiz4 = Theiz*heizperiode1+(1-heizperiode1)*theizsom*0	![°C] BUILDING-INPUT
+
+mheiz = 7	![???]
+dheiz = -5	![???]
+mheizp = 4.4	![???]
+dheizp = -2	![???]
+theizvormit = 28	![°C]
+hfakreduk = 0.85 	![-] Faktor für Flächenreduktion etc. global
+
+HEIZMAX1 = (1000*(1-GSC)+33.75*heizidealfrei*GSC)*anutz1	![W???] BUILDING-INPUT
+HEIZMAX2 = (1000*(1-GSC)+33.75*heizidealfrei*GSC)*anutz2	![W???] BUILDING-INPUT
+HEIZMAX3 = (1000*(1-GSC)+33.75*heizidealfrei*GSC)*anutz3	![W???] BUILDING-INPUT
+HEIZMAX4 = (1000*(1-GSC)+33.75*heizidealfrei*GSC)*anutz4	![W???] BUILDING-INPUT
+
+relmin1 = relmin	![%???] BUILDING-INPUT
+relmin2 = relmin	![%???] BUILDING-INPUT
+relmin3 = relmin	![%???] BUILDING-INPUT
+relmin4 = relmin	![%???] BUILDING-INPUT
+
+*------------------------------------------------------------------------------
 * EQUATIONS "kuehl"
 * 
 EQUATIONS 24
-tkuehlges = (impuls*((tbtasoll)*(1-heizperiode1)+50*heizperiode1)+(1-impuls)*(tkuehlsollminidealcomf*(1-heizperiode1)+heizperiode1*50))*(1-BTAmodellein)+BTAmodellein*50 !25-wkuehlvor*2*0
-tkuehlgesfb = 24*(1-BTAmodellein)+BTAmodellein*50 !25-wkuehlvor*1
 
-Tkuehl1 = tkuehlges	! Solltemperaturen Kühlen [°C]	
-Tkuehl2 = tkuehlges 
-Tkuehl3 = tkuehlges 
-Tkuehl4 = tkuehlges
-mkuehl = 7     !Abbildung Verlauf Leistungsabgabe bei Flächenheizungen (meist in Abhängigkeit von Differenz Raumtemperatur zu BTA_Mitteltemperatur (Differenz Vorlauf / Rücklauf)
-mkuehlfb = 4.4
-dkuehl = 5
-dkuehlfb = 0
-mkuehlp = 6
-dkuehlp = 0
-ttau2 = [332,8]
-ttau2grenz = ttau2+2
-tkuehlvormit = lt(ttau2grenz,19)*19+(1-lt(ttau2grenz,19))*ttau2grenz
-kfakreduk = 0.85 !Faktor für Flächenreduktion etc. global
-kuehlmax1 = (-impuls*qbtamax1*(1-heizperiode1)+(1-impuls)*(1000*(1-GSC)+40.5*kuehlidealfrei*GSC))*anutz1 ! Anutz1*(mkuehlp*(TZone1-tkuehlvormit)+dkuehlp)*kfakreduk
-kuehlmax2 = (-impuls*qbtamax2*(1-heizperiode1)+(1-impuls)*(1000*(1-GSC)+40.5*kuehlidealfrei*GSC))*anutz2 ! Anutz2*(mkuehlp*(TZone2-tkuehlvormit)+dkuehlp)*kfakreduk
-kuehlmax3 = (-impuls*qbtamax3*(1-heizperiode1)+(1-impuls)*(1000*(1-GSC)+40.5*kuehlidealfrei*GSC))*anutz3 ! Anutz3*(mkuehlp*(TZone3-tkuehlvormit)+dkuehlp)*kfakreduk
-kuehlmax4 = (-impuls*qbtamax4*(1-heizperiode1)+(1-impuls)*(1000*(1-GSC)+40.5*kuehlidealfrei*GSC))*anutz4 ! Anutz4*(mkuehlp*(TZone4-tkuehlvormit)+dkuehlp)*kfakreduk	!ms250310
-*absmax = 0.012  !Grenze für ideale Entfeuchtung Raum
-absmax1 = absmax
-absmax2 = absmax
-absmax3 = absmax
-absmax4 = absmax	!ms250310
+tkuehlges = (tkuehlsollminidealcomf*(1-heizperiode1)+heizperiode1*50)*(1-BTAmodellein)+BTAmodellein*50	![°C]
+tkuehlgesfb = 24*(1-BTAmodellein)+BTAmodellein*50	![°C]
 
+Tkuehl1 = tkuehlges	![°C] BUILDING-INPUT Solltemperaturen Kühlen
+Tkuehl2 = tkuehlges	![°C] BUILDING-INPUT
+Tkuehl3 = tkuehlges	![°C] BUILDING-INPUT
+Tkuehl4 = tkuehlges	![°C] BUILDING-INPUT
 
+mkuehl = 7		![???] Abbildung Verlauf Leistungsabgabe bei Flächenheizungen (meist in Abhängigkeit von Differenz Raumtemperatur zu BTA_Mitteltemperatur (Differenz Vorlauf / Rücklauf)
+mkuehlfb = 4.4	![???]
+dkuehl = 5		![???]
+dkuehlfb = 0	![???]
+mkuehlp = 6		![???]
+dkuehlp = 0		![???]
+ttau2 = [332,8]	![°C]
+ttau2grenz = ttau2+2	![°C]
+tkuehlvormit = lt(ttau2grenz,19)*19+(1-lt(ttau2grenz,19))*ttau2grenz	![°C]
+kfakreduk = 0.85 ![-] Faktor für Flächenreduktion etc. global
+
+kuehlmax1 = (1000*(1-GSC)+40.5*kuehlidealfrei*GSC)*anutz1 ! Anutz1*(mkuehlp*(TZone1-tkuehlvormit)+dkuehlp)*kfakreduk	![W???] BUILDING-INPUT
+kuehlmax2 = (1000*(1-GSC)+40.5*kuehlidealfrei*GSC)*anutz2 ! Anutz2*(mkuehlp*(TZone2-tkuehlvormit)+dkuehlp)*kfakreduk	![W???] BUILDING-INPUT
+kuehlmax3 = (1000*(1-GSC)+40.5*kuehlidealfrei*GSC)*anutz3 ! Anutz3*(mkuehlp*(TZone3-tkuehlvormit)+dkuehlp)*kfakreduk	![W???] BUILDING-INPUT
+kuehlmax4 = (1000*(1-GSC)+40.5*kuehlidealfrei*GSC)*anutz4 ! Anutz4*(mkuehlp*(TZone4-tkuehlvormit)+dkuehlp)*kfakreduk	![W???] BUILDING-INPUT
+
+absmax1 = absmax	![g/kg] BUILDING-INPUT	Grenze für ideale Entfeuchtung Raum
+absmax2 = absmax	![g/kg] BUILDING-INPUT
+absmax3 = absmax	![g/kg] BUILDING-INPUT
+absmax4 = absmax	![g/kg] BUILDING-INPUT
+
+*------------------------------------------------------------------------------
+* EQUATIONS "SzenarioAneu"
+* 
+EQUATIONS 30
+
+bedarf2050 = [132,1]		![???]
+biomasse2050 = [132,2]		![???]
+wasser2050 = [132,3]		![???]
+solar2050 = [132,4]			![???]
+wind2050 = [132,5]			![???]
+EEges2050 = [132,6]			![???]
+ueberschuss2050 = [132,7]	![???]
+unterschuss2050 = [132,8]	![???]
+bilanz2050 = [132,9]		![???]
+Kostideal = [132,10]		![???]
+Lastheizideal = [132,11]	![???]
+heiz24h = [132,12]			![???]
+heizWo = [132,13]			![???]
+heiz2Wo = [132,14]			![???]
+heiz4Wo = [132,15]			![???]
+Lastkuehlideal = [132,16]	![???]
+kuehl24h = [132,17]			![???]
+kuehlWo = [132,18]			![???]
+kuehl2Wo = [132,19]			![???]
+kuehl4Wo = [132,20]			![???]
+LastWWideal = [132,21]		![???]
+WW24h = [132,22]			![???]
+WWWo = [132,23]				![???]
+WW2Wo = [132,24]			![???]
+WW4Wo = [132,25]			![???]
+Lastnutzideal = [132,26]	![???]
+nutz24h = [132,27]			![???]
+nutzWo = [132,28]			![???]
+nutz2Wo = [132,29]			![???]
+nutz4Wo = [132,30]			![???]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Klima"
+* 
+EQUATIONS 82
+
+ta = [109,1]	![°C] BUILDING-INPUT
+relha = [109,7]	![%] BUILDING-INPUT
+absa = [109,6]	![kg/kg]
+tsky = [109,4]	![°C] BUILDING-INPUT
+tsgrd = ta	![°C] BUILDING-INPUT
+twasgrd = [109,5]	![°C]
+Ttau = [109,2]		![°C]
+Twetbaulb = [109,3]	![°C]
+
+terd1 = 10.4+[19,2]*(15.4-10.4)  	![°C] BUILDING-INPUT EG, Temperaturfaktor ca. 0.5
+terd2 = 10 !11.04+[19,2]*16.4		![°C] BUILDING-INPUT
+terd3 = 10 !11.04+[19,2]*16.4		![°C] BUILDING-INPUT
+terd4 = 10 !11.04+[19,2]*16.4 		![°C] BUILDING-INPUT
+
+Tewtphpp = 7.1+[19,2]*7	![°C]
+GRD_REFL = 0.2  ![???] BUILDING-INPUT
+wind = [109,8]	![m/s] BUILDING-INPUT
+winddir = [109,9]	![°C]
+druck = [109,10]  	![atm] BUILDING-INPUT
+TURN = 0	![°]
+HEMISPHERE = 1 ![-] northern hemisphere: 1  - southern hemisphere: -1
+
+AA_H_0_0 = 0  ![°] azimuth angle of orientation
+AA_S_0_90 = (0+TURN)*GT(HEMISPHERE,0)+(180-0 -TURN)*NOT(GT(HEMISPHERE,0)) 		![°] azimuth angle of orientation
+AA_W_90_90 = (90+TURN)*GT(HEMISPHERE,0)+(180-90-TURN)*NOT(GT(HEMISPHERE,0)) 	![°] azimuth angle of orientation
+AA_N_180_90 = (180+TURN)*GT(HEMISPHERE,0)+(180-180-TURN)*NOT(GT(HEMISPHERE,0)) 	![°] azimuth angle of orientation
+AA_E_270_90 = (270+TURN)*GT(HEMISPHERE,0)+(180-270-TURN)*NOT(GT(HEMISPHERE,0)) 	![°] azimuth angle of orientation
+AA_W2 = (90+TURN)*GT(HEMISPHERE,0)+(180-45-TURN)*NOT(GT(HEMISPHERE,0)) 			![°] azimuth angle of orientation
+AA_N2 = (180+TURN)*GT(HEMISPHERE,0)+(180-135-TURN)*NOT(GT(HEMISPHERE,0)) 		![°] azimuth angle of orientation
+AA_E2 = (270+TURN)*GT(HEMISPHERE,0)+(180-225-TURN)*NOT(GT(HEMISPHERE,0)) 		![°] azimuth angle of orientation
+AA_S2 = (0+TURN)*GT(HEMISPHERE,0)+(180-315-TURN)*NOT(GT(HEMISPHERE,0)) 			![°] azimuth angle of orientation
+
+AAZM_CORR_HEM = AAZM*GT(HEMISPHERE,0) +  NOT(GT(HEMISPHERE,0))*((180-AAZM)*GT(AAZM,0)*LE(AAZM,180) + (-180-AAZM)*NOT(GT(AAZM,0)*LE(AAZM,180))) ![°] solar azimuth corrected for southern hemisphere such that north = 180, south = 0, west = 90, east = -90
+AAZM_TYPE56 = (AAZM_CORR_HEM - TURN) ![°] solar azimuth corrected by building rotation - Input for Type 56 sun position for SHM and ISM
+AZEN = [109,16]	![°] BUILDING-INPUT
+AAZM = [109,17]	![°] BUILDING-INPUT
+
+IDHkJ = [109,20]	![kJ/m2h] Sky diffuse radiation on the horizontal
+
+IGHkJ = [109,24]	![kJ/m2h] BUILDING-INPUT Total incident of radation orientation H_0_0
+IBHkJ = [109,33]    	![kJ/m2h] BUILDING-INPUT Beam incident of radation orientation H_0_0
+AIH = [109,69]	![°] BUILDING-INPUT Incident angle of orientation H_0_0					
+IGSkJ = [109,25]	![kJ/m2h] BUILDING-INPUT
+IBSkJ = [109,34]		![kJ/m2h] BUILDING-INPUT
+AIS = [109,70]	![°] BUILDING-INPUT
+IGWkJ = [109,26]	![kJ/m2h] BUILDING-INPUT
+IBWkJ = [109,35]		![kJ/m2h] BUILDING-INPUT
+AIW = [109,71]	![°] BUILDING-INPUT
+IGNkJ = [109,27]	![kJ/m2h] BUILDING-INPUT
+IBNkJ = [109,36]		![kJ/m2h] BUILDING-INPUT
+AIN = [109,72]	![°] BUILDING-INPUT
+IGOkJ = [109,28]	![kJ/m2h] BUILDING-INPUT
+IBOkJ = [109,37]		![kJ/m2h] BUILDING-INPUT
+AIO = [109,73]	![°] BUILDING-INPUT
+
+IGS2kJ = [109,29]	![kJ/m2h]
+IBS2kJ = [109,38]	![kJ/m2h]
+AIS2 = [109,74]		![°]	
+IGW2kJ = [109,30]	![kJ/m2h]
+IBW2kJ = [109,39]	![kJ/m2h]
+AIW2 = [109,75]		![°]
+IGN2kJ = [109,31]	![kJ/m2h]
+IBN2kJ = [109,40]	![kJ/m2h]
+AIN2 = [109,76]		![°]
+IGO2kJ = [109,32]	![kJ/m2h]
+IBO2kJ = [109,41]	![kJ/m2h]
+AIO2 = [109,77]		![°]
+
+hour_of_day = MOD(TIME,24)  ![h]
+idh = IDhkJ/3.6		![W/m2]
+igh = IghkJ/3.6		![W/m2]
+ibh = IbhkJ/3.6		![W/m2]
+igs = IGSkJ/3.6		![W/m2]
+ibs = IBSkJ/3.6		![W/m2]
+igw = IGWkJ/3.6		![W/m2]
+ibw = IBWkJ/3.6		![W/m2]
+ign = IGNkJ/3.6		![W/m2]
+ibn = IBNkJ/3.6		![W/m2]
+igo = IGOkJ/3.6		![W/m2]
+ibo = IBOkJ/3.6		![W/m2]
+igs2 = IGS2kJ/3.6	![W/m2]
+ibs2 = IBS2kJ/3.6	![W/m2]
+igw2 = IGW2kJ/3.6	![W/m2]
+ibw2 = IBW2kJ/3.6	![W/m2]
+ign2 = IGN2kJ/3.6	![W/m2]
+ibn2 = IBN2kJ/3.6	![W/m2]
+igo2 = IGO2kJ/3.6	![W/m2]
+ibo2 = IBO2kJ/3.6	![W/m2]
+somm = 1-heizperiode1  ![-]
+winter = heizperiode1  ![-]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Fixed Shading"
+* 
+EQUATIONS 12
+Z1_IT_SW_SHD = [341,1]	![kJ/m2h] BUILDING-INPUT
+Z1_IB_SW_SHD = [341,2]	![kJ/m2h] BUILDING-INPUT
+Z1_AI_SW_SHD = AIS		![°] BUILDING-INPUT
+Z3_IT_SW_SHD = [343,1]	![kJ/m2h] BUILDING-INPUT
+Z3_IB_SW_SHD = [343,2]	![kJ/m2h] BUILDING-INPUT
+Z3_AI_SW_SHD = AIS		![°] BUILDING-INPUT
+Z5_IT_SW_SHD = [345,1]	![kJ/m2h] BUILDING-INPUT
+Z5_IB_SW_SHD = [345,2]	![kJ/m2h] BUILDING-INPUT
+Z5_AI_SW_SHD = AIS		![°] BUILDING-INPUT
+Z7_IT_SW_SHD = [347,1]	![kJ/m2h] BUILDING-INPUT
+Z7_IB_SW_SHD = [347,2]	![kJ/m2h] BUILDING-INPUT
+Z7_AI_SW_SHD = AIS		![°] BUILDING-INPUT
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Equa-2"
+* 
+EQUATIONS 1
+
+qmaschabw = [3,3]*1000	![???]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Schatt"
+* 
+EQUATIONS 30
+
+schattzu = 0.75    			![-]
+Schattschaltinnen = 1		![-]   
+Schatti = 0  				![-]
+
+Schatti1 = Schatti*schattschaltinnen	![-] BUILDING-INPUT
+Schatti2 = Schatti*schattschaltinnen	![-] BUILDING-INPUT 
+Schatti3 = Schatti*schattschaltinnen 	![-] BUILDING-INPUT
+Schatti4 = Schatti*schattschaltinnen  	![-] BUILDING-INPUT
+
+strahlungsgrenze = 200   ![W/m2]
+
+windauf = 1		![-]
+
+tschattcontr1 = [40,1]	![-]
+tschattcontr2 = [41,1]	![-]
+tschattcontr3 = [42,1]	![-]
+tschattcontr4 = [43,1]	![-]
+
+reschmutz = 1			![-]
+
+Schatts1 = (1-(1-schattzu*windauf*(somm*gt(igs,strahlungsgrenze)+(1-somm)*tschattcontr1))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schattw1 = (1-(1-schattzu*windauf*(somm*gt(igw,strahlungsgrenze)+(1-somm)*tschattcontr1))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schattn1 = (1-(1-schattzu*windauf*(somm*gt(ign,strahlungsgrenze)+(1-somm)*tschattcontr1))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schatto1 = (1-(1-schattzu*windauf*(somm*gt(igo,strahlungsgrenze)+(1-somm)*tschattcontr1))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schatts2 = (1-(1-schattzu*windauf*(somm*gt(igs,strahlungsgrenze)+(1-somm)*tschattcontr2))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schattw2 = (1-(1-schattzu*windauf*(somm*gt(igw,strahlungsgrenze)+(1-somm)*tschattcontr2))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schattn2 = (1-(1-schattzu*windauf*(somm*gt(ign,strahlungsgrenze)+(1-somm)*tschattcontr2))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schatto2 = (1-(1-schattzu*windauf*(somm*gt(igo,strahlungsgrenze)+(1-somm)*tschattcontr2))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schatts3 = (1-(1-schattzu*windauf*(somm*gt(igs,strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schattw3 = (1-(1-schattzu*windauf*(somm*gt(igw,strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schattn3 = (1-(1-schattzu*windauf*(somm*gt(ign,strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schatto3 = (1-(1-schattzu*windauf*(somm*gt(igo,strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schatts4 = (1-(1-schattzu*windauf*(somm*gt(igs,strahlungsgrenze)+(1-somm)*tschattcontr4))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schattw4 = (1-(1-schattzu*windauf*(somm*gt(igw,strahlungsgrenze)+(1-somm)*tschattcontr4))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schattn4 = (1-(1-schattzu*windauf*(somm*gt(ign,strahlungsgrenze)+(1-somm)*tschattcontr4))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+Schatto4 = (1-(1-schattzu*windauf*(somm*gt(igo,strahlungsgrenze)+(1-somm)*tschattcontr4))*[333,1]*reschmutz)	![-] BUILDING-INPUT
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Vent"
+* 
+EQUATIONS 46 
+
+rholuft = 1.204		![kg/m3]
+waermerueckg = 0 ![%]
+quellluftfaktor = 1	![-]
+luftvolpers = 30	![m³/h]	35 hyg. minimum -   42
+
+lueftvol1 = 40*quellluftfaktor	![m³/h]
+lueftvol2 = 40*quellluftfaktor	![m³/h]
+lueftvol3 = 40*quellluftfaktor	![m³/h]
+lueftvol4 = 40*quellluftfaktor	![m³/h]
+
+wluft = [3,76] 			![-]
+
+ventvol1 = wluft*(lueftvol1*somm+(1-somm)*lueftvol1)	![m³/h] 
+ventvol2 = wluft*(lueftvol2*somm+(1-somm)*lueftvol2)	![m³/h]
+ventvol3 = wluft*(lueftvol3*somm+(1-somm)*lueftvol3)	![m³/h]
+ventvol4 = wluft*(lueftvol4*somm+(1-somm)*lueftvol4)	![m³/h]
+
+ventvolges = ventvol1 + ventvol2 + ventvol3 + ventvol4	![m³/h]
+ventvolges1 = ventvol1 + ventvol2 + ventvol3 + ventvol4	![m³/h]
+
+ventab1 = wluft*lueftvol1	![m³/h]
+ventab2 = wluft*lueftvol2	![m³/h]
+ventab3 = wluft*lueftvol3	![m³/h]
+ventab4 = wluft*lueftvol4	![m³/h]	
+
+VENT1 = Vent1var*wluft	![1/h] -> Input Building
+VENT2 = Vent2var*wluft	![1/h]
+VENT3 = Vent3var*wluft	![1/h]
+VENT4 = Vent4var*wluft	![1/h]
+
+tmittel1 = (TZone1+TZone2+TZone3+TZone4)/4	![°C]
+
+twtoutges1 = ventvol1*TZone1+ventvol2*TZone2+ventvol3*TZone3+ventvol4*TZone4	![???]	
+twtoutges2 = 0	![???]
+twtout = lt(ventvolges,0.1)*tmittel1+(1-lt(ventvolges,0.1))*(twtoutges1)/(ventvolges+0.001)	![°C]
+
+ventab14ges = ventvolges	![m³/h]
+ventabges = ventvolges		![m³/h]
+
+tminwint = twtout-1			![°C] Minimum der Zulufttemperatur im Winter
+tzuquellmin = twtout-2		![°C]
+tminsomm = twtout-1			![°C] Minimum der Zulufttemperatur im Sommer
+tewt = ta	![°C]
+twtwarm = 0	![°C]
+
+twrg1 = (tewt+waermerueckg*(tzone1-tewt))	![°C] Ventilatorabwärme nicht berücksichtigt
+twrg2 = (tewt+waermerueckg*(tzone2-tewt))	![°C]
+twrg3 = (tewt+waermerueckg*(tzone3-tewt))	![°C]
+twrg4 = (tewt+waermerueckg*(tzone4-tewt))	![°C]
+
+tzuschalt = [18,2]	![???]
+
+TZU22w = twrg2		![°C] Wohnnutzung mit fixer Bypassregelung, Quellluftsystem mit beschränkter Zulufttemperatur  
+TZU22s = ta 		![°C] Wohnnutzung, sonst z.B. Quellluftsystem gt(ta,tminsomm)*(ta*lt(ta,26)+twrg2*(1-lt(ta,26)))+(1-gt(ta,tminsomm))*tminsomm
+TZU = somm*(gt(tzu22s,tzukuehl)*tzukuehl+(1-gt(tzu22s,tzukuehl))*tzu22s)+(1-somm)*(lt(tzu22w,tzuheiz)*tzuheiz+(1-lt(tzu22w,tzuheiz))*tzu22w)	![°C]
+
+tzu1 = (1-somm)*twrg2+somm*ta  ![°C] BUILDING-INPUT Einfache saisonale Regelung, keine Sommer WT Nutzung
+tzu2 = (1-somm)*twrg2+somm*ta  ![°C] BUILDING-INPUT
+tzu3 = (1-somm)*twrg2+somm*ta  ![°C] BUILDING-INPUT
+tzu4 = (1-somm)*twrg2+somm*ta  ![°C] BUILDING-INPUT
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Ventfeu"
+* 
+EQUATIONS 17
+
+wrgfeu = 0		![%]
+BeFeucht = 0	![%] Befeuchtung auf relative Feuchte von 	
+EntFeucht = 0.1	![kg/kg] Entfeuchtung auf absolute Feuchte von
+abshuma = absa	![kg/kg]
+absoutges1 = ventvol1*absh1+ventvol2*absh2+ventvol3*absh3+ventvol4*absh4	![???]
+absoutges2 = 0	![???]
+abshumout = (absoutges1)/(ventvolges+0.001)	![kg/kg] abs Feuchte des Raumes, wo abgesaugt wird
+abswrg = somm*(gt(TZU22s,tzukuehl)*absZU22s+(1-gt(TZU22s,tzukuehl))*absZU22s)+(1-somm)*(lt(TZU22w,tzuheiz)*absZU22w+(1-lt(TZU22w,tzuheiz))*absZU22w)	![kg/kg]
+abswrg1 = (abshuma+(abshumout-abshuma)*wrgfeu)	![kg/kg]
+abszu = absa 	![kg/kg] Feuchterückgewinnung ausgeschalten    somm*(gt(abswrg,abshumgrenzo)*abshumgrenzo+(1-gt(abswrg,abshumgrenzo))*abswrg)+(1-somm)*(abswrg)	! kg/kg Feuchte in den Raum,
+absZU22w = abswrg1	![kg/kg]
+absZU22s = gt(ta,tminsomm)*(absa*lt(ta,26)+abswrg1*(1-lt(ta,26)))+(1-gt(ta,tminsomm))*absa	![kg/kg]
+relzu = [150,6]	![???] umrechung von abs Feuchte in relative Feuchte
+
+abszu1 = abszu	![kg/kg] BUILDING-INPUT
+abszu2 = abszu	![kg/kg] BUILDING-INPUT
+abszu3 = abszu	![kg/kg] BUILDING-INPUT
+abszu4 = abszu	![kg/kg] BUILDING-INPUT
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Signale"
+* 
+EQUATIONS 9
+
+WindPV = [131,11] ![MW] 2015 Hagenbrunn und Seyring
+CO2_2015 = [131,13] ![g/kWh]
+CO2_2050 = [131,14] ![g/kWh]
+QBedarf_2050 = [131,18]	![???]
+QWasPVWind_2050 = [131,15]+[131,16]+[131,17]	![???] 
+QBiomasse_2050 = [131,20]		![???]
+QGeothermie_2050 = [131,22]		![???]
+QUeberschuss_2050 = [131,24]	![???]
+QUnterschuss_2050 = [131,25]	![???]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "BTA"
+* 
+EQUATIONS 29
+
+area_BTA1 = anutz1*0.9	![m2]
+area_BTA2 = anutz2*0.9	![m2]
+area_BTA3 = anutz3*0.9	![m2]
+area_BTA4 = anutz3*0.9	![m2]
+
+tbtasoll1 = (kuehlperiode1*tkuehlsollmin+heizperiode1*theizsollmin)*(1-gt(queber,0))+(kuehlperiode1*tkuehlsollmax+heizperiode1*theizsollmax)*gt(queber,0)	![°C]
+tbtasoll = Py_ein*(kuehlperiode1*tkuehlsollmin+heizperiode1*theizsollmin)+(1-Py_ein)*tbtasoll1   ![°C] hier nur die beiden Mindesttemperaturen, Einfluss Netzdienlichkeit müßte in MPC kommen
+tbtahys = kuehlperiode1*tbtahysges+heizperiode1*tbtahysges	![K]
+
+queberh = anutzges*Qelnutzerueberschuss*JAZh*etaverth    						![W] thermische Energie in Raum
+queberhPV = ge(queberh,qbtamax)*qbtamax+(1-ge(queberh,qbtamax))*(queberh)		![W]
+queberhcost = lt(queberhPV,qbtamax)*(qbtamax-queberhPV)*costfunction			![W]
+queberc = anutzges*Qelnutzerueberschuss*JAZc*etavertc							![W]
+quebercPV = ge(queberc,qbtamaxs)*qbtamaxs+(1-ge(queberc,qbtamaxs))*(queberc)	![W]
+queberccost = lt(quebercPV,qbtamaxs)*(qbtamaxs-quebercPV)*costfunction			![W]
+queber = heizperiode1*(queberhPV+queberhcost)+(1-heizperiode1)*(quebercPV+queberccost)	![W]
+
+tofl1u0 = [170,2]  ![°C] Rücklauftemperatur
+tofl2u0 = [170,4]  ![°C]
+tofl3u0 = [170,6]  ![°C]
+tofl4u0 = [170,18] ![°C]
+
+tofl1o0 = [170,8]  ![°C]
+tofl2o0 = [170,10] ![°C]
+tofl3o0 = [170,12] ![°C]
+tofl4o0 = [170,20] ![°C]
+
+tnode1o = [56,161]  ![°C] Temperatur Bauteilaktivierung
+tnode1u = [56,162]  ![°C]
+
+MBTAspez = MBTAspezges  ![kg/m2h] 22 bei Fußbodenheizung, 16 bei BTA
+
+tsystemw = qbtamax/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*(1-gt(queber,0))+queber/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*gt(queber,0)+(tofl1u0*minbta1+tofl2u0*minbta2+tofl3u0*minbta3+tofl4u0*minbta4)/(minbta1+minbta2+minbta3+minbta4+0.001)	  ![°C]
+tsystems = -qbtamaxs/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*(1-gt(queber,0))-queber/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*gt(queber,0)+(tofl1u0*minbta1+tofl2u0*minbta2+tofl3u0*minbta3+tofl4u0*minbta4)/(minbta1+minbta2+minbta3+minbta4+0.001) ![°C]	
+tsystem1 = heizperiode1*tsystemw+(1-heizperiode1)*tsystems  ![°C]
+
+* TRNSYS-Python-Kopplung
+*INCLUDE "mpc_enabled.dck"
+Qheizbtapy = 0  ![-] !Manfred gehört dann raus
+
+*------------------------------------------------------------------------------
+* EQUATIONS "xxx"
+*
+EQUATIONS 71
+
+tsystem = Qheizbtapy/((minbta1+0.0001)*(4.18/3.6))+tofl1u0	![°C] Qheizbtapy in W, minbta1 in kg/h, Umrechnung Wärmekapazität 4.18 kJ/kg K von Wasser in Wh/kg K
+
+tinbta1v = qbtamax1/MBTAspez/4.18*3.6*(1-gt(queber1,0))+qbtamax1/MBTAspez/4.18*3.6*gt(queber1,0)+tofl1u0  ![°C]
+tinbta2v = qbtamax2/MBTAspez/4.18*3.6*(1-gt(queber2,0))+qbtamax2/MBTAspez/4.18*3.6*gt(queber2,0)+tofl2u0  ![°C]
+tinbta3v = qbtamax3/MBTAspez/4.18*3.6*(1-gt(queber3,0))+qbtamax3/MBTAspez/4.18*3.6*gt(queber3,0)+tofl3u0  ![°C]
+tinbta4v = qbtamax4/MBTAspez/4.18*3.6*(1-gt(queber4,0))+qbtamax4/MBTAspez/4.18*3.6*gt(queber4,0)+tofl4u0  ![°C] 
+
+tinbta1 = tsystem  ![°C] BUILDING-INPUT
+tinbta2 = tsystem  ![°C] BUILDING-INPUT
+tinbta3 = tsystem  ![°C] BUILDING-INPUT
+tinbta4 = tsystem  ![°C] BUILDING-INPUT
+
+tinbta1ov = qbtamax1/MBTAspez/4.18*3.6*(1-gt(queber1,0))+qbtamax1/MBTAspez/4.18*3.6*gt(queber1,0)+tofl1o0  ![°C]
+tinbta2ov = qbtamax2/MBTAspez/4.18*3.6*(1-gt(queber2,0))+qbtamax2/MBTAspez/4.18*3.6*gt(queber2,0)+tofl2o0  ![°C]
+tinbta3ov = qbtamax3/MBTAspez/4.18*3.6*(1-gt(queber3,0))+qbtamax3/MBTAspez/4.18*3.6*gt(queber3,0)+tofl3o0  ![°C]
+tinbta4ov = qbtamax4/MBTAspez/4.18*3.6*(1-gt(queber4,0))+qbtamax4/MBTAspez/4.18*3.6*gt(queber4,0)+tofl4o0  ![°C]
+
+tinbtao1 = tsystem  ![°C] BUILDING-INPUT
+tinbtao2 = tsystem  ![°C] BUILDING-INPUT
+tinbtao3 = tsystem  ![°C] BUILDING-INPUT
+tinbtao4 = tsystem  ![°C] BUILDING-INPUT
+
+bta1schalt = heizperiode1*(1-[64,1])+kuehlperiode1*[64,1]	![-]
+bta2schalt = heizperiode1*(1-[65,1])+kuehlperiode1*[65,1]	![-]
+bta3schalt = heizperiode1*(1-[66,1])+kuehlperiode1*[66,1]	![-]
+bta4schalt = heizperiode1*(1-[71,1])+kuehlperiode1*[71,1]	![-]
+
+minbta1 = Py_ein*(MBTAspez*(area_BTA1))+(1-Py_ein)*(BTAmodellein*MBTAspez*(area_BTA1)*((bta1schalt)*heizperiode1+bta1schalt*kuehlperiode1))	![kg/m2h] BUILDING-INPUT Achtung, hier tatsächliche Flächen einstellen
+minbta2 = Py_ein*(MBTAspez*(area_BTA2))+(1-Py_ein)*(BTAmodellein*MBTAspez*(area_BTA2)*((bta2schalt)*heizperiode1+bta2schalt*kuehlperiode1))	![kg/m2h] BUILDING-INPUT
+minbta3 = Py_ein*(MBTAspez*(area_BTA3))+(1-Py_ein)*(BTAmodellein*MBTAspez*(area_BTA3)*((bta3schalt)*heizperiode1+bta3schalt*kuehlperiode1))	![kg/m2h] BUILDING-INPUT
+minbta4 = Py_ein*(MBTAspez*(area_BTA4))+(1-Py_ein)*(BTAmodellein*MBTAspez*(area_BTA4)*((bta4schalt)*heizperiode1+bta4schalt*kuehlperiode1))	![kg/m2h] BUILDING-INPUT
+
+tbtareg1 = TZone1	![°C]
+tbtareg2 = TZone2	![°C]
+tbtareg3 = TZone3	![°C]
+tbtareg4 = TZone4	![°C]
+
+thsoll1 = tbtasoll+tbtahys	![°C]
+thsoll1l = tbtasoll			![°C]
+thsoll2 = tbtasoll+tbtahys	![°C]
+thsoll2l = tbtasoll			![°C]
+thsoll3 = tbtasoll+tbtahys	![°C]
+thsoll3l = tbtasoll			![°C]
+thsoll4 = tbtasoll+tbtahys	![°C]
+thsoll4l = tbtasoll			![°C]
+
+igm = (igs2+igw2+ign2+igo2)/4   ![W/m2] mittlere Einstrahlung auf PV-Module
+
+Qel = Qelvar  			![W/m2] Geräte pro Haushalt Profil mit Beleuchtung ohne Hilfsstrom ohne Heizen/Kühlen
+Qwwnutz = Qwwnutzvar	![W/m2] WW-Profil
+QelAbw = QelAbwvar		![W/m2] Abwärme von Haushaltsgeräten
+
+qhend = (qhges)/(JAZh*etaverth)		![W/m2] Endenergiebedarf Heizen ohne hilfstrom
+qwwend = Qwwnutz/etavertww/JAZww	![W/m2] Endenergiebedarf Warmwasser
+qendwaerme = 0*qhend+0*qwwend  		![W/m2] Achtung, hier nur, wenn nicht mit Strom direkt oder WP
+qcend = (qcges+qentfgesraum)/(JAZc*etavertc)	![W/m2] Endenergie
+qelges = Qel+qhend+qwwend+qcend		![W/m2] Strombedarf inkl Hilfsstrom
+PEBwaerme = -0*PEBkonvwae   		![W/m2] hier wenn Wärme über Systemgrenze
+PEBel = -qelges*PEBkonvel 			![WPE/m2] Primärenergiebedarf gesamt
+PVprod = qpvmm*0.18*0.85 			![W/m2] Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 85%
+Qelnutzereigen = lt(PVprod,qel)*PVprod+(1-lt(PVprod,qel))*qel	![W/m2]
+
+Qelnutzernetz = lt(PVprod,qel)*(qel-PVprod)						![W/m2] Netzbezug
+Qelnutzernetzcost = lt(PVprod,qel)*(qel-PVprod)*costfunction	![W/m2] Netzbezug bei Freigabesignal
+Qelnutzerueberschuss = (1-lt(PVprod,qel))*(PVprod-qel)  		![W/m2] Überschuss nach PV-Nutzung
+
+qhcstrom = heizperiode1*qhend+(1-heizperiode1)*qcend  																![W/m2] Umrechnung Heiz- oder Kühlleistung in Strom
+Qeleigenqhc = lt(Qelnutzerueberschuss,qhcstrom)*Qelnutzerueberschuss+(1-lt(Qelnutzerueberschuss,qhcstrom))*qhcstrom	![W/m2] 
+Qelnetzhc = lt(Qelnutzerueberschuss,qhcstrom)*(qhcstrom-Qelnutzerueberschuss) 										![W/m2] Netzbezug
+Qelnetzhccost = lt(Qelnutzerueberschuss,qhcstrom)*(qhcstrom-Qelnutzerueberschuss)*costfunction 						![W/m2] Netzbezug bei Freigabesignal
+Qelüberschusshc = (1-lt(Qelnutzerueberschuss,qhcstrom))*(Qelnutzerueberschuss-qhcstrom)								![W/m2]
+qstromrest = qwwend/JAZww																							![W/m2]
+Qeleigenww = gt(SpeicherWW,0)*QelPVeigenm2+(1-gt(SpeicherWW,0))*(lt(Qelüberschusshc,qstromrest)*Qelüberschusshc+(1-lt(Qelüberschusshc,qstromrest))*qstromrest)	![W/m2]
+Qelnetzww = gt(SpeicherWW,0)*Qelnetzwwm2+(1-gt(SpeicherWW,0))*(lt(Qelüberschusshc,qstromrest)*(qstromrest-Qelüberschusshc)) 									![W/m2] Netzbezug
+Qelnetzwwcost = gt(SpeicherWW,0)*Qeleigenwwcostm2+(1-gt(SpeicherWW,0))*(lt(Qelüberschusshc,qstromrest)*(qstromrest-Qelüberschusshc)*costfunction)				![W/m2] Netzbezug bei Freigabesignal
+Qelüberschussww = gt(SpeicherWW,0)*Qelueberschusswwm2+(1-gt(SpeicherWW,0))*((1-lt(Qelüberschusshc,qstromrest))*(Qelüberschusshc-qstromrest))					![W/m2]
+Qeleigenges = Qeleigenww+Qeleigenqhc+Qelnutzereigen				![W/m2]
+Qelnetzges = Qelnetzww+Qelnetzhc+Qelnutzernetz					![W/m2]
+Qelnetzgescost = Qelnetzwwcost+Qelnetzhccost+Qelnutzernetzcost	![W/m2]
+Qelüberschussges = Qelüberschussww								![W/m2]
+
+PEBelnetz = -Qelnetzges*PEBkonvel 				![W/m2] Primärenrgienetzstrom in System
+PEBelüberschuss = Qelüberschussges*PEBkonvel 	![W/m2] Überschuss primärenergetisch
+PEB = PEBwaerme+PEBelnetz+PEBelüberschuss 		![W/m2] Gesamter primärenergiesaldo
+PEBakkum = [17,4]/1000*step	![W/m2]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Speicher"
+*
+EQUATIONS 82
+
+tspeichmin = 60			![°C]
+tspeichmaxmin = 70		![°C]
+tspeichermaxmax = 90	![°C]
+Qww_Speichermax = Qww_Speichermaxvar	![kg] bzw. [Liter]
+Qww_Speicherverlustspez = 1.3 			![W/K] 120 l Bioler Energy Systems
+QWW_ges = Qwwnutz/etavertww*anutzges  	![W]  Warmwasserbedarf thermisch nach Speicher
+tWW_Speicher_tminus1 = gt(time,0)*[170,16]+(1-gt(time,0))*tspeichmin  	![°C] Temperatur des Speichers im vorigen Zeitschritt
+Qww_Speicherverlust = Qww_Speicherverlustspez*(tWW_Speicher_tminus1-20)	![Wh]
+tww_Speichertminus1incV = tWW_Speicher_tminus1-Qww_Speicherverlust*step/(Qww_Speichermax*4.18/3.6)	![°C]
+tWW_Speicher_t1 = tWW_Speichertminus1incV-QWW_ges*step/(Qww_Speichermax*4.18/3.6)					![Wh]
+deltatWWmax0 = tspeichermaxmax-tWW_Speicher_t1   ![°C]
+qwwwpmax = qwwwpmaxvar  ![W/m2] thermisch
+qwwwpmaxges = qwwwpmax*anutzges ![W]
+qwwmaxladenstep = qwwwpmaxges*step  ![Wh]
+deltatWWmaxladen = qwwmaxladenstep/(Qww_Speichermax*4.18/3.6)   ![K] maximal ladbar
+deltatWWmax1 = lt(deltatWWmaxladen,deltatWWmax0)*deltatWWmaxladen+(1-lt(deltatWWmaxladen,deltatWWmax0))*deltatWWmax0  	![K] maximal ladbar
+deltatWWmin0 = lt(tWW_Speicher_t1,tspeichmin)*(tspeichmin-tWW_Speicher_t1) 												![K] Temperaturdifferenz, die mindestens geladen werden muss
+deltatWWmin1 = gt(deltatWWmin0,deltatWWmaxladen)*deltatWWmaxladen+(1-gt(deltatWWmin0,deltatWWmaxladen))*deltatWWmin0	![K] 
+
+queberwwPV = Qelüberschusshc*JAZww*anutzges  ![W]
+deltatueberwwPVmax = queberwwPV*step/(Qww_Speichermax*4.18/3.6)  ![K] maximale Temperaturerhöhung durch PV ohne Leistungs und Speicherbeschränkung
+deltatueberwwPV = gt(deltatueberwwPVmax,deltatWWmax1)*deltatWWmax1+(1-gt(deltatueberwwPVmax,deltatWWmax1))*deltatueberwwPVmax  ![K] max. Temperaturerhöhung durch PV tatsächlich
+deltatwwnachPVmax1 = deltatWWmax1-deltatueberwwPV  ![K] bleibt noch zu decken über Rest
+QPVeigen = deltatueberwwPV/step*(Qww_Speichermax*4.18/3.6)  ![W] Leistung PV in Speicher
+QelPVeigen = QPVeigen/JAZww	![W]
+
+Qelueberschusswwges = Qelüberschusshc*anutzges-QelPVeigen	![W]
+queberwwcost = qwwwpmaxges*costfunction						![W]
+deltatueberwwcostmax = queberwwcost*step/(Qww_Speichermax*4.18/3.6)  ![K] maximale Temperaturerhöhung durch Netzsignal
+deltatueberwwcost = gt(deltatueberwwcostmax,deltatwwnachPVmax1)*deltatwwnachPVmax1+(1-gt(deltatueberwwcostmax,deltatwwnachPVmax1))*deltatueberwwcostmax  ![K] max. Temperaturerhöhung durch Netzstrom bei Freigabesignal tatsächlich
+Qeigenwwcostges = deltatueberwwcost/step*(Qww_Speichermax*4.18/3.6)  ![W] Leistung Netzstrom bei Freigabesignal in Speicher
+Qeleigenwwcostges = Qeigenwwcostges/JAZww	![W]
+deltatwwueberPVundCost = deltatueberwwcost+deltatueberwwPV ![K] wurde gedeckt
+
+deltatwwnetz = lt(deltatwwueberPVundCost,deltatWWmin1)*(deltatWWmin1-deltatwwueberPVundCost)	![K]
+Qnetzwwges = deltatwwnetz/step*(Qww_Speichermax*4.18/3.6)	![W] thermische Leistung Netz in Speicher
+Qelnetzwwges = Qnetzwwges/JAZww								![W]
+tWW_Speicher_t = tWW_Speicher_t1+deltatwwueberPVundCost+deltatwwnetz	![°C]
+Qeleigenwwges = Qeleigenwwcostges+QelPVeigen				![W]
+QWW_gesm2 = QWW_ges/anutzges								![W/m2]
+Qww_Speicherverlustm2 = Qww_Speicherverlust/anutzges		![W/m2]
+
+QPVeigenm2 = QelPVeigen/anutzges*JAZww						![W/m2]
+QelPVeigenm2 = QelPVeigen/anutzges							![W/m2]
+Qeigenwwcostm2 = Qeigenwwcostges/anutzges					![W/m2]
+Qeleigenwwcostm2 = Qeleigenwwcostges/anutzges				![W/m2]
+Qnetzwwm2 = Qnetzwwges/anutzges								![W/m2]
+Qelnetzwwm2 = Qelnetzwwges/anutzges							![W/m2]
+Qelueberschusswwm2 = Qelueberschusswwges/anutzges			![W/m2]
+Qww_BedarfVerlustem2 = QWW_gesm2+Qww_Speicherverlustm2		![W/m2]
+Qww_Deckungm2 = QPVeigenm2+Qeigenwwcostm2+Qnetzwwm2			![W/m2]
+Qelww_Deckungm2 = QelPVeigenm2+Qeleigenwwcostm2+Qelnetzwwm2	![W/m2]
+
+Strom_ges = Qel*anutzges		![W]
+Strom_PV = PVprod*anutzges		![W]
+Q_Speichermax = 5000 			![Wh]
+Q_Speicher_tminus1 = [170,14]   ![Wh] Speicherladung 1 Zeitschritt früher, type 93
+Q_Speicher_t = lt(Strom_PV,Strom_ges)*(ge(Qmaxentladenstep,QbedarfminusPVStep)*(QSpeichertminus1incV-QbedarfminusPVStep/Ethaentladen)+(1-ge(Qmaxentladenstep,QbedarfminusPVStep))*0)+(1-lt(Strom_PV,Strom_ges))*(lt(QPVminusBedarfStep,Qmaxladenstep)*(QSpeichertminus1incV+QPVminusBedarfStep*Ethaladen)+(1-lt(QPVminusBedarfStep,Qmaxladenstep))*(Q_Speichermax))   ![Wh], Ladezustand, bezogen auf maximale Entladbarkeit (d.h. 0-Niveau müssen nicht 0 Wh sein)
+Q_AusNetz = lt(Strom_PV,Strom_ges)*(1-ge(Qmaxentladenstep,QbedarfminusPVStep))*((QbedarfminusPVStep-Qmaxentladenstep))/step  ![W] Leistung, wird aus Netz bezogen
+Q_UeberschussinsNetz = (1-lt(Strom_PV,Strom_ges))*(1-lt(QPVminusBedarfStep,deltaQmax1))*(QPVminusBedarf-Qmaxladen) ![W] Leistung, geht ins Netz
+deltaQmax1 = Q_Speichermax-QSpeichertminus1incV   ![Wh]
+QSpeichertminus1incV = (1-EthaVerlusStep)*Q_Speicher_tminus1  ![Wh] Energie
+
+EthaVerlust = 0.1 						![-] %/100 Verlust pro Monat
+EthaVerlusStep = EthaVerlust/720*step 	![-] %/100 Verlust pro Zeitschritt
+
+QPVminusBedarf = (1-gt(Strom_ges,Strom_PV))*(Strom_PV-Strom_ges)	![W]
+QBedarfminusPV = gt(Strom_ges,Strom_PV)*(Strom_ges-Strom_PV)  		![W]
+
+Ethaladen = 0.95  	![-] %/100, bezogen auf die Energie, die in den Speicher eingespeist werden soll
+Ethaentladen = 0.95	![-] %/100, bezogen auf die Energie, die dem Speicher entnommen wird
+
+QPVminusBedarfStep = QPVminusBedarf*step	![Wh] 
+QbedarfminusPVStep = QBedarfminusPV*step	![Wh]
+Qmaxladenstep = deltaQmax1/Ethaladen		![Wh] max mögliche Energie nach Entladen aus Speicher
+Qmaxladen = Qmaxladenstep/Step 				![W]
+Qmaxentladenstep = QSpeichertminus1incV*Ethaentladen  ![Wh] maximal entladbare Energie, bezogen auf bereitgestellte Energie
+Qmaxentladen = Qmaxentladenstep/step		![Wh]
+Qdeckeneigendir = lt(Strom_PV,Strom_ges)*Strom_PV   +(1-lt(Strom_PV,Strom_ges))*Strom_ges	![W] Direktdeckung ohne Speicher
+QUeberschussdir = lt(Strom_ges,Strom_PV)*(Strom_PV-Strom_ges)								![W] Überschuss nach Direktdeckung vor Batterieladen
+QdeckenEigenspeicher = lt(Strom_PV,Strom_ges)*(ge(Qmaxentladenstep,QbedarfminusPVStep)*(QbedarfminusPV)+(1-ge(Qmaxentladenstep,QbedarfminusPVStep))*Qmaxentladen)	![W]
+QVerlustSpeicher = (Q_Speicher_tminus1-QSpeichertminus1incV)/step	![W]
+QVerlustLaden = (1-lt(Strom_PV,Strom_ges))*(lt(QPVminusBedarfStep,Qmaxladenstep)*(QPVminusBedarf)*(1-Ethaladen)+(1-lt(QPVminusBedarfStep,Qmaxladenstep))*(Qmaxladen) *(1-Ethaladen))	![W]
+QVerlustEntladen = lt(Strom_PV,Strom_ges)*(ge(Qmaxentladenstep,QbedarfminusPVStep)*(QbedarfminusPV/Ethaentladen)*(1-Ethaentladen)+(1-ge(Qmaxentladenstep,QbedarfminusPVStep))*Qmaxentladen/Ethaentladen*(1-Ethaentladen))	![W]
+Qdeckeneigendirm2 = Qdeckeneigendir/anutzges			![W/m2]
+QUeberschussdirm2 = QUeberschussdir/anutzges			![W/m2]
+QdeckenEigenspeicherm2 = QdeckenEigenspeicher/anutzges	![W/m2]
+Q_UeberschussinsNetzm2 = Q_UeberschussinsNetz/anutzges	![W/m2]
+Q_Speicher_tm2 = Q_Speicher_t/anutzges					![W/m2]
+Qverlustges = QVerlustSpeicher+QVerlustLaden+QVerlustEntladen	![W]
+Qverlustgesm2 = Qverlustges/anutzges					![W/m2]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "comf"
+* 
+EQUATIONS 45
+
+top1 = [56,34]	![°C]
+top2 = [56,35]	![°C]
+top3 = [56,36]	![°C]
+top4 = [56,174]	![°C]
+
+TZone1 = [56,1]		![°C]
+TZone2 = [56,2]		![°C]
+TZone3 = [56,3]		![°C]
+TZone4 = [56,163]	![°C] 
+
+relh1 = [56,4]		![%]
+relh2 = [56,5]		![%]
+relh3 = [56,6]		![%]
+relh4 = [56,164]	![%] 
+
+absh1 = [56,7]		![kg/kg]
+absh2 = [56,8]		![kg/kg]
+absh3 = [56,9]		![kg/kg]
+absh4 = [56,165]	![kg/kg] 
+
+clo1 = 1.2*lt(top1,20)+1*(1-lt(top1,20))*((gt(top1,25))*0.45+(-0.15*top1+4.2)*(1-gt(top1,25)))	![-] BUILDING-INPUT
+clo2 = 1.2*lt(top2,20)+1*(1-lt(top2,20))*((gt(top2,25))*0.45+(-0.15*top2+4.2)*(1-gt(top2,25)))	![-] BUILDING-INPUT
+clo3 = 1.2*lt(top3,20)+1*(1-lt(top3,20))*((gt(top3,25))*0.45+(-0.15*top3+4.2)*(1-gt(top3,25)))	![-] BUILDING-INPUT
+clo4 = 1.2*lt(top4,20)+1*(1-lt(top4,20))*((gt(top4,25))*0.45+(-0.15*top4+4.2)*(1-gt(top4,25)))	![-] BUILDING-INPUT
+
+met1 = 1.2	![-] BUILDING-INPUT
+met2 = 1.2	![-] BUILDING-INPUT
+met3 = 1.2	![-] BUILDING-INPUT
+met4 = 1.2 	![-] BUILDING-INPUT
+
+velstand = 0.05	![m/s]
+
+vel1 = velstand	![m/s] BUILDING-INPUT
+vel2 = velstand	![m/s] BUILDING-INPUT
+vel3 = velstand	![m/s] BUILDING-INPUT
+vel4 = velstand ![m/s] BUILDING-INPUT
+
+pmv1 = [56,37]	![-]
+pmv2 = [56,38]	![-]
+pmv3 = [56,39]	![-]
+pmv4 = [56,175]	![-] 
+
+ppd1 = [56,40]	![%]
+ppd2 = [56,41]	![%]
+ppd3 = [56,42]	![%]
+ppd4 = [56,176]	![%]
+
+tstar1 = [56,155]	![°C]
+tstar2 = [56,156]	![°C]
+tstar3 = [56,157]	![°C]
+tstar4 = [56,177]	![°C]
+
+tsurf1 = [56,158]	![°C]
+tsurf2 = [56,159]	![°C]
+tsurf3 = [56,160]	![°C]
+tsurf4 = [56,178]	![°C]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Interne Gewinne"
+* 
+EQUATIONS 5
+
+default = 7200/8760/8*3600*0 !2Haushalte*3600kWh/8760Std/a/8Zonen*0  ![kJ/h] Hier allgemeines angeben, Rest ausschalten
+Gain01 = default  ![kJ/h] BUILDING-INPUT
+Gain02 = default  ![kJ/h] BUILDING-INPUT
+Gain03 = default  ![kJ/h] BUILDING-INPUT
+Gain04 = default  ![kJ/h] BUILDING-INPUT
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Energie"
+* 
+EQUATIONS 76
+
+Qh1 = [56,10]/3.6/Anutz1*(1-BTAmodellein)-BTAmodellein*(Qalfl1u)*heizperiode1		![W/m2] Fussbodenheizung Qalfl1o
+Qh2 = [56,11]/3.6/Anutz2*(1-BTAmodellein)-BTAmodellein*(Qalfl2u)*heizperiode1       ![W/m2]
+Qh3 = [56,12]/3.6/Anutz3*(1-BTAmodellein)-BTAmodellein*(Qalfl3u)*heizperiode1       ![W/m2]
+Qh4 = [56,166]/3.6/Anutz4*(1-BTAmodellein)-BTAmodellein*(Qalfl4u)*heizperiode1      ![W/m2]
+
+Qc1 = [56,13]/3.6/Anutz1*(1-BTAmodellein)+BTAmodellein*Qalfl1u*(1-heizperiode1)		![W/m2]
+Qc2 = [56,14]/3.6/Anutz2*(1-BTAmodellein)+BTAmodellein*Qalfl2u*(1-heizperiode1)		![W/m2]
+Qc3 = [56,15]/3.6/Anutz3*(1-BTAmodellein)+BTAmodellein*Qalfl3u*(1-heizperiode1)		![W/m2]
+Qc4 = [56,167]/3.6/Anutz4*(1-BTAmodellein)+BTAmodellein*Qalfl4u*(1-heizperiode1) 	![W/m2]
+
+Qbef1 = [56,31]/3.6/Anutz1		![W/m2]
+Qbef2 = [56,32]/3.6/Anutz2		![W/m2]
+Qbef3 = [56,33]/3.6/Anutz3		![W/m2]
+Qbef4 = [56,173]/3.6/Anutz4 	![W/m2]
+
+Qentf1 = [56,28]/3.6/Anutz1		![W/m2]
+Qentf2 = [56,29]/3.6/Anutz2		![W/m2]
+Qentf3 = [56,30]/3.6/Anutz3		![W/m2]
+Qentf4 = [56,172]/3.6/Anutz4 	![W/m2]
+
+Qvv1 = [56,19]/3.6/Anutz1		![W/m2]
+Qvv2 = [56,20]/3.6/Anutz2		![W/m2]
+Qvv3 = [56,21]/3.6/Anutz3		![W/m2]
+Qvv4 = [56,169]/3.6/Anutz4 		![W/m2]
+
+qvolgesh = (1-somm)*gt(TZU,TZU22w)*(TZU-TZU22w)*1.204*1.012/3.6*ventvolges/anutzges	![W/m2]
+qvolgesc = (somm)*lt(TZU,TZU22s)*(TZU22s-TZU)*1.204*1.012/3.6*ventvolges/anutzges	![W/m2]
+
+deltaabszu = somm*gt(abswrg,abshumgrenzo)*(abswrg-abshumgrenzo)+(1-somm)*lt(abswrg,abshumgrenzu)*(abshumgrenzu-abswrg)	![g/kg] falls Entfeuchtung im Sommer verwendet berechnet die Differenz zur Grenze, bzw. falls Befeuchtung im Winter
+absENTFges = somm*ventvolges*1.204*deltaabszu			![kg] gesamt der Enteuchtungs Differenz
+Qventfges = ne(abszu,absa)*694*(absENTFges)/anutzges	![W/m2] Verdampfungsenthalpie = 2500 kJ/kg H20 / 3,6 = 694 Wh/kg
+absBEFges = (1-somm)*ventvolges*1.204*deltaabszu		![kg] gesamt der Befeuchtungs Differenz
+Qvbefges = ne(abszu,absa)*694*(absBEFges)/anutzges		![W/m2] Verdampfungsenthalpie = 2500 kJ/kg H20 / 3,6 = 694 Wh/kg
+
+qcges = (qc1*anutz1+qc2*anutz2+qc3*anutz3+qc4*anutz4)/(anutzges)					![W/m2]
+qentfgesraum = (qentf1*anutz1+qentf2*anutz2+qentf3*anutz3+qentf4*anutz4)/(anutzges)	![W/m2]
+qkuehlsens = qvolgesc+qcges	![W/m2]
+qkuehlges = qvolgesc+Qventfges+qcges+qentfgesraum					![W/m2]
+qhges = (qh1*anutz1+qh2*anutz2+qh3*anutz3+qh4*anutz4)/(anutzges) 	![W/m2]
+qbefgesraum = (qbef1*anutz1+qbef2*anutz2+qbef3*anutz3+qbef4*anutz4)/(anutzges)	![W/m2] 
+qheizsens = qvolgesh+qhges	![W/m2]
+qheizges = qvolgesh+Qvbefges+qhges+qbefgesraum	![W/m2]
+QDAMPF = -2450 ![kJ/kg] BUILDING-INPUT Wasser, im b17 nur halbe Leistung, da Rest von Personen ohne Verdunstungskühlung
+
+tofl1u = [56,62]	![°C]
+tofl1o = [56,63]	![°C]
+tofl2u = [56,74]	![°C]
+tofl2o = [56,75]	![°C]
+tofl3u = [56,86]	![°C]
+tofl3o = [56,87]	![°C]
+tofl4u = [56,179]	![°C]
+tofl4o = [56,180]	![°C]
+
+Qalfl1u = [56,64]/3.6/anutz1	![W/m2]
+Qalfl1o = [56,65]/3.6/anutz1	![W/m2]
+Qalfl2u = [56,76]/3.6/anutz2	![W/m2]
+Qalfl2o = [56,77]/3.6/anutz2	![W/m2]
+Qalfl3u = [56,88]/3.6/anutz3	![W/m2]
+Qalfl3o = [56,89]/3.6/anutz3	![W/m2]
+Qalfl4u = [56,181]/3.6/anutz4	![W/m2]
+Qalfl4o = [56,182]/3.6/anutz4	![W/m2]
+
+Mflal1u = [56,66]/anutz1	![kg/m2h]
+Mflal1o = [56,67]/anutz1	![kg/m2h]
+Mflal2u = [56,78]/anutz2	![kg/m2h]
+Mflal2o = [56,79]/anutz2	![kg/m2h]
+Mflal3u = [56,90]/anutz3	![kg/m2h]
+Mflal3o = [56,91]/anutz3	![kg/m2h]
+Mflal4u = [56,183]/anutz4	![kg/m2h]
+Mflal4o = [56,184]/anutz4	![kg/m2h]
+
+tsi1u = [56,68]		![°C]
+tsi1o = [56,69]		![°C]
+tsi2u = [56,80]		![°C]
+tsi2o = [56,81]		![°C]
+tsi3u = [56,92]		![°C]
+tsi3o = [56,93]		![°C]
+tsi4u = [56,185]	![°C]
+tsi4o = [56,186]	![°C]
+
+Qcomi1u = ([56,70]-[56,72])/3.6/anutz1		![W/m2]
+Qcomi1o = ([56,71]-[56,73])/3.6/anutz1		![W/m2]
+Qcomi2u = ([56,82]-[56,84])/3.6/anutz2		![W/m2]
+Qcomi2o = ([56,83]-[56,85])/3.6/anutz2		![W/m2]
+Qcomi3u = ([56,94]-[56,96])/3.6/anutz3		![W/m2]
+Qcomi3o = ([56,95]-[56,97])/3.6/anutz3		![W/m2]
+Qcomi4u = ([56,187]-[56,189])/3.6/anutz4	![W/m2]
+Qcomi4o = ([56,188]-[56,190])/3.6/anutz4 	![W/m2]
+
+*-------------------------------------------------------------------------------------
+* EQUATIONS "Strahlungsasymmetrie"
+*
+*Berechnung Strahlungsasymmetrie nach Glück (Kopf oben/vertikal zu Fenster) und nach EN ISO 7730 Halbraum oben unten auf 0,6m
+*Wohnung Dach angepasst an bui wdach_V9 - ok 20180531
+
+EQUATIONS 56
+       
+tsibod1 = [56,98]		![°C]
+tsiwwest1 = [56,99]		![°C]
+tsiwnord1 = [56,100]  	![°C]
+tsiwost1 = [56,101]		![°C]
+tsiwsued1 = [56,102]	![°C]
+tsidec1 = [56,103]		![°C]
+tsi1iwsp = [56,104]		![°C]
+tsifensued1 = [56,105]	![°C]
+tsidec2 = [56,117]		![°C]
+tsiwwest2 = [56,118]	![°C]
+tsiwost2 = [56,119]		![°C]
+tsiwnord2 = [56,120]	![°C]
+tsibod2 = [56,121]		![°C]
+tsiwsued2 = [56,122]	![°C]
+tsifenwest2 = tzone2	![°C]
+tsi2iwsp = [56,123]		![°C]
+tsiwwest3 = [56,136]	![°C]
+tsiwost3 = [56,137]		![°C]
+tsiwnord3 = [56,138]	![°C]
+tsibod3 = [56,139] 		![°C]
+tsidec3 = [56,140]		![°C]
+tsiwsued3 = [56,141]	![°C]
+tsi3iwsp = [56,142]		![°C]
+tsifennord3 = [56,143]	![°C]
+tsiwwest4 = [56,136]  	![°C] muss angepasst werden, aktuell von Zone3
+tsiwost4 = [56,137]		![°C] muss angepasst werden, aktuell von Zone3
+tsiwnord4 = [56,138]	![°C] muss angepasst werden, aktuell von Zone3
+tsibod4 = [56,139]		![°C] muss angepasst werden, aktuell von Zone3
+tsidec4 = [56,140]		![°C] muss angepasst werden, aktuell von Zone3
+tsiwsued4 = [56,141]	![°C] muss angepasst werden, aktuell von Zone3
+tsi4iwsp = [56,142]		![°C] muss angepasst werden, aktuell von Zone3
+tsifennord4 = [56,143]	![°C] muss angepasst werden, aktuell von Zone3
+
+*Strahlungsasymmetrie
+tsiglueckoben1 = 0*tsibod1+0.73*tsidec1+0.018*tsiwnord1+0.144*tsifensued1+0.026*tsiwsued1+0.041*tsiwwest1+0.041*tsiwost1		![°C]
+tsiglueckvertikal1 = 0.096*tsibod1+0.108*tsidec1+0*tsiwnord1+0.501*tsifensued1+0.245*tsiwsued1+0.025*tsiwwest1+0.025*tsiwost1	![°C]
+tsi7730oben1 = 0*tsibod1+0.555*tsidec1+0.038*tsiwnord1+0.196*tsifensued1+0.051*tsiwsued1+0.08*tsiwwest1+0.08*tsiwost1			![°C]
+tsi7730unten1 = 0.902*tsibod1+0*tsidec1+0.005*tsiwnord1+0.0*tsifensued1+0.069*tsiwsued1+0.012*tsiwwest1+0.012*tsiwost1			![°C]
+deltatsiglueck1 = tsiglueckoben1-tsiglueckvertikal1	![K]
+deltatsi77301 = tsi7730oben1-tsi7730unten1			![K]
+
+tsiglueckoben2 = 0*tsibod2+0.73*tsidec2+0.018*tsiwnord2+0.144*tsifenwest2+0.026*tsiwsued2+0.041*tsiwwest2+0.041*tsiwost2		![°C]
+tsiglueckvertikal2 = 0.096*tsibod2+0.108*tsidec2+0*tsiwnord2+0.501*tsifenwest2+0.245*tsiwsued2+0.025*tsiwwest2+0.025*tsiwost2	![°C]
+tsi7730oben2 = 0*tsibod2+0.555*tsidec2+0.038*tsiwnord2+0.196*tsifenwest2+0.051*tsiwsued2+0.08*tsiwwest2+0.08*tsiwost2			![°C]
+tsi7730unten2 = 0.902*tsibod2+0*tsidec2+0.005*tsiwnord2+0.0*tsifenwest2+0.069*tsiwsued2+0.012*tsiwwest2+0.012*tsiwost2			![°C]
+deltatsiglueck2 = tsiglueckoben2-tsiglueckvertikal2	![K]
+deltatsi77302 = tsi7730oben2-tsi7730unten2			![K]
+
+tsiglueckoben3 = 0*tsibod3+0.73*tsidec3+0.018*tsiwsued3+0.144*tsifennord3+0.026*tsiwnord3+0.041*tsiwwest3+0.041*tsiwost3		![°C]
+tsiglueckvertikal3 = 0.096*tsibod3+0.108*tsidec3+0*tsiwsued3+0.501*tsifennord3+0.245*tsiwnord3+0.025*tsiwwest3+0.025*tsiwost3	![°C]
+tsi7730oben3 = 0*tsibod3+0.555*tsidec3+0.038*tsiwsued3+0.196*tsifennord3+0.051*tsiwnord3+0.08*tsiwwest3+0.08*tsiwost3			![°C]
+tsi7730unten3 = 0.902*tsibod3+0*tsidec3+0.005*tsiwsued3+0.0*tsifennord3+0.069*tsiwnord3+0.012*tsiwwest3+0.012*tsiwost3			![°C]
+deltatsiglueck3 = tsiglueckoben3-tsiglueckvertikal3	![K]
+deltatsi77303 = tsi7730oben3-tsi7730unten3			![K]
+
+tsiglueckoben4 = 0*tsibod4+0.73*tsidec4+0.018*tsiwsued4+0.144*tsifennord4+0.026*tsiwnord4+0.041*tsiwwest4+0.041*tsiwost4 		![°C]
+tsiglueckvertikal4 = 0.096*tsibod4+0.108*tsidec4+0*tsiwsued4+0.501*tsifennord4+0.245*tsiwnord4+0.025*tsiwwest4+0.025*tsiwost4 	![°C]
+tsi7730oben4 = 0*tsibod4+0.555*tsidec4+0.038*tsiwsued4+0.196*tsifennord4+0.051*tsiwnord4+0.08*tsiwwest4+0.08*tsiwost4 			![°C]
+tsi7730unten4 = 0.902*tsibod4+0*tsidec4+0.005*tsiwsued4+0.0*tsifennord4+0.069*tsiwnord4+0.012*tsiwwest4+0.012*tsiwost4 			![°C]
+deltatsiglueck4 = tsiglueckoben4-tsiglueckvertikal4	![K]
+deltatsi77304 = tsi7730oben4-tsi7730unten4 			![K]
+
+*-------------------------------------------------------------------------------------
+* EQUATIONS "xxx"
+*
+EQUATIONS 74
+
+PEBkonvel = 1.91	![-]
+PEBkonvwae = 1.23	![-]
+
+Qel1 = QelHH*anutz1/anutzges	![W/m2] Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen
+Qwwnutz1 = 12.75/0.8*1000/8760	![W/m2] WWprofil
+QelAbw1 = comp1 !Qel1*0.8		![W/m2] Abwärme von Haushaltsgeräten
+qhend1 = (qh1+qbef1)/0.9/2.5	![W/m2] Endenergiebedarf Heizen ohne Hilfstrom 
+qwwend1 = Qwwnutz1/0.7/2.5		![W/m2] Endenergiebedarf Warmwasser
+qendwaerme1 = 0*qhend1+0*qwwend1	![W/m2] Achtung, hier nur, wenn nicht mit Strom direkt oder WP
+qcend1 = (qc1+qentf1)/0.9/2.5	![W/m2] Endenergie, Achtung hier ohne Entfeuchtung, wäre noch zu ergänzen
+qelges1 = Qel1+qhend1*0.05+qwwend1*0.05+qcend1*0.05+qhend1+qwwend1+qcend1	![W/m2] Strombedarf inkl Hilfsstrom
+PEBwaerme1 = -0*PEBkonvwae	![W/m2] Hier wenn Wärme über Systemgrenze
+PEBel1 = -qelges1*PEBkonvel	![W/m2] Primärenergiebedarf gesamt
+PVprod1 = qpvmm*0.18*0.85	![W/m2] Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 90%
+Qeleigen1 = lt(PVprod1,qelges1)*PVprod1+(1-lt(PVprod1,qelges1))*qelges1	![W/m2]
+Qelnetz1 = lt(PVprod1,qelges1)*(qelges1-PVprod1)	![W/m2] Netzbezug
+Qelüberschuss1 = (1-lt(PVprod1,qelges1))*(PVprod1-qelges1)	![W/m2]
+PEBelnetz1 = -Qelnetz1*PEBkonvel	![W/m2] Primärenrgienetzstrom Netzstrom in system
+PEBelüberschuss1 = Qelüberschuss1*PEBkonvel	![W/m2] Überschuss primärenergetisch 
+PEB1 = PEBwaerme1+PEBelnetz1+PEBelüberschuss1	![W/m2] Gesamter primärenergiesaldo
+PEB1akkum = [17,1]/1000*step	![W/m2]
+
+Qel2 = QelHH*anutz2/anutzges	![W/m2] Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen
+Qwwnutz2 = 12.75/0.8*1000/8760	![W/m2] WWprofil 
+QelAbw2 = comp2					![W/m2] Abwärme von Haushaltsgeräten
+qhend2 = (qh2+qbef2)/0.9/2.5	![W/m2] Endenergiebedarf Heizen ohne hilfstrom
+qwwend2 = Qwwnutz2/0.7/2.5		![W/m2] Endenergiebedarf Warmwasser
+qendwaerme2 = 0*qhend2+0*qwwend2	![W/m2] Achtung, hier nur, wenn nicht mit Strom direkt oder WP
+qcend2 = (qc2+qentf2)/0.9/2.5	![W/m2] Endenergie
+qelges2 = Qel2+qhend2*0.05+qwwend2*0.05+qcend2*0.05+qhend2+qwwend2+qcend2	![W/m2] Strombedarf inkl hilfsstrom 
+PEBwaerme2 = -0*PEBkonvwae		![W/m2] Hier wenn Wärme über Systemgrenze
+PEBel2 = -qelges2*PEBkonvel		![W/m2] Primärenergiebedarf gesamt
+PVprod2 = qpvmm*0.18*0.85		![W/m2] Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 90%
+Qeleigen2 = lt(PVprod2,qelges2)*PVprod2+(1-lt(PVprod2,qelges2))*qelges2	![W/m2]
+Qelnetz2 = lt(PVprod2,qelges2)*(qelges2-PVprod2) ![W/m2] Netzbezug
+Qelueberschuss2 = (1-lt(PVprod2,qelges2))*(PVprod2-qelges2)	![W/m2] Netzbezug
+PEBelnetz2 = -Qelnetz2*PEBkonvel	![W/m2] primärenrgienetzstrom Netzstrom in system
+PEBelüberschuss2 = Qelueberschuss2*PEBkonvel		![W/m2] Überschuss primärenergetisch
+PEB2 = PEBwaerme2+PEBelnetz2+PEBelüberschuss2	![W/m2] Gesamter primärenergiesaldo 
+PEB2akkum = [17,2]/1000*step	![W/m2]
+
+Qel3 = QelHH*anutz3/anutzges	![W/m2] Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen
+Qwwnutz3 = 12.75/0.8*1000/8760	![W/m2] WWprofil 
+QelAbw3 = comp3  !Qel3*0.8		![W/m2] Abwärme von Haushaltsgeräten
+qhend3 = (qh3+qbef3)/0.9/2.5	![W/m2] Endenergiebedarf Heizen ohne hilfstrom
+qwwend3 = Qwwnutz3/0.7/2.5		![W/m2] Endenergiebedarf Warmwasser
+qendwaerme3 = 0*qhend3+0*qwwend3	![W/m2] Achtung, hier nur, wenn nicht mit Strom direkt oder WP
+qcend3 = (qc3+qentf3)/0.9/2.5	![W/m2] Endenergie
+qelges3 = (Qel3+qentf3)+qhend3*0.05+qwwend3*0.05+qcend3*0.05+qhend3+qwwend3+qcend3	![W/m2] Strombedarf inkl hilfsstrom
+PEBwaerme3 = -0*PEBkonvwae		![W/m2] Hier wenn Wärme über Systemgrenze
+PEBel3 = -qelges3*PEBkonvel		![W/m2] Primärenergiebedarf gesamt 
+PVprod3 = qpvmm*0.18*0.85		![W/m2] Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 90%
+Qeleigen3 = lt(PVprod3,qelges3)*PVprod3+(1-lt(PVprod3,qelges3))*qelges3	![W/m2]
+Qelnetz3 = lt(PVprod3,qelges3)*(qelges3-PVprod3)	![W/m2] netzbezug
+Qelüberschuss3 = (1-lt(PVprod3,qelges3))*(PVprod3-qelges3)	![W/m2]
+PEBelnetz3 = -Qelnetz3*PEBkonvel	![W/m2] primärenrgienetzstrom Netzstrom in system
+PEBelüberschuss3 = Qelüberschuss3*PEBkonvel		![W/m2] Überschuss primärenergetisch 
+PEB3 = PEBwaerme3+PEBelnetz3+PEBelüberschuss3	![W/m2] Gesamter primärenergiesaldo
+PEB3akkum = [17,3]/1000*step	![W/m2]
+
+Qel4 = QelHH*anutz4/anutzges	![W/m2] Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen 
+Qwwnutz4 = 12.75/0.8*1000/8760	![W/m2] WWprofil 
+QelAbw4 = comp4  				![W/m2] Abwärme von Haushaltsgeräten 
+qhend4 = (qh4+qbef4)/0.9/2.5	![W/m2] Endenergiebedarf Heizen ohne hilfstrom 
+qwwend4 = Qwwnutz4/0.7/2.5		![W/m2] Endenergiebedarf Warmwasser 
+qendwaerme4 = 0*qhend4+0*qwwend4	![W/m2] Achtung, hier nur, wenn nicht mit Strom direkt oder WP 
+qcend4 = (qc4+qentf4)/0.9/2.5	![W/m2] Endenergie 
+qelges4 = (Qel4+qentf4)+qhend4*0.05+qwwend4*0.05+qcend4*0.05+qhend4+qwwend4+qcend4	![W/m2] Strombedarf inkl hilfsstrom 
+PEBwaerme4 = -0*PEBkonvwae		![W/m2] Hier wenn Wärme über Systemgrenze 
+PEBel4 = -qelges4*PEBkonvel		![W/m2] Primärenergiebedarf gesamt 
+PVprod4 = qpvmm*0.18*0.85		![W/m2] Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 90%
+Qeleigen4 = lt(PVprod4,qelges4)*PVprod4+(1-lt(PVprod4,qelges4))*qelges4	![W/m2]
+Qelnetz4 = lt(PVprod4,qelges4)*(qelges4-PVprod4)	![W/m2] netzbezug
+Qelüberschuss4 = (1-lt(PVprod4,qelges4))*(PVprod4-qelges4)	![W/m2]
+PEBelnetz4 = -Qelnetz4*PEBkonvel	![W/m2] primärenrgienetzstrom Netzstrom in system 
+PEBelüberschuss4 = Qelüberschuss4*PEBkonvel		![W/m2] Überschuss primärenergetisch 
+PEB4 = PEBwaerme4+PEBelnetz4+PEBelüberschuss4	![W/m2] Gesamter primärenergiesaldo 
+PEB4akkum = [17,5]/1000*step	![W/m2]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "outvent"
+* 
+EQUATIONS 32
+Qvvc1 = -lt(Qvv1,0)*Qvv1	![W/m2]
+Qvvc2 = -lt(Qvv2,0)*Qvv2	![W/m2]
+Qvvc3 = -lt(Qvv3,0)*Qvv3	![W/m2]
+Qvvc4 = -lt(Qvv4,0)*Qvv4	![W/m2]
+
+Qvvh1 = gt(Qvv1,0)*Qvv1		![W/m2]
+Qvvh2 = gt(Qvv2,0)*Qvv2		![W/m2]
+Qvvh3 = gt(Qvv3,0)*Qvv3		![W/m2]
+Qvvh4 = gt(Qvv4,0)*Qvv4		![W/m2]
+
+Qvol1 = -(twrg1-tzu1)*1.204*1.012/3.6*VENT1*Vol1/Anutz1		![W/m2]
+Qvol2 = -(twrg2-tzu2)*1.204*1.012/3.6*VENT2*Vol2/Anutz2		![W/m2]
+Qvol3 = -(twrg3-tzu3)*1.204*1.012/3.6*VENT3*Vol3/Anutz3		![W/m2]
+Qvol4 = -(twrg4-tzu4)*1.204*1.012/3.6*VENT4*Vol4/Anutz4		![W/m2]
+
+Qvol1a = -(ta-tzu1)*1.204*1.012/3.6*VENT1*Vol1/Anutz1		![W/m2]
+Qvol2a = -(ta-tzu2)*1.204*1.012/3.6*VENT2*Vol2/Anutz2		![W/m2]
+Qvol3a = -(ta-tzu3)*1.204*1.012/3.6*VENT3*Vol3/Anutz3		![W/m2]
+Qvol4a = -(ta-tzu4)*1.204*1.012/3.6*VENT4*Vol4/Anutz4		![W/m2]
+
+Qvol1c = -lt(Qvol1,0)*Qvol1		![W/m2]
+Qvol1h = (gt(Qvol1,0))*Qvol1	![W/m2]
+Qvol2c = -lt(Qvol2,0)*Qvol2		![W/m2]
+Qvol2h = (gt(Qvol2,0))*Qvol2	![W/m2]
+Qvol3c = -lt(Qvol3,0)*Qvol3		![W/m2]
+Qvol3h = (gt(Qvol3,0))*Qvol3	![W/m2]
+Qvol4c = -lt(Qvol4,0)*Qvol4 	![W/m2]
+Qvol4h = (gt(Qvol4,0))*Qvol4 	![W/m2]
+
+Qvol1ac = -lt(Qvol1a,0)*Qvol1a	![W/m2]
+Qvol1ah = (gt(Qvol1a,0))*Qvol1a	![W/m2]
+Qvol2ac = -lt(Qvol2a,0)*Qvol2a	![W/m2]
+Qvol2ah = (gt(Qvol2a,0))*Qvol2a	![W/m2]
+Qvol3ac = -lt(Qvol3a,0)*Qvol3a	![W/m2]
+Qvol3ah = (gt(Qvol3a,0))*Qvol3a	![W/m2]
+Qvol4ac = -lt(Qvol4a,0)*Qvol4a 	![W/m2]
+Qvol4ah = (gt(Qvol4a,0))*Qvol4a ![W/m2]
+
+*------------------------------------------------------------------------------
+* EQUATIONS "Equa-24"
+* 
+EQUATIONS 5
+abs1g = absh1*1000
+
+licht1klein = Licht1/Anutz1 ![W/m2]
+absgzu = abszu*1000			![kg/kg]
+absgwrg = abswrg*1000		![kg/kg]
+absg2 = absh2*1000			![kg/kg]
+
+*------------------------------------------------------------------------------
 UNIT 210 TYPE 14	 Impulse
 *$UNIT_NAME Sommer
 *$MODEL .\Utility\Forcing Functions\General\Type14h.tmf
@@ -478,8 +1305,9 @@ PARAMETERS 48
 2400		! 9 Time at point-4
 3		! 10 Value at point -4
 
+*------------------------------------------------------------------------------
 UNIT 131 TYPE 9	 Type9e
-*$UNIT_NAME Type9e
+*$UNIT_NAME Wind etc
 *$MODEL .\Utility\Data Readers\Generic Data Files\Expert Mode\Free Format\Type9e.tmf
 *$POSITION 752 127
 *$LAYER Weather - Data Files # 
@@ -593,8 +1421,9 @@ PARAMETERS 106
 -1		! 65 Free format mode
 *** External files
 
+*------------------------------------------------------------------------------
 UNIT 132 TYPE 9	 Type9e
-*$UNIT_NAME Type9e
+*$UNIT_NAME SzenarioAneu
 *$MODEL .\Utility\Data Readers\Generic Data Files\Expert Mode\Free Format\Type9e.tmf
 *$POSITION 752 127
 *$LAYER Weather - Data Files # 
@@ -727,439 +1556,8 @@ PARAMETERS 126
 135		! 121 Logical unit for input file
 -1		! 65 Free format mode
 
-
-
-equations 30
-bedarf2050 = [132,1]
-biomasse2050 = [132,2]
-wasser2050 = [132,3]
-solar2050 = [132,4]
-wind2050 = [132,5]
-EEges2050 = [132,6]
-ueberschuss2050 = [132,7]
-unterschuss2050 = [132,8]
-bilanz2050 = [132,9]
-Kostideal = [132,10]
-Lastheizideal = [132,11]
-heiz24h = [132,12]
-heizWo = [132,13]
-heiz2Wo = [132,14]
-heiz4Wo = [132,15]
-Lastkuehlideal = [132,16]
-kuehl24h = [132,17]
-kuehlWo = [132,18]
-kuehl2Wo = [132,19]
-kuehl4Wo = [132,20]
-LastWWideal = [132,21]
-WW24h = [132,22]
-WWWo = [132,23]
-WW2Wo = [132,24]
-WW4Wo = [132,25]
-Lastnutzideal = [132,26]
-nutz24h = [132,27]
-nutzWo = [132,28]
-nutz2Wo = [132,29]
-nutz4Wo = [132,30]
-
-
-
-
-* EQUATIONS "Klima"
-* 
-EQUATIONS 81
-ta = (-4.8*heizperiode1+26.3*kuehlperiode1)*impuls+(1-impuls)*[109,1]
-relha = (80*heizperiode1+65*kuehlperiode1)*impuls+(1-impuls)*[109,7]
-absa = (0.003*heizperiode1+0.012*kuehlperiode1)*impuls+(1-impuls)*[109,6]
-tsky = (ta-11)*impuls+(1-impuls)*[109,4]
-tsgrd = ta
-twasgrd = [109,5]
-Ttau = [109,2]
-Twetbaulb = [109,3]
-* siehe oben   terd1 = 9.9+[19,2]*(20.7-9.9)  ! Bestand: 9.9+[19,2]*(20.7-9.9) OIB:6.1+[19,2]*(19.6-6.1)  NEH:  9.6+[19,2]*(16.3-9.6) PH: 10.4+[19,2]*(15.4-10.4)  !ta+(heizperiode1*21+26*(1-heizperiode1)-ta)/2 !9.5+[19,2]*15.1  !EG, Temperaturfaktor ca. 0.5
-terd2 = 10 !11.04+[19,2]*16.4  !UG
-terd3 = 10 !11.04+[19,2]*16.4
-terd4 = 10 !11.04+[19,2]*16.4 !ms250310
-Tewtphpp = 7.1+[19,2]*7
-GRD_REFL = 0.2  ! Sehr gefährlich, unbedingt Input checken[109,91]
-wind = [109,8]
-winddir = [109,9]
-druck = [109,10]  !atm  !11
-TURN = 0
-HEMISPHERE = 1 ! northern hemisphere: 1  - southern hemisphere: -1
-AA_H_0_0 = 0  ! azimuth angle of orientation
-AA_S_0_90 = (0  +TURN)*GT(HEMISPHERE,0)+ (180-0 -TURN)*NOT(GT(HEMISPHERE,0)) ! azimuth angle of orientation
-AA_W_90_90 = (90 +TURN)*GT(HEMISPHERE,0)+ (180-90-TURN)*NOT(GT(HEMISPHERE,0)) ! azimuth angle of orientation
-AA_N_180_90 = (180+TURN)*GT(HEMISPHERE,0)+ (180-180-TURN)*NOT(GT(HEMISPHERE,0)) ! azimuth angle of orientation
-AA_E_270_90 = (270+TURN)*GT(HEMISPHERE,0)+ (180-270-TURN)*NOT(GT(HEMISPHERE,0)) ! azimuth angle of orientation
-AA_W2 = (90 +TURN)*GT(HEMISPHERE,0)+ (180-45-TURN)*NOT(GT(HEMISPHERE,0)) ! azimuth angle of orientation
-AA_N2 = (180+TURN)*GT(HEMISPHERE,0)+ (180-135-TURN)*NOT(GT(HEMISPHERE,0)) ! azimuth angle of orientation
-AA_E2 = (270+TURN)*GT(HEMISPHERE,0)+ (180-225-TURN)*NOT(GT(HEMISPHERE,0)) ! azimuth angle of orientation
-AA_S2 = (0+TURN)*GT(HEMISPHERE,0)+ (180-315-TURN)*NOT(GT(HEMISPHERE,0)) ! azimuth angle of orientation
-AAZM_CORR_HEM = AAZM*GT(HEMISPHERE,0) +  NOT(GT(HEMISPHERE,0))*((180-AAZM)*GT(AAZM,0)*LE(AAZM,180) + (-180-AAZM)*NOT(GT(AAZM,0)*LE(AAZM,180))) !solar azimuth corrected for southern hemisphere such that north = 180, south = 0, west = 90, east = -90
-AAZM_TYPE56 = (AAZM_CORR_HEM - TURN) ! solar azimuth corrected by building rotation - Input for Type 56 sun position for SHM and ISM
-AZEN = [109,16]
-AAZM = [109,17]
-IDHkJ = (10*heizperiode1+350*kuehlperiode1)*impuls+(1-impuls)*[109,20]    !Sky diffuse radiation on the horizontal, impuls sommer 20% direkt
-IGHkJ = (10*heizperiode1+350*kuehlperiode1)*impuls+(1-impuls)*[109,24]    !Total incident of radation orientation H_0_0
-IBHkJ = (0*heizperiode1+0*kuehlperiode1)*impuls+(1-impuls)*[109,33]    !Beam incident of radation orientation H_0_0
-AIH = [109,69]    !Incident angle of orientation H_0_0
-IGSkJ = (10*heizperiode1+180*kuehlperiode1)*impuls+(1-impuls)*[109,25]
-IBSkJ = (0*heizperiode1+0*kuehlperiode1)*impuls+(1-impuls)*[109,34]
-AIS = [109,70]
-IGWkJ = (5*heizperiode1+220*kuehlperiode1)*impuls+(1-impuls)*[109,26]
-IBWkJ = (0*heizperiode1+0*kuehlperiode1)*impuls+(1-impuls)*[109,35]
-AIW = [109,71]
-IGNkJ = (5*heizperiode1+100*kuehlperiode1)*impuls+(1-impuls)*[109,27]
-IBNkJ = (0*heizperiode1+0*kuehlperiode1)*impuls+(1-impuls)*[109,36]
-AIN = [109,72]
-IGOkJ = (5*heizperiode1+210*kuehlperiode1)*impuls+(1-impuls)*[109,28]
-IBOkJ = (0*heizperiode1+0*kuehlperiode1)*impuls+(1-impuls)*[109,37]
-AIO = [109,73]
-IGS2kJ = [109,29]
-IBS2kJ = [109,38]
-AIS2 = [109,74]
-IGW2kJ = [109,30]
-IBW2kJ = [109,39]
-AIW2 = [109,75]
-IGN2kJ = [109,31]
-IBN2kJ = [109,40]
-AIN2 = [109,76]
-IGO2kJ = [109,32]
-IBO2kJ = [109,41]
-AIO2 = [109,77]
-hour_of_day = MOD(TIME,24)  !11+13+31 = 55
-idh = IDhkJ/3.6
-igh = IghkJ/3.6
-ibh = IbhkJ/3.6
-igs = IGSkJ/3.6
-ibs = IBSkJ/3.6
-igw = IGWkJ/3.6
-ibw = IBWkJ/3.6
-ign = IGNkJ/3.6
-ibn = IBNkJ/3.6
-igo = IGOkJ/3.6
-ibo = IBOkJ/3.6
-igs2 = IGS2kJ/3.6
-ibs2 = IBS2kJ/3.6
-igw2 = IGW2kJ/3.6
-ibw2 = IBW2kJ/3.6
-ign2 = IGN2kJ/3.6
-ibn2 = IBN2kJ/3.6
-igo2 = IGO2kJ/3.6
-ibo2 = IBO2kJ/3.6
-somm = 1-heizperiode1  ![10,2]
-winter = heizperiode1  ![11,2]
-*$UNIT_NAME Klima
-*$LAYER Main
-*$POSITION 197 101
-
 *------------------------------------------------------------------------------
-
-
-* EQUATIONS "Fixed Shading"
-* 
-EQUATIONS 12
-Z1_IT_SW_SHD = [341,1]
-Z1_IB_SW_SHD = [341,2]
-Z1_AI_SW_SHD = AIS
-Z3_IT_SW_SHD = [343,1]
-Z3_IB_SW_SHD = [343,2]
-Z3_AI_SW_SHD = AIS
-Z5_IT_SW_SHD = [345,1]
-Z5_IB_SW_SHD = [345,2]
-Z5_AI_SW_SHD = AIS
-Z7_IT_SW_SHD = [347,1]
-Z7_IB_SW_SHD = [347,2]
-Z7_AI_SW_SHD = AIS
-*$UNIT_NAME Fixed Shading
-*$LAYER Main
-*$POSITION 618 275
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Equa-2"
-* 
-EQUATIONS 1
-qmaschabw = [3,3]*1000
-*$UNIT_NAME Reserve
-*$LAYER Main
-*$POSITION 199 794
-
-                                                                         
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Schatt"
-* 
-EQUATIONS 30
-*schattzu = 0.8*schattschaltaussen !0.90
-*strahlungsgrenze = 150
-strahlungglobal = igh
-grenzschatt = 30   !windgeschwindigkeit, bis zu welcher Sonnenschutz aussen zu bleiben kann
-windfass = wind*3.6*0.8*1.8  ! Windgeschwindigkeit in m/s (meist 10 m Höhe) umgerechnet auf km/h mal Reduktion durch Umgebungsstruktur/Laibung/Umrechnung auf tatsächliche Höhe + 80% für Böhen (nach Lahme)
-windauf = 1 !lt(windfass,grenzschatt)
-tschattcontr1 = [40,1]
-tschattcontr2 = [41,1]
-tschattcontr3 = [42,1]
-tschattcontr4 = [43,1]	!ms250310
-reschmutz = 1
-Schatts1 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igs, strahlungsgrenze)+(1-somm)*tschattcontr1))*[333,1]*reschmutz)
-Schattw1 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igw, strahlungsgrenze)+(1-somm)*tschattcontr1))*[333,1]*reschmutz)  
-Schattn1 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(ign, strahlungsgrenze)+(1-somm)*tschattcontr1))*[333,1]*reschmutz)
-Schatto1 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igo, strahlungsgrenze)+(1-somm)*tschattcontr1))*[333,1]*reschmutz)
-Schatts2 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igs, strahlungsgrenze)+(1-somm)*tschattcontr2))*[333,1]*reschmutz)
-Schattw2 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igw, strahlungsgrenze)+(1-somm)*tschattcontr2))*[333,1]*reschmutz)
-Schattn2 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(ign, strahlungsgrenze)+(1-somm)*tschattcontr2))*[333,1]*reschmutz)
-Schatto2 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igo, strahlungsgrenze)+(1-somm)*tschattcontr2))*[333,1]*reschmutz)
-Schatts3 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igs, strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)
-Schattw3 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igw, strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)
-Schattn3 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(ign, strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)
-Schatto3 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igo, strahlungsgrenze)+(1-somm)*tschattcontr3))*[333,1]*reschmutz)
-Schatts4 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igs, strahlungsgrenze)+(1-somm)*tschattcontr4))*[333,1]*reschmutz)	!ms250310
-Schattw4 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igw, strahlungsgrenze)+(1-somm)*tschattcontr4))*[333,1]*reschmutz)	!ms250310
-Schattn4 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(ign, strahlungsgrenze)+(1-somm)*tschattcontr4))*[333,1]*reschmutz)	!ms250310
-Schatto4 = 0*impuls+(1-impuls)*(1-(1-schattzu*windauf*(somm*gt(igo, strahlungsgrenze)+(1-somm)*tschattcontr4))*[333,1]*reschmutz)	!ms250310
-
-
-
-*Schatti1 = 0.6*schattschaltinnen
-*Schatti2 = 0.6*schattschaltinnen
-*Schatti3 = 0.6*schattschaltinnen
-*Schatti4 = 0.6*schattschaltinnen
-strahlungZone1 = igh
-Iglobal4ohne = 100*TQ4*igh
-Iglobal4mit = 100*TQ4*igh*(1-0.8)
-Schatth = 0  !somm*(0.8*gt(iglobal4mit,300)+0*(1-gt(iglobal4mit,300)))+(1-Input23)*(tschattcontr14*0.8*gt(iglobal4mit,300))
-Schatth2 = 0 !somm*(0.8*gt(iglobal4mit,750)+0*(1-gt(iglobal4mit,750)))+(1-Input23)*(tschattcontr14*0.8*gt(iglobal4mit,750))
-*$UNIT_NAME Schatt
-*$LAYER Main
-*$POSITION 597 1594
-
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Vent"
-* 
-EQUATIONS 45 
-rholuft = 1.204
-waermerueckg = waermerueckgimpuls !0.85	! [%]
-quellluftfaktor = 1	! [-] faktor
-luftvolpers = 30		! [m³/h]	35 hyg. minimum -   42
-lueftvol1 = 40*quellluftfaktor
-lueftvol2 = 40*quellluftfaktor
-lueftvol3 = 40*quellluftfaktor
-lueftvol4 = 40*quellluftfaktor	!ms250310
-ventvol1 = wluft*(lueftvol1*somm+(1-somm)*lueftvol1)	! [m³/h] 
-ventvol2 = wluft*(lueftvol2*somm+(1-somm)*lueftvol2)
-ventvol3 = wluft*(lueftvol3*somm+(1-somm)*lueftvol3)
-ventvol4 = wluft*(lueftvol4*somm+(1-somm)*lueftvol4)	!ms250310
-ventvolges = ventvol1 + ventvol2 + ventvol3 + ventvol4  	!ms250310
-ventvolges1 = ventvol1 + ventvol2 + ventvol3 + ventvol4  	!ms250310
-ventab1 = wluft*lueftvol1
-ventab2 = wluft*lueftvol2
-ventab3 = wluft*lueftvol3
-ventab4 = wluft*lueftvol4	!ms250310
-VENT1 = Vent1var*wluft ! 0.5 ! ventvol1/Vol1	! [1/h] -> Input Building
-VENT2 = Vent2var*wluft !0. ! ventvol2/Vol2
-VENT3 = Vent3var*wluft !0.5 ! ventvol3/Vol3
-VENT4 = Vent4var*wluft !0.5 ! ventvol4/Vol4	!ms250310
-tmittel1 = (TZone1+TZone2+TZone3+TZone4)/4	!ms250310
-twtoutges1 = ventvol1*TZone1+ventvol2*TZone2+ventvol3*TZone3+ventvol4*TZone4	!ms250310
-twtoutges2 = 0
-twtout = lt(ventvolges,0.1)*tmittel1+(1-lt(ventvolges,0.1))*(twtoutges1)/(ventvolges+0.001)
-ventab14ges = ventvolges
-ventabges = ventvolges
-tminwint = twtout-1		! [C]	Minimum der Zulufttemperatur im Winter
-tzuquellmin = twtout-2
-tminsomm = twtout-1		! [C] Minimum der Zulufttemperatur im Sommer
-tewt = ta ! EWT (Tewtphpp-Input65)*0.5
-twtwarm = 0   !34
-twrg1 = (tewt+waermerueckg*(tzone1-tewt))	! [C] Ventilatorabwärme nicht berücksichtigt
-twrg2 = (tewt+waermerueckg*(tzone2-tewt))
-twrg3 = (tewt+waermerueckg*(tzone3-tewt))
-twrg4 = (tewt+waermerueckg*(tzone4-tewt))	!ms250310
-tzuschalt = [18,2]
-TZU22w = twrg2       !Wohnnutzung mit fixer Bypassregelung, Quellluftsystem mit beschränkter Zulufttemperatur gt(twrg2,22)*22+(1-gt(twrg2,22))*twrg2  
-TZU22s = ta !Wohnnutzung, sonst z.B. Quellluftsystem gt(ta,tminsomm)*(ta*lt(ta,26)+twrg2*(1-lt(ta,26)))+(1-gt(ta,tminsomm))*tminsomm
-TZU = somm*(gt(tzu22s,tzukuehl)*tzukuehl+(1-gt(tzu22s,tzukuehl))*tzu22s)+(1-somm)*(lt(tzu22w,tzuheiz)*tzuheiz+(1-lt(tzu22w,tzuheiz))*tzu22w)
-tzu1 = (1-somm)*twrg2+somm*ta  !Einfache saisonale Regelung, keine Sommer WT Nutzung
-tzu2 = (1-somm)*twrg2+somm*ta  !Einfache saisonale Regelung, keine Sommer WT Nutzung
-tzu3 = (1-somm)*twrg2+somm*ta  !Einfache saisonale Regelung, keine Sommer WT Nutzung
-tzu4 = (1-somm)*twrg2+somm*ta  !Einfache saisonale Regelung, keine Sommer WT Nutzung	!ms250310
-*$UNIT_NAME Vent
-*$LAYER Main
-*$POSITION 703 594
-
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Ventfeu"
-* 
-EQUATIONS 17
-wrgfeu = 0	! [%]
-BeFeucht = 0	!Befeuchtung auf relative Feuchte von ..% 	
-EntFeucht = 0.1	!Entfeuchtung auf absolute Feuchte von ..kg/kg	
-abshuma = absa
-absoutges1 = ventvol1*absh1+ventvol2*absh2+ventvol3*absh3
-absoutges2 = 0
-abshumout = (absoutges1)/(ventvolges+0.001)	! [kg/kg] abs Feuchte des Raumes wo abgesaugt wird
-abswrg = somm*(gt(TZU22s,tzukuehl)*absZU22s+(1-gt(TZU22s,tzukuehl))*absZU22s)+(1-somm)*(lt(TZU22w,tzuheiz)*absZU22w+(1-lt(TZU22w,tzuheiz))*absZU22w)
-abswrg1 = (abshuma+(abshumout-abshuma)*wrgfeu)
-abszu = absa ! Feuchterückgewinnung ausgeschalten    somm*(gt(abswrg,abshumgrenzo)*abshumgrenzo+(1-gt(abswrg,abshumgrenzo))*abswrg)+(1-somm)*(abswrg)	! kg/kg Feuchte in den Raum,
-absZU22w = abswrg1
-absZU22s = gt(ta,tminsomm)*(absa*lt(ta,26)+abswrg1*(1-lt(ta,26)))+(1-gt(ta,tminsomm))*absa
-relzu = [150,6]	! umrechung von abs Feuchte in relative Feuchte
-abszu1 = abszu
-abszu2 = abszu
-abszu3 = abszu
-abszu4 = abszu	!ms250310
-
-*------------------------------------------------------------------------------
-EQUATIONS 9
-
-WindPV = [131,11] !MW 2015 Hagenbrunn und Seyring
-CO2_2015 = [131,13] !g/kWh
-CO2_2050 = [131,14] !g/kWh
-QBedarf_2050 = [131,18]
-QWasPVWind_2050 = [131,15]+[131,16]+[131,17] 
-QBiomasse_2050 = [131,20] 
-QGeothermie_2050 = [131,22]
-QUeberschuss_2050 = [131,24]
-QUnterschuss_2050 = [131,25]
- 
-* EQUATIONS "BTA"
-* 
-EQUATIONS 29
-
-area_BTA1 = anutz1*0.9
-area_BTA2 = anutz2*0.9
-area_BTA3 = anutz3*0.9
-area_BTA4 = anutz3*0.9	!ms250310
-
-tbtasollohneimpuls = (kuehlperiode1*tkuehlsollmin+heizperiode1*theizsollmin)*(1-gt(queber,0))+(kuehlperiode1*tkuehlsollmax+heizperiode1*theizsollmax)*gt(queber,0)
-tbtasollmitimpuls = (kuehlperiode1*tkuehlsollmin+heizperiode1*theizsollmin)*(1-gt(queber1,0))+(kuehlperiode1*tkuehlsollmax+heizperiode1*theizsollmax)*gt(queber1,0)
-tbtasoll = Py_ein*(kuehlperiode1*tkuehlsollmin+heizperiode1*theizsollmin)+(1-Py_ein)*(impuls*tbtasollmitimpuls+(1-impuls)*tbtasollohneimpuls)   !Thomas neu, hier nur die beiden Mindesttemperaturen, Einfluss Netzdienlichkeit müßte in MPC kommen
-tbtahys = kuehlperiode1*tbtahysges+heizperiode1*tbtahysges
-
-queberh = anutzges*Qelnutzerüberschuss*JAZh*etaverth    !gt(time,36)*lt(time,96)*50*anutzges  Thermische Energie in Raum
-queberhPV = ge(queberh,qbtamax)*qbtamax+(1-ge(queberh,qbtamax))*(queberh)
-queberhwind = lt(queberhPV,qbtamax)*(qbtamax-queberhPV)*WindstromvonAnlagen
-queberc = anutzges*Qelnutzerüberschuss*JAZc*etavertc
-quebercPV = ge(queberc,qbtamaxs)*qbtamaxs+(1-ge(queberc,qbtamaxs))*(queberc)
-quebercwind = lt(quebercPV,qbtamaxs)*(qbtamaxs-quebercPV)*WindstromvonAnlagen
-queber = heizperiode1*(queberhPV+queberhwind)+(1-heizperiode1)*(quebercPV+quebercwind)
-tofl1u0 = [170,2]  !Rücklauftemperatur
-tofl2u0 = [170,4]
-tofl3u0 = [170,6]
-tofl4u0 = [170,18]	!ms250310 
-tofl1o0 = [170,8]
-tofl2o0 = [170,10]
-tofl3o0 = [170,12]
-tofl4o0 = [170,20]	!ms250310
-tnode1o = [56,161]  !Temperatur Bauteilaktivierung
-tnode1u = [56,162]
-
-MBTAspez = MBTAspezges  !kg/h/m² 22 bei fußbodenheizung, 16 bei BTA
-tsystemw = qbtamax/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*(1-gt(queber,0))+queber/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*gt(queber,0)+(tofl1u0*minbta1+tofl2u0*minbta2+tofl3u0*minbta3+tofl4u0*minbta4)/(minbta1+minbta2+minbta3+minbta4+0.001)	!ms250310
-tsystems = -qbtamaxs/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*(1-gt(queber,0))-queber/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*gt(queber,0)+(tofl1u0*minbta1+tofl2u0*minbta2+tofl3u0*minbta3+tofl4u0*minbta4)/(minbta1+minbta2+minbta3+minbta4+0.001)	!ms250310
-tsystem1 = heizperiode1*tsystemw+(1-heizperiode1)*tsystems
-*tsystem = gt(tsystem1,35)*35+(1-gt(tsystem1,35))*(lt(tsystem1,18)*18+tsystem1*(1-lt(tsystem1,18)))
-
-* TRNSYS-Python-Kopplung
-INCLUDE "Python_coupling.dck"
-
-EQUATIONS 71
-
-tsystem = Qheizbtapy/((minbta1+0.0001)*(4.18/3.6))+tofl1u0   !tz20250130 Qheizbtapy in W, minbta1 in kg/h, Umrechnung Wärmekapazität 4.18 kJ/kg K von Wasser in Wh/kg K
-
-*tsystem = (tinbta1v*minbta1+tinbta2v*minbta2+tinbta3v*minbta3)/(minbta1+minbta2+minbta3+0.001) !30*heizperiode1+(1-heizperiode1)*20  !Außentemperatursteuern
-tinbta1v = qbtamax1/MBTAspez/4.18*3.6*(1-gt(queber1,0))+qbtamax1/MBTAspez/4.18*3.6*gt(queber1,0)+tofl1u0  !tsystem
-tinbta2v = qbtamax2/MBTAspez/4.18*3.6*(1-gt(queber2,0))+qbtamax2/MBTAspez/4.18*3.6*gt(queber2,0)+tofl2u0
-tinbta3v = qbtamax3/MBTAspez/4.18*3.6*(1-gt(queber3,0))+qbtamax3/MBTAspez/4.18*3.6*gt(queber3,0)+tofl3u0
-tinbta4v = qbtamax4/MBTAspez/4.18*3.6*(1-gt(queber4,0))+qbtamax4/MBTAspez/4.18*3.6*gt(queber4,0)+tofl4u0 !ms250310
-tinbta1 = tinbta1v*impuls+(1-impuls)*tsystem
-tinbta2 = tinbta2v*impuls+(1-impuls)*tsystem
-tinbta3 = tinbta3v*impuls+(1-impuls)*tsystem
-tinbta4 = tinbta4v*impuls+(1-impuls)*tsystem !ms250310
-tinbta1ov = qbtamax1/MBTAspez/4.18*3.6*(1-gt(queber1,0))+qbtamax1/MBTAspez/4.18*3.6*gt(queber1,0)+tofl1o0  !tsystem
-tinbta2ov = qbtamax2/MBTAspez/4.18*3.6*(1-gt(queber2,0))+qbtamax2/MBTAspez/4.18*3.6*gt(queber2,0)+tofl2o0
-tinbta3ov = qbtamax3/MBTAspez/4.18*3.6*(1-gt(queber3,0))+qbtamax3/MBTAspez/4.18*3.6*gt(queber3,0)+tofl3o0
-tinbta4ov = qbtamax4/MBTAspez/4.18*3.6*(1-gt(queber4,0))+qbtamax4/MBTAspez/4.18*3.6*gt(queber4,0)+tofl4o0 !ms250310
-tinbtao1 = tinbta1ov*impuls+(1-impuls)*tsystem !tsystem
-tinbtao2 = tinbta2ov*impuls+(1-impuls)*tsystem  !tinbta2ov !tsystem
-tinbtao3 = tinbta3ov*impuls+(1-impuls)*tsystem  !tinbta3ov !tsystem
-tinbtao4 = tinbta4ov*impuls+(1-impuls)*tsystem  !tinbta4ov !tsystem !ms250310
-
-bta1schalt = heizperiode1*(1-[64,1])+kuehlperiode1*[64,1]
-bta2schalt = heizperiode1*(1-[65,1])+kuehlperiode1*[65,1]
-bta3schalt = heizperiode1*(1-[66,1])+kuehlperiode1*[66,1]
-bta4schalt = heizperiode1*(1-[71,1])+kuehlperiode1*[71,1] !ms250310
-
-minbta1 = Py_ein*(MBTAspez*(area_BTA1))+(1-Py_ein)*(BTAmodellein*MBTAspez*(area_BTA1)*((bta1schalt)*heizperiode1+bta1schalt*kuehlperiode1)*WBTA*B2Grid_frei)  !Thomas Achtung, hier tatsächliche Flächen einstellen
-minbta2 = Py_ein*(MBTAspez*(area_BTA2))+(1-Py_ein)*(BTAmodellein*MBTAspez*(area_BTA2)*((bta2schalt)*heizperiode1+bta2schalt*kuehlperiode1)*WBTA*B2Grid_frei)
-minbta3 = Py_ein*(MBTAspez*(area_BTA3))+(1-Py_ein)*(BTAmodellein*MBTAspez*(area_BTA3)*((bta3schalt)*heizperiode1+bta3schalt*kuehlperiode1)*WBTA*B2Grid_frei)
-minbta4 = Py_ein*(MBTAspez*(area_BTA4))+(1-Py_ein)*(BTAmodellein*MBTAspez*(area_BTA4)*((bta4schalt)*heizperiode1+bta4schalt*kuehlperiode1)*WBTA*B2Grid_frei) !ms250310
-
-tbtareg1 = TZone1
-tbtareg2 = TZone2
-tbtareg3 = TZone3
-tbtareg4 = TZone4 !ms250310
-
-
-thsoll1 = tbtasoll+tbtahys
-thsoll1l = tbtasoll
-*tcsoll1 = tbtasoll+tbtahys	!v laut OENORM Kat. II
-*tcsoll1l = tbtasoll
-thsoll2 = tbtasoll+tbtahys
-thsoll2l = tbtasoll
-thsoll3 = tbtasoll+tbtahys
-thsoll3l = tbtasoll
-thsoll4 = tbtasoll+tbtahys !ms250310
-thsoll4l = tbtasoll !ms250310
-
-igm = (igs2+igw2+ign2+igo2)/4   !mittlere Einstrahlung auf PV-Module
-
-Qel = Qelvar  !QelHH/4 !(Qel1*anutz1+Qel2*anutz2+Qel3*anutz3)/anutzges  !([3,44]+[3,45]+[3,46]+[3,47]+[3,48]+(licht3*anutz3)/1000+[3,50]+[3,51]+[3,52])*1000/anutz3 !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-Qwwnutz = Qwwnutzvar !QWW_HH/4 !12.75/0.8*1000/8760 ![3,40]*1000/anutz3 !WWprofil in W/m²
-QelAbw = QelAbwvar !Qel*0.8 !QelabwHH !Qel*0.8 !Abwärme von Haushaltsgeräten in W/m²
-qhend = (qhges)/(JAZh*etaverth) !Endenergiebedarf Heizen ohne hilfstrom qhend = (qhges+qbefgesraum)/(JAZh*etaverth)
-qwwend = Qwwnutz/etavertww/JAZww !Endenergiebedarf Warmwasser
-qendwaerme = 0*qhend+0*qwwend  !Achtung, hier nur, wenn nicht mit Strom direkt oder WP
-qcend = (qcges+qentfgesraum)/(JAZc*etavertc)  !Endenergie
-qelges = Qel+qhend+qwwend+qcend !Strombedarf inkl hilfsstrom W/m²
-PEBwaerme = -0*PEBkonvwae   !Hier wenn Wärme über Systemgrenze
-PEBel = -qelges*PEBkonvel !Primärenergiebedarf gesamt PE/m²
-PVprod = qpvmm*0.18*0.85 !Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 85%, in W/m²
-Qelnutzereigen = lt(PVprod,qel)*PVprod+(1-lt(PVprod,qel))*qel
-
-Qelnutzernetz = lt(PVprod,qel)*(qel-PVprod) !netzbezug in W/m²
-Qelnutzernetzwind = lt(PVprod,qel)*(qel-PVprod)*WindstromvonAnlagen !netzbezug in W/m²
-Qelnutzerüberschuss = (1-lt(PVprod,qel))*(PVprod-qel)  !Überschuss nach
-qhcstrom = heizperiode1*qhend+(1-heizperiode1)*qcend  !Umrechnung Heiz- oder Kühlleistung in Strom
-Qeleigenqhc = lt(Qelnutzerüberschuss,qhcstrom)*Qelnutzerüberschuss+(1-lt(Qelnutzerüberschuss,qhcstrom))*qhcstrom
-Qelnetzhc = lt(Qelnutzerüberschuss,qhcstrom)*(qhcstrom-Qelnutzerüberschuss) !netzbezug in W/m²
-Qelnetzhcwind = lt(Qelnutzerüberschuss,qhcstrom)*(qhcstrom-Qelnutzerüberschuss)*WindstromvonAnlagen !netzbezug in W/m²
-Qelüberschusshc = (1-lt(Qelnutzerüberschuss,qhcstrom))*(Qelnutzerüberschuss-qhcstrom)
-qstromrest = qwwend/JAZww
-Qeleigenww = gt(SpeicherWW,0)*QelPVeigenm2+(1-gt(SpeicherWW,0))*(lt(Qelüberschusshc,qstromrest)*Qelüberschusshc+(1-lt(Qelüberschusshc,qstromrest))*qstromrest)
-Qelnetzww = gt(SpeicherWW,0)*Qelnetzwwm2+(1-gt(SpeicherWW,0))*(lt(Qelüberschusshc,qstromrest)*(qstromrest-Qelüberschusshc)) !netzbezug in W/m²
-Qelnetzwwwind = gt(SpeicherWW,0)*Qeleigenwwwindm2+(1-gt(SpeicherWW,0))*(lt(Qelüberschusshc,qstromrest)*(qstromrest-Qelüberschusshc)*WindstromvonAnlagen) !netzbezug in W/m²
-Qelüberschussww = gt(SpeicherWW,0)*Qelueberschusswwm2+(1-gt(SpeicherWW,0))*((1-lt(Qelüberschusshc,qstromrest))*(Qelüberschusshc-qstromrest))
-Qeleigenges = Qeleigenww+Qeleigenqhc+Qelnutzereigen
-Qelnetzges = Qelnetzww+Qelnetzhc+Qelnutzernetz
-Qelnetzgeswind = Qelnetzwwwind+Qelnetzhcwind+Qelnutzernetzwind
-Qelüberschussges = Qelüberschussww
-
-PEBelnetz = -Qelnetzges*PEBkonvel !primärenrgienetzstrom Netzstrom in system
-PEBelüberschuss = Qelüberschussges*PEBkonvel ! Überschuss primärenergetisch W/m²
-PEB = PEBwaerme+PEBelnetz+PEBelüberschuss !Gesamter primärenergiesaldo in W/m²
-PEBakkum = [17,4]/1000*step
-
-*$UNIT_NAME BTA
-*$LAYER Main
-*$POSITION -3 -6
-
-UNIT 170 TYPE 93	 Type93 !ms250310
+UNIT 170 TYPE 93	 Type93 
 *$UNIT_NAME Type93
 *$MODEL .\Utility\Input Value Recall\Type93.tmf
 *$POSITION 45 34
@@ -1169,511 +1567,20 @@ PARAMETERS 2
 10		! 1 Number of inputs to be stored
 2		! 2 Number of timesteps to be stored (including the curent step)
 INPUTS 10
-tofl1u tofl2u tofl3u tofl1o tofl2o tofl3o Q_Speicher_t tWW_Speicher_t tofl3u tofl4o		! [unconnected] Input value
+tofl1u
+tofl2u 
+tofl3u 
+tofl1o 
+tofl2o 
+tofl3o 
+Q_Speicher_t 
+tWW_Speicher_t 
+tofl3u
+tofl4o
 *** INITIAL INPUT VALUES
 21 21 21 21 21 21 0 50 21 21
-*------------------------------------------------------------------------------
-* EQUATIONS "speicher"
-
-equations 82
-tspeichmin = 60
-tspeichmaxmin = 70
-tspeichermaxmax = 90
-Qww_Speichermax = Qww_Speichermaxvar  !120*10  ! kg
-Qww_Speicherverlustspez = 1.3 !W/K 120 l Bioler Energy Systems
-QWW_ges = Qwwnutz/etavertww*anutzges  !W  Warmwasserbedarf thermisch nach Speicher
-tWW_Speicher_tminus1 = gt(time,0)*[170,16]+(1-gt(time,0))*tspeichmin  !Temperatur des Speichers im vorigen Zeitschritt
-Qww_Speicherverlust = Qww_Speicherverlustspez*(tWW_Speicher_tminus1-20)  !Wh
-tww_Speichertminus1incV = tWW_Speicher_tminus1-Qww_Speicherverlust*step/(Qww_Speichermax*4.18/3.6) !°C
-tWW_Speicher_t1 = tWW_Speichertminus1incV-QWW_ges*step/(Qww_Speichermax*4.18/3.6) !Wh
-deltatWWmax0 = tspeichermaxmax-tWW_Speicher_t1   !°C
-qwwwpmax = qwwwpmaxvar  !W/m² thermisch
-qwwwpmaxges = qwwwpmax*anutzges !W
-qwwmaxladenstep = qwwwpmaxges*step  !Wh
-deltatWWmaxladen = qwwmaxladenstep/(Qww_Speichermax*4.18/3.6)   !Wh maximal ladbar
-deltatWWmax1 = lt(deltatWWmaxladen,deltatWWmax0)*deltatWWmaxladen+(1-lt(deltatWWmaxladen,deltatWWmax0))*deltatWWmax0  !was ist maximal ladbar
-deltatWWmin0 = lt(tWW_Speicher_t1,tspeichmin)*(tspeichmin-tWW_Speicher_t1) !Temperaturdifferenz, die mindestens geladen werden muss
-deltatWWmin1 = gt(deltatWWmin0,deltatWWmaxladen)*deltatWWmaxladen+(1-gt(deltatWWmin0,deltatWWmaxladen))*deltatWWmin0
-
-queberwwPV = Qelüberschusshc*JAZww*anutzges  !Leistung W
-deltatueberwwPVmax = queberwwPV*step/(Qww_Speichermax*4.18/3.6)  !maximale Temperaturerhöhung durch PV ohne Leistungs und Speicherbeschränkung
-deltatueberwwPV = gt(deltatueberwwPVmax,deltatWWmax1)*deltatWWmax1+(1-gt(deltatueberwwPVmax,deltatWWmax1))*deltatueberwwPVmax  !max. Temperaturerhöhung durch PV tatsächlich
-deltatwwnachPVmax1 = deltatWWmax1-deltatueberwwPV  !bleibt noch zu decken über Rest
-QPVeigen = deltatueberwwPV/step*(Qww_Speichermax*4.18/3.6)  !Leistung PV in Speicher
-QelPVeigen = QPVeigen/JAZww
-
-Qelueberschusswwges = Qelüberschusshc*anutzges-QelPVeigen
-queberwwwind = qwwwpmaxges*WindstromvonAnlagen
-deltatueberwwwindmax = queberwwwind*step/(Qww_Speichermax*4.18/3.6)  !maximale Temperaturerhöhung durch Wind
-deltatueberwwwind = gt(deltatueberwwwindmax,deltatwwnachPVmax1)*deltatwwnachPVmax1+(1-gt(deltatueberwwwindmax,deltatwwnachPVmax1))*deltatueberwwwindmax  !max. Temperaturerhöhung durch Wind tatsächlich
-Qeigenwwwindges = deltatueberwwwind/step*(Qww_Speichermax*4.18/3.6)  !Leistung Wind in Speicher
-Qeleigenwwwindges = Qeigenwwwindges/JAZww
-deltatwwueberPVundWind = deltatueberwwwind+deltatueberwwPV !wurde gedeckt
-
-deltatwwnetz = lt(deltatwwueberPVundWind,deltatWWmin1)*(deltatWWmin1-deltatwwueberPVundWind)
-Qnetzwwges = deltatwwnetz/step*(Qww_Speichermax*4.18/3.6)  !thermische Leistung Netz in Speicher
-Qelnetzwwges = Qnetzwwges/JAZww
-tWW_Speicher_t = tWW_Speicher_t1+deltatwwueberPVundWind+deltatwwnetz
-Qeleigenwwges = Qeleigenwwwindges+QelPVeigen
-QWW_gesm2 = QWW_ges/anutzges
-Qww_Speicherverlustm2 = Qww_Speicherverlust/anutzges
-
-QPVeigenm2 = QelPVeigen/anutzges*JAZww
-QelPVeigenm2 = QelPVeigen/anutzges
-Qeigenwwwindm2 = Qeigenwwwindges/anutzges
-Qeleigenwwwindm2 = Qeleigenwwwindges/anutzges
-Qnetzwwm2 = Qnetzwwges/anutzges
-Qelnetzwwm2 = Qelnetzwwges/anutzges
-Qelueberschusswwm2 = Qelueberschusswwges/anutzges
-Qww_BedarfVerlustem2 = QWW_gesm2+Qww_Speicherverlustm2
-Qww_Deckungm2 = QPVeigenm2+Qeigenwwwindm2+Qnetzwwm2
-Qelww_Deckungm2 = QelPVeigenm2+Qeleigenwwwindm2+Qelnetzwwm2
-
-*48
-
-Strom_ges = Qel*anutzges
-Strom_PV = PVprod*anutzges
-Q_Speichermax = 5000 !Wh
-Q_Speicher_tminus1 = [170,14]   !Speicherladung 1 Zeitschritt früher, type 93
-Q_Speicher_t = lt(Strom_PV,Strom_ges)*(ge(Qmaxentladenstep,QbedarfminusPVStep)*(QSpeichertminus1incV-QbedarfminusPVStep/Ethaentladen)+(1-ge(Qmaxentladenstep,QbedarfminusPVStep))*0)+(1-lt(Strom_PV,Strom_ges))*(lt(QPVminusBedarfStep,Qmaxladenstep)*(QSpeichertminus1incV+QPVminusBedarfStep*Ethaladen)+(1-lt(QPVminusBedarfStep,Qmaxladenstep))*(Q_Speichermax))   !Wh, Ladezustand, bezogen auf maximale Entladbarkeit (d.h. 0-Niveau müssen nicht 0 Wh sein)
-Q_AusNetz = lt(Strom_PV,Strom_ges)*(1-ge(Qmaxentladenstep,QbedarfminusPVStep))*((QbedarfminusPVStep-Qmaxentladenstep))/step  !Leistung, wird aus Netz bezogen
-Q_UeberschussinsNetz = (1-lt(Strom_PV,Strom_ges))*(1-lt(QPVminusBedarfStep,deltaQmax1))*(QPVminusBedarf-Qmaxladen) !W Leistung, geht ins Netz
-deltaQmax1 = Q_Speichermax-QSpeichertminus1incV   !Wh Energie
-QSpeichertminus1incV = (1-EthaVerlusStep)*Q_Speicher_tminus1  !Wh Energie
-EthaVerlust = 0.1 !%/100 Verlust pro Monat
-EthaVerlusStep = EthaVerlust/720*step !%/100 Verlust pro Zeitschritt
-QPVminusBedarf = (1-gt(Strom_ges,Strom_PV))*(Strom_PV-Strom_ges) !W Leistung
-QBedarfminusPV = gt(Strom_ges,Strom_PV)*(Strom_ges-Strom_PV)  !W Leistung 
-Ethaladen = 0.95  !%/100, bezogen auf die Energie, die in den Speicher eingespeist werden soll
-Ethaentladen = 0.95  !%/100, bezogen auf die Energie, die dem Speicher entnommen wird  
-QPVminusBedarfStep = QPVminusBedarf*step  !Energie Wh  
-QbedarfminusPVStep = QBedarfminusPV*step !Energie Wh
-Qmaxladenstep = deltaQmax1/Ethaladen   ! Wh max mögliche Energie nach Entladen aus Speicher
-Qmaxladen = Qmaxladenstep/Step  !W Leistung
-Qmaxentladenstep = QSpeichertminus1incV*Ethaentladen  !Wh Maximal entladbare Energie, bezogen auf bereitgestellte Energie
-Qmaxentladen = Qmaxentladenstep/step
-Qdeckeneigendir = lt(Strom_PV,Strom_ges)*Strom_PV   +(1-lt(Strom_PV,Strom_ges))*Strom_ges !W, Direktdeckung ohne Speicher
-QUeberschussdir = lt(Strom_ges,Strom_PV)*(Strom_PV-Strom_ges)  !W Überschuss nach Direktdeckung vor Batterieladen
-QdeckenEigenspeicher = lt(Strom_PV,Strom_ges)*(ge(Qmaxentladenstep,QbedarfminusPVStep)*(QbedarfminusPV)+(1-ge(Qmaxentladenstep,QbedarfminusPVStep))*Qmaxentladen)   !W
-QVerlustSpeicher = (Q_Speicher_tminus1-QSpeichertminus1incV)/step  !W
-QVerlustLaden = (1-lt(Strom_PV,Strom_ges))*(lt(QPVminusBedarfStep,Qmaxladenstep)*(QPVminusBedarf)*(1-Ethaladen)+(1-lt(QPVminusBedarfStep,Qmaxladenstep))*(Qmaxladen) *(1-Ethaladen))  !W  
-QVerlustEntladen = lt(Strom_PV,Strom_ges)*(ge(Qmaxentladenstep,QbedarfminusPVStep)*(QbedarfminusPV/Ethaentladen)*(1-Ethaentladen)+(1-ge(Qmaxentladenstep,QbedarfminusPVStep))*Qmaxentladen/Ethaentladen*(1-Ethaentladen))  !W
-Qdeckeneigendirm2 = Qdeckeneigendir/anutzges  !W/m2
-QUeberschussdirm2 = QUeberschussdir/anutzges  !W/m2
-QdeckenEigenspeicherm2 = QdeckenEigenspeicher/anutzges   !W/m2
-Q_UeberschussinsNetzm2 = Q_UeberschussinsNetz/anutzges
-Q_Speicher_tm2 = Q_Speicher_t/anutzges  !Wh/m2
-Qverlustges = QVerlustSpeicher+QVerlustLaden+QVerlustEntladen
-Qverlustgesm2 = Qverlustges/anutzges
-*34
-
-
-* EQUATIONS "comf"
-* 
-EQUATIONS 45
-top1 = [56,34]
-top2 = [56,35]
-top3 = [56,36]
-top4 = [56,174] !ms250310
-
-TZone1 = [56,1]
-TZone2 = [56,2]
-TZone3 = [56,3]
-TZone4 = [56,163] !ms250310
-
-relh1 = [56,4]
-relh2 = [56,5]
-relh3 = [56,6]
-relh4 = [56,164] !ms250310
-
-absh1 = [56,7]
-absh2 = [56,8]
-absh3 = [56,9]
-absh4 = [56,165] !ms250310
-
-clo1 = 1.2*lt(top1,20)+1*(1-lt(top1,20))*((gt(top1,25))*0.45+(-0.15*top1+4.2)*(1-gt(top1,25)))
-clo2 = 1.2*lt(top2,20)+1*(1-lt(top2,20))*((gt(top2,25))*0.45+(-0.15*top2+4.2)*(1-gt(top2,25)))
-clo3 = 1.2*lt(top3,20)+1*(1-lt(top3,20))*((gt(top3,25))*0.45+(-0.15*top3+4.2)*(1-gt(top3,25)))
-clo4 = 1.2*lt(top4,20)+1*(1-lt(top4,20))*((gt(top4,25))*0.45+(-0.15*top4+4.2)*(1-gt(top4,25))) !ms250310
-
-met1 = 1.2
-met2 = 1.2
-met3 = 1.2
-met4 = 1.2 !ms250310
-
-velstand = 0.05
-vel1 = velstand
-vel2 = velstand
-vel3 = velstand
-vel4 = velstand !ms250310
-
-pmv1 = [56,37]
-pmv2 = [56,38]
-pmv3 = [56,39]
-pmv4 = [56,175] !ms250310
-
-ppd1 = [56,40]
-ppd2 = [56,41]
-ppd3 = [56,42]
-ppd4 = [56,176] !ms250310
-
-tstar1 = [56,155]
-tstar2 = [56,156]
-tstar3 = [56,157]
-tstar4 = [56,177] !ms250310
-
-tsurf1 = [56,158]
-tsurf2 = [56,159]
-tsurf3 = [56,160]
-tsurf4 = [56,178] !ms250310
-
-*$UNIT_NAME comf
-*$LAYER Main
-*$POSITION 196 301
 
 *------------------------------------------------------------------------------
-
-* EQUATIONS "Interne Gewinne"
-* 
-EQUATIONS 5
-default = 7200/8760/8*3600*0 !2Haushalte*3600kWh/8760Std/a/8Zonen*0  !Hier allgemeines angeben, Rest ausschalten
-Gain01 = default
-Gain02 = default
-Gain03 = default
-Gain04 = default !ms250310
-*$UNIT_NAME Interne Gewinne Scholz
-*$LAYER Main
-*$POSITION 349 511
-*$UNIT_NAME IW
-*$LAYER Main
-*$POSITION 703 701
-
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "Energie"
-* 
-EQUATIONS 76
-
-Qh1 = [56,10]/3.6/Anutz1*(1-BTAmodellein)-BTAmodellein*(Qalfl1u)*heizperiode1		! [W/m²] Fussbodenheizung Qalfl1o
-Qh2 = [56,11]/3.6/Anutz2*(1-BTAmodellein)-BTAmodellein*(Qalfl2u)*heizperiode1       !+Qalfl2o
-Qh3 = [56,12]/3.6/Anutz3*(1-BTAmodellein)-BTAmodellein*(Qalfl3u)*heizperiode1       !+Qalfl3o
-Qh4 = [56,166]/3.6/Anutz4*(1-BTAmodellein)-BTAmodellein*(Qalfl4u)*heizperiode1       !+Qalfl4o !ms250310
-
-Qc1 = [56,13]/3.6/Anutz1*(1-BTAmodellein)+BTAmodellein*Qalfl1u*(1-heizperiode1)		! [W/m²]
-Qc2 = [56,14]/3.6/Anutz2*(1-BTAmodellein)+BTAmodellein*Qalfl2u*(1-heizperiode1)
-Qc3 = [56,15]/3.6/Anutz3*(1-BTAmodellein)+BTAmodellein*Qalfl3u*(1-heizperiode1)
-Qc4 = [56,167]/3.6/Anutz4*(1-BTAmodellein)+BTAmodellein*Qalfl4u*(1-heizperiode1) !ms250310
-
-Qbef1 = [56,31]/3.6/Anutz1		! [W/m²]
-Qbef2 = [56,32]/3.6/Anutz2
-Qbef3 = [56,33]/3.6/Anutz3
-Qbef4 = [56,173]/3.6/Anutz4 !ms250310
-
-Qentf1 = [56,28]/3.6/Anutz1		! [W/m²]
-Qentf2 = [56,29]/3.6/Anutz2
-Qentf3 = [56,30]/3.6/Anutz3
-Qentf4 = [56,172]/3.6/Anutz4 !ms250310
-
-Qvv1 = [56,19]/3.6/Anutz1		! [W/m²]
-Qvv2 = [56,20]/3.6/Anutz2
-Qvv3 = [56,21]/3.6/Anutz3
-Qvv4 = [56,169]/3.6/Anutz4 !ms250310
-
-qvolgesh = (1-somm)*gt(TZU,TZU22w)*(TZU-TZU22w)*1.204*1.012/3.6*ventvolges/anutzges
-qvolgesc = (somm)*lt(TZU,TZU22s)*(TZU22s-TZU)*1.204*1.012/3.6*ventvolges/anutzges
-deltaabszu = somm*gt(abswrg,abshumgrenzo)*(abswrg-abshumgrenzo)+(1-somm)*lt(abswrg,abshumgrenzu)*(abshumgrenzu-abswrg)	! g/kg falls Entfeuchtung im Sommer verwendet berechnet die Differenz zur Grenze, bzw. falls Befeuchtung im Winter
-absENTFges = somm*ventvolges*1.204*deltaabszu	! kg gesamt der Enteuchtungs Differenz
-Qventfges = ne(abszu,absa)*694*(absENTFges)/anutzges		! Verdampfungsenthalpie = 2500 kJ/kg H20 / 3,6 = 694 Wh/kg
-absBEFges = (1-somm)*ventvolges*1.204*deltaabszu	! kg gesamt der Befeuchtungs Differenz
-Qvbefges = ne(abszu,absa)*694*(absBEFges)/anutzges			! Verdampfungsenthalpie = 2500 kJ/kg H20 / 3,6 = 694 Wh/kg
-qcges = (qc1*anutz1+qc2*anutz2+qc3*anutz3+qc4*anutz4)/(anutzges) !ms250310
-qentfgesraum = (qentf1*anutz1+qentf2*anutz2+qentf3*anutz3+qentf4*anutz4)/(anutzges) !ms250310
-qkuehlsens = qvolgesc+qcges
-qkuehlges = qvolgesc+Qventfges+qcges+qentfgesraum
-qhges = (qh1*anutz1+qh2*anutz2+qh3*anutz3+qh4*anutz4)/(anutzges) !ms250310
-qbefgesraum = (qbef1*anutz1+qbef2*anutz2+qbef3*anutz3+qbef4*anutz4)/(anutzges) !ms250310
-qheizsens = qvolgesh+qhges
-qheizges = qvolgesh+Qvbefges+qhges+qbefgesraum
-QDAMPF = -2450 !kJ/kg Wasser, im b17 nur halbe Leistung, da Rest von Personen ohne Verdunstungskühlung
-
-tofl1u = [56,62]
-tofl1o = [56,63]
-tofl2u = [56,74]
-tofl2o = [56,75]
-tofl3u = [56,86]
-tofl3o = [56,87]
-tofl4u = [56,179] !ms250310
-tofl4o = [56,180] !ms250310
-
-Qalfl1u = [56,64]/3.6/anutz1 
-Qalfl1o = [56,65]/3.6/anutz1
-Qalfl2u = [56,76]/3.6/anutz2
-Qalfl2o = [56,77]/3.6/anutz2
-Qalfl3u = [56,88]/3.6/anutz3
-Qalfl3o = [56,89]/3.6/anutz3
-Qalfl4u = [56,181]/3.6/anutz4 !ms250310
-Qalfl4o = [56,182]/3.6/anutz4 !ms250310
-
-Mflal1u = [56,66]/anutz1
-Mflal1o = [56,67]/anutz1
-Mflal2u = [56,78]/anutz2
-Mflal2o = [56,79]/anutz2
-Mflal3u = [56,90]/anutz3
-Mflal3o = [56,91]/anutz3
-Mflal4u = [56,183]/anutz4 !ms250310
-Mflal4o = [56,184]/anutz4 !ms250310
-
-tsi1u = [56,68]
-tsi1o = [56,69]
-tsi2u = [56,80]
-tsi2o = [56,81]
-tsi3u = [56,92]
-tsi3o = [56,93]
-tsi4u = [56,185] !ms250310
-tsi4o = [56,186] !ms250310
-
-Qcomi1u = ([56,70]-[56,72])/3.6/anutz1
-Qcomi1o = ([56,71]-[56,73])/3.6/anutz1  
-Qcomi2u = ([56,82]-[56,84])/3.6/anutz2
-Qcomi2o = ([56,83]-[56,85])/3.6/anutz2
-Qcomi3u = ([56,94]-[56,96])/3.6/anutz3
-Qcomi3o = ([56,95]-[56,97])/3.6/anutz3
-Qcomi4u = ([56,187]-[56,189])/3.6/anutz4 !ms250310
-Qcomi4o = ([56,188]-[56,190])/3.6/anutz4 !ms250310
-
-                                                     
-*$UNIT_NAME Energie
-*$LAYER Main
-*$POSITION 599 1301
-*-------------------------------------------------------------------------------------
-
-
-*Berechnung Strahlungsasymmetrie nach Glück (Kopf oben/vertikal zu Fenster) und nach EN ISO 7730 Halbraum oben unten auf 0,6m
-*Wohnung Dach angepasst an bui wdach_V9 - ok 20180531
-
-equations 56
-       
-tsibod1 = [56,98]
-tsiwwest1 = [56,99]
-tsiwnord1 = [56,100]  
-tsiwost1 = [56,101]
-tsiwsued1 = [56,102]
-tsidec1 = [56,103]
-tsi1iwsp = [56,104]
-tsifensued1 = [56,105]
-tsidec2 = [56,117]
-tsiwwest2 = [56,118]
-tsiwost2 = [56,119]
-tsiwnord2 = [56,120]
-tsibod2 = [56,121]
-tsiwsued2 = [56,122]
-tsifenwest2 = tzone2
-tsi2iwsp = [56,123]
-tsiwwest3 = [56,136]
-tsiwost3 = [56,137]
-tsiwnord3 = [56,138]
-tsibod3 = [56,139] 
-tsidec3 = [56,140]
-tsiwsued3 = [56,141]
-tsi3iwsp = [56,142]
-tsifennord3 = [56,143]
-tsiwwest4 = [56,136] !ms250310 muss angepasst werden, aktuell von Zone3
-tsiwost4 = [56,137] !ms250310 muss angepasst werden, aktuell von Zone3
-tsiwnord4 = [56,138] !ms250310 muss angepasst werden, aktuell von Zone3
-tsibod4 = [56,139]  !ms250310 muss angepasst werden, aktuell von Zone3
-tsidec4 = [56,140] !ms250310 muss angepasst werden, aktuell von Zone3
-tsiwsued4 = [56,141] !ms250310 muss angepasst werden, aktuell von Zone3
-tsi4iwsp = [56,142] !ms250310 muss angepasst werden, aktuell von Zone3
-tsifennord4 = [56,143] !ms250310 muss angepasst werden, aktuell von Zone3
-
-*Strahlungsasymmetrie*
-tsiglueckoben1 = 0*tsibod1+0.73*tsidec1+0.018*tsiwnord1+0.144*tsifensued1+0.026*tsiwsued1+0.041*tsiwwest1+0.041*tsiwost1
-tsiglueckvertikal1 = 0.096*tsibod1+0.108*tsidec1+0*tsiwnord1+0.501*tsifensued1+0.245*tsiwsued1+0.025*tsiwwest1+0.025*tsiwost1
-tsi7730oben1 = 0*tsibod1+0.555*tsidec1+0.038*tsiwnord1+0.196*tsifensued1+0.051*tsiwsued1+0.08*tsiwwest1+0.08*tsiwost1
-tsi7730unten1 = 0.902*tsibod1+0*tsidec1+0.005*tsiwnord1+0.0*tsifensued1+0.069*tsiwsued1+0.012*tsiwwest1+0.012*tsiwost1
-deltatsiglueck1 = tsiglueckoben1-tsiglueckvertikal1
-deltatsi77301 = tsi7730oben1-tsi7730unten1
-
-tsiglueckoben2 = 0*tsibod2+0.73*tsidec2+0.018*tsiwnord2+0.144*tsifenwest2+0.026*tsiwsued2+0.041*tsiwwest2+0.041*tsiwost2
-tsiglueckvertikal2 = 0.096*tsibod2+0.108*tsidec2+0*tsiwnord2+0.501*tsifenwest2+0.245*tsiwsued2+0.025*tsiwwest2+0.025*tsiwost2
-tsi7730oben2 = 0*tsibod2+0.555*tsidec2+0.038*tsiwnord2+0.196*tsifenwest2+0.051*tsiwsued2+0.08*tsiwwest2+0.08*tsiwost2
-tsi7730unten2 = 0.902*tsibod2+0*tsidec2+0.005*tsiwnord2+0.0*tsifenwest2+0.069*tsiwsued2+0.012*tsiwwest2+0.012*tsiwost2
-deltatsiglueck2 = tsiglueckoben2-tsiglueckvertikal2
-deltatsi77302 = tsi7730oben2-tsi7730unten2
-
-tsiglueckoben3 = 0*tsibod3+0.73*tsidec3+0.018*tsiwsued3+0.144*tsifennord3+0.026*tsiwnord3+0.041*tsiwwest3+0.041*tsiwost3
-tsiglueckvertikal3 = 0.096*tsibod3+0.108*tsidec3+0*tsiwsued3+0.501*tsifennord3+0.245*tsiwnord3+0.025*tsiwwest3+0.025*tsiwost3
-tsi7730oben3 = 0*tsibod3+0.555*tsidec3+0.038*tsiwsued3+0.196*tsifennord3+0.051*tsiwnord3+0.08*tsiwwest3+0.08*tsiwost3
-tsi7730unten3 = 0.902*tsibod3+0*tsidec3+0.005*tsiwsued3+0.0*tsifennord3+0.069*tsiwnord3+0.012*tsiwwest3+0.012*tsiwost3
-deltatsiglueck3 = tsiglueckoben3-tsiglueckvertikal3
-deltatsi77303 = tsi7730oben3-tsi7730unten3
-
-tsiglueckoben4 = 0*tsibod4+0.73*tsidec4+0.018*tsiwsued4+0.144*tsifennord4+0.026*tsiwnord4+0.041*tsiwwest4+0.041*tsiwost4 !ms250310
-tsiglueckvertikal4 = 0.096*tsibod4+0.108*tsidec4+0*tsiwsued4+0.501*tsifennord4+0.245*tsiwnord4+0.025*tsiwwest4+0.025*tsiwost4 !ms250310
-tsi7730oben4 = 0*tsibod4+0.555*tsidec4+0.038*tsiwsued4+0.196*tsifennord4+0.051*tsiwnord4+0.08*tsiwwest4+0.08*tsiwost4 !ms250310
-tsi7730unten4 = 0.902*tsibod4+0*tsidec4+0.005*tsiwsued4+0.0*tsifennord4+0.069*tsiwnord4+0.012*tsiwwest4+0.012*tsiwost4 !ms250310
-deltatsiglueck4 = tsiglueckoben4-tsiglueckvertikal4 !ms250310
-deltatsi77304 = tsi7730oben4-tsi7730unten4 !ms250310
-
-*------------------------------------------------------------------------------
-equations 74
-
-PEBkonvel = 1.91
-PEBkonvwae = 1.23
-*Profil 1
-*Qel1 = ([3,2]+[3,3]+[3,4]+[3,5]+[3,6]+(licht*anutz)/1000+[3,8]+[3,9]+[3,10])*1000/anutz !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-*Qwwnutz1 = [3,12]*1000/anutzHH1 !WWprofil in W/m²
-*Profil 2
-*Qel2 = ([3,16]+[3,17]+[3,18]+[3,19]+[3,20]+(licht*anutz)/1000+[3,22]+[3,23]+[3,24])*1000/anutz !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-*Qwwnutz2 = [3,26]*1000/anutz !WWprofil in W/m²
-*Profil 3
-*Qel3 = ([3,30]+[3,31]+[3,32]+[3,33]+[3,34]+(licht*anutz)/1000+[3,36]+[3,37]+[3,38])*1000/anutz !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-*Qwwnutz3 = [3,40]*1000/anutz !WWprofil in W/m²
-*Profil 4
-*Qel4 = ([3,44]+[3,45]+[3,46]+[3,47]+[3,48]+(licht*anutz)/1000+[3,50]+[3,51]+[3,52])*1000/anutz !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-*Qwwnutz4 = [3,54]*1000/anutz !WWprofil in W/m²
-*Profil 5
-*Qel5 = ([3,58]+[3,59]+[3,60]+[3,61]+[3,62]+(licht*anutz)/1000+[3,64]+[3,65]+[3,66])*1000/anutz !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-*Qwwnutz5 = [3,68]*1000/anutz !WWprofil in W/m²
-*Profil 6
-*Qel6 = [3,72]*1000/anutz !Gesamtstromverbrauch Lastprofil H0 bezogen auf 1000000kWh/a in W/m²
-*Qwwnutz5 = [3,73]*1000/anutz !WWprofil bezogen auf 1000000kWh/a in W/m²
-
-Qel1 = QelHH*anutz1/anutzges !comp1/0.8 !([3,2]+[3,3]+[3,4]+[3,5]+[3,6]+(licht1*anutz1)/1000+[3,8]+[3,9]+[3,10])*1000/anutz1 !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-Qwwnutz1 = 12.75/0.8*1000/8760 ![3,12]*1000/anutz1 !WWprofil in W/m²
-QelAbw1 = comp1 !Qel1*0.8 !Abwärme von Haushaltsgeräten in W/m²
-qhend1 = (qh1+qbef1)/0.9/2.5 !Endenergiebedarf Heizen ohne hilfstrom 
-qwwend1 = Qwwnutz1/0.7/2.5 !Endenergiebedarf Warmwasser
-qendwaerme1 = 0*qhend1+0*qwwend1  !Achtung, hier nur, wenn nicht mit Strom direkt oder WP
-qcend1 = (qc1+qentf1)/0.9/2.5  !Endenergie, Achtung hier ohne Entfeuchtung, wäre noch zu ergänzen
-qelges1 = Qel1+qhend1*0.05+qwwend1*0.05+qcend1*0.05+qhend1+qwwend1+qcend1 !Strombedarf inkl hilfsstrom W/m²
-PEBwaerme1 = -0*PEBkonvwae   !Hier wenn Wärme über Systemgrenze
-PEBel1 = -qelges1*PEBkonvel !Primärenergiebedarf gesamt PE/m²
-PVprod1 = qpvmm*0.18*0.85 !Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 90%, in W/m²
-Qeleigen1 = lt(PVprod1,qelges1)*PVprod1+(1-lt(PVprod1,qelges1))*qelges1
-Qelnetz1 = lt(PVprod1,qelges1)*(qelges1-PVprod1) !netzbezug in W/m²
-Qelüberschuss1 = (1-lt(PVprod1,qelges1))*(PVprod1-qelges1)
-PEBelnetz1 = -Qelnetz1*PEBkonvel !primärenrgienetzstrom Netzstrom in system
-PEBelüberschuss1 = Qelüberschuss1*PEBkonvel ! Überschuss primärenergetisch W/m²
-PEB1 = PEBwaerme1+PEBelnetz1+PEBelüberschuss1 !Gesamter primärenergiesaldo in W/m²
-PEB1akkum = [17,1]/1000*step
-
-Qel2 = QelHH*anutz2/anutzges !comp2/0.8 !([3,16]+[3,17]+[3,18]+[3,19]+[3,20]+(licht2*anutz2)/1000+[3,22]+[3,23]+[3,24])*1000/anutz2 !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-Qwwnutz2 = 12.75/0.8*1000/8760 ![3,26]*1000/anutz2 !WWprofil in W/m²
-QelAbw2 = comp2 !Abwärme von Haushaltsgeräten in W/m²
-qhend2 = (qh2+qbef2)/0.9/2.5 !Endenergiebedarf Heizen ohne hilfstrom
-qwwend2 = Qwwnutz2/0.7/2.5 !Endenergiebedarf Warmwasser
-qendwaerme2 = 0*qhend2+0*qwwend2  !Achtung, hier nur, wenn nicht mit Strom direkt oder WP
-qcend2 = (qc2+qentf2)/0.9/2.5  !Endenergie
-qelges2 = Qel2+qhend2*0.05+qwwend2*0.05+qcend2*0.05+qhend2+qwwend2+qcend2 !Strombedarf inkl hilfsstrom W/m²
-PEBwaerme2 = -0*PEBkonvwae   !Hier wenn Wärme über Systemgrenze
-PEBel2 = -qelges2*PEBkonvel !Primärenergiebedarf gesamt PE/m²
-PVprod2 = qpvmm*0.18*0.85 !Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 90%, in W/m²
-Qeleigen2 = lt(PVprod2,qelges2)*PVprod2+(1-lt(PVprod2,qelges2))*qelges2
-Qelnetz2 = lt(PVprod2,qelges2)*(qelges2-PVprod2) !netzbezug in W/m²
-Qelüberschuss2 = (1-lt(PVprod2,qelges2))*(PVprod2-qelges2)
-PEBelnetz2 = -Qelnetz2*PEBkonvel !primärenrgienetzstrom Netzstrom in system
-PEBelüberschuss2 = Qelüberschuss2*PEBkonvel ! Überschuss primärenergetisch W/m²
-PEB2 = PEBwaerme2+PEBelnetz2+PEBelüberschuss2 !Gesamter primärenergiesaldo in W/m²
-PEB2akkum = [17,2]/1000*step
-
-Qel3 = QelHH*anutz3/anutzges !comp3/0.8 !([3,44]+[3,45]+[3,46]+[3,47]+[3,48]+(licht3*anutz3)/1000+[3,50]+[3,51]+[3,52])*1000/anutz3 !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m²
-Qwwnutz3 = 12.75/0.8*1000/8760 ![3,40]*1000/anutz3 !WWprofil in W/m²
-QelAbw3 = comp3  !Qel3*0.8 !Abwärme von Haushaltsgeräten in W/m²
-qhend3 = (qh3+qbef3)/0.9/2.5 !Endenergiebedarf Heizen ohne hilfstrom
-qwwend3 = Qwwnutz3/0.7/2.5 !Endenergiebedarf Warmwasser
-qendwaerme3 = 0*qhend3+0*qwwend3  !Achtung, hier nur, wenn nicht mit Strom direkt oder WP
-qcend3 = (qc3+qentf3)/0.9/2.5  !Endenergie
-qelges3 = (Qel3+qentf3)+qhend3*0.05+qwwend3*0.05+qcend3*0.05+qhend3+qwwend3+qcend3 !Strombedarf inkl hilfsstrom W/m²
-PEBwaerme3 = -0*PEBkonvwae   !Hier wenn Wärme über Systemgrenze
-PEBel3 = -qelges3*PEBkonvel !Primärenergiebedarf gesamt PE/m²
-PVprod3 = qpvmm*0.18*0.85 !Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 90%, in W/m²
-Qeleigen3 = lt(PVprod3,qelges3)*PVprod3+(1-lt(PVprod3,qelges3))*qelges3
-Qelnetz3 = lt(PVprod3,qelges3)*(qelges3-PVprod3) !netzbezug in W/m²
-Qelüberschuss3 = (1-lt(PVprod3,qelges3))*(PVprod3-qelges3)
-PEBelnetz3 = -Qelnetz3*PEBkonvel !primärenrgienetzstrom Netzstrom in system
-PEBelüberschuss3 = Qelüberschuss3*PEBkonvel ! Überschuss primärenergetisch W/m²
-PEB3 = PEBwaerme3+PEBelnetz3+PEBelüberschuss3 !Gesamter primärenergiesaldo in W/m²
-PEB3akkum = [17,3]/1000*step
-
-Qel4 = QelHH*anutz4/anutzges !Geräte pro Haushalt Profil1 mit Beleuchtung ohne Hilfsstrom ohne Heizen/kühlen in W/m² !ms250310
-Qwwnutz4 = 12.75/0.8*1000/8760 !WWprofil in W/m² !ms250310
-QelAbw4 = comp4  !Abwärme von Haushaltsgeräten in W/m² !ms250310
-qhend4 = (qh4+qbef4)/0.9/2.5 !Endenergiebedarf Heizen ohne hilfstrom !ms250310
-qwwend4 = Qwwnutz4/0.7/2.5 !Endenergiebedarf Warmwasser !ms250310
-qendwaerme4 = 0*qhend4+0*qwwend4  !Achtung, hier nur, wenn nicht mit Strom direkt oder WP !ms250310
-qcend4 = (qc4+qentf4)/0.9/2.5  !Endenergie !ms250310
-qelges4 = (Qel4+qentf4)+qhend4*0.05+qwwend4*0.05+qcend4*0.05+qhend4+qwwend4+qcend4 !Strombedarf inkl hilfsstrom W/m² !ms250310
-PEBwaerme4 = -0*PEBkonvwae   !Hier wenn Wärme über Systemgrenze !ms250310
-PEBel4 = -qelges4*PEBkonvel !Primärenergiebedarf gesamt PE/m² !ms250310
-PVprod4 = qpvmm*0.18*0.85 !Solarstromproduktion AC näherungsweise Anteil von Nutzungfläche mal 90%, in W/m² !ms250310
-Qeleigen4 = lt(PVprod4,qelges4)*PVprod4+(1-lt(PVprod4,qelges4))*qelges4 !ms250310
-Qelnetz4 = lt(PVprod4,qelges4)*(qelges4-PVprod4) !netzbezug in W/m² !ms250310
-Qelüberschuss4 = (1-lt(PVprod4,qelges4))*(PVprod4-qelges4) !ms250310
-PEBelnetz4 = -Qelnetz4*PEBkonvel !primärenrgienetzstrom Netzstrom in system !ms250310
-PEBelüberschuss4 = Qelüberschuss4*PEBkonvel ! Überschuss primärenergetisch W/m² !ms250310
-PEB4 = PEBwaerme4+PEBelnetz4+PEBelüberschuss4 !Gesamter primärenergiesaldo in W/m² !ms250310
-PEB4akkum = [17,5]/1000*step !ms250310
-
-
-*$UNIT_NAME Energie
-*$LAYER Main
-*$POSITION 349 511
-*------------------------------------------------------------------------------
-
-
-* EQUATIONS "outvent"
-* 
-EQUATIONS 32
-Qvvc1 = -lt(Qvv1,0)*Qvv1
-Qvvc2 = -lt(Qvv2,0)*Qvv2
-Qvvc3 = -lt(Qvv3,0)*Qvv3
-Qvvc4 = -lt(Qvv4,0)*Qvv4 !ms250310
-
-Qvvh1 = gt(Qvv1,0)*Qvv1
-Qvvh2 = gt(Qvv2,0)*Qvv2
-Qvvh3 = gt(Qvv3,0)*Qvv3
-Qvvh4 = gt(Qvv4,0)*Qvv4 !ms250310
-
-Qvol1 = -(twrg1-tzu1)*1.204*1.012/3.6*VENT1*Vol1/Anutz1
-Qvol2 = -(twrg2-tzu2)*1.204*1.012/3.6*VENT2*Vol2/Anutz2
-Qvol3 = -(twrg3-tzu3)*1.204*1.012/3.6*VENT3*Vol3/Anutz3
-Qvol4 = -(twrg4-tzu4)*1.204*1.012/3.6*VENT4*Vol4/Anutz4 !ms250310
-
-Qvol1a = -(ta-tzu1)*1.204*1.012/3.6*VENT1*Vol1/Anutz1
-Qvol2a = -(ta-tzu2)*1.204*1.012/3.6*VENT2*Vol2/Anutz2
-Qvol3a = -(ta-tzu3)*1.204*1.012/3.6*VENT3*Vol3/Anutz3
-Qvol4a = -(ta-tzu4)*1.204*1.012/3.6*VENT4*Vol4/Anutz4 !ms250310
-
-Qvol1c = -lt(Qvol1,0)*Qvol1
-Qvol1h = (gt(Qvol1,0))*Qvol1
-Qvol2c = -lt(Qvol2,0)*Qvol2
-Qvol2h = (gt(Qvol2,0))*Qvol2
-Qvol3c = -lt(Qvol3,0)*Qvol3
-Qvol3h = (gt(Qvol3,0))*Qvol3
-Qvol4c = -lt(Qvol4,0)*Qvol4 !ms250310
-Qvol4h = (gt(Qvol4,0))*Qvol4 !ms250310
-
-Qvol1ac = -lt(Qvol1a,0)*Qvol1a
-Qvol1ah = (gt(Qvol1a,0))*Qvol1a
-Qvol2ac = -lt(Qvol2a,0)*Qvol2a
-Qvol2ah = (gt(Qvol2a,0))*Qvol2a
-Qvol3ac = -lt(Qvol3a,0)*Qvol3a
-Qvol3ah = (gt(Qvol3a,0))*Qvol3a
-Qvol4ac = -lt(Qvol4a,0)*Qvol4a !ms250310
-Qvol4ah = (gt(Qvol4a,0))*Qvol4a !ms250310
-
-*$UNIT_NAME outvent
-*$LAYER Main
-*$POSITION 706 794
-
-*------------------------------------------------------------------------------
-
-
-* Model "Weather data" (Type 15)
-* 
-
 UNIT 109 TYPE 15	 Weather data
 *$UNIT_NAME Weather data
 *$MODEL .\Weather Data Reading and Processing\Standard Format\TMY2\Type15-2.tmf
@@ -1716,11 +1623,8 @@ AA_E2		! 33 Azimuth of surface-9
 *** External files
 
 *|? Which file contains the TMY-2 weather data? |1000
+
 *------------------------------------------------------------------------------
-
-* Model "WingWall Z1" (Type 34)
-* 
-
 UNIT 341 TYPE 34	 WingWall Z1
 *$UNIT_NAME WingWall Z1
 *$MODEL .\Loads and Structures\Overhang and Wingwall Shading\Type34.tmf
@@ -1754,13 +1658,7 @@ AIs		! Radiation:AI_W_45_90 ->Incidence angle of direct radiation
 *** INITIAL INPUT VALUES
 30 20 0 0 0 0.2 0 
 
-
-
 *------------------------------------------------------------------------------
-
-* Model "WingWall Z3" (Type 34)
-* 
-
 UNIT 343 TYPE 34	 WingWall Z3
 *$UNIT_NAME WingWall Z3
 *$MODEL .\Loads and Structures\Overhang and Wingwall Shading\Type34.tmf
@@ -1793,11 +1691,8 @@ GRD_REFL		! [unconnected] Ground reflectance
 AIs		! Radiation:AI_W_45_90 ->Incidence angle of direct radiation
 *** INITIAL INPUT VALUES
 30 20 0 0 0 0.2 0 
+
 *------------------------------------------------------------------------------
-
-* Model "WingWall Z5" (Type 34)
-* 
-
 UNIT 345 TYPE 34	 WingWall Z5
 *$UNIT_NAME WingWall Z5
 *$MODEL .\Loads and Structures\Overhang and Wingwall Shading\Type34.tmf
@@ -1831,10 +1726,6 @@ AIs		! Radiation:AI_W_45_90 ->Incidence angle of direct radiation
 *** INITIAL INPUT VALUES
 30 20 0 0 0 0.2 0 
 *------------------------------------------------------------------------------
-
-* Model "WingWall Z7" (Type 34)
-* 
-
 UNIT 347 TYPE 34	 WingWall Z7
 *$UNIT_NAME WingWall Z7
 *$MODEL .\Loads and Structures\Overhang and Wingwall Shading\Type34.tmf
@@ -1867,6 +1758,7 @@ GRD_REFL		! [unconnected] Ground reflectance
 AIs		! Radiation:AI_W_45_90 ->Incidence angle of direct radiation
 *** INITIAL INPUT VALUES
 30 20 0 0 0 0.2 0 
+
 *------------------------------------------------------------------------------
 UNIT 17 TYPE 24	 Type24-2
 *$UNIT_NAME PEB_Akkumuliert
@@ -1881,12 +1773,8 @@ INPUTS 5
 PEB1 PEB2 PEB3 PEB PEB4 		! SCHATTLUEFKOMFORT:PEB1akkumuliert ->Input to be integrated
 *** INITIAL INPUT VALUES
 0.0 0 0 0 0
+
 *------------------------------------------------------------------------------
-
-
-* Model "lastprofil" (Type 9)
-* 
-
 UNIT 3 TYPE 9	 lastprofil
 *$UNIT_NAME lastprofil
 *$MODEL .\Utility\Data Readers\Generic Data Files\Skip Lines to Start\Free Format\Type9c.tmf
@@ -2222,12 +2110,11 @@ PARAMETERS 326
 -1		! 122 Free format mode
 
 *-------------------------------
-ASSIGN "lastprofil.txt" 31
+
 *|? Input file name |1000
+
 *------------------------------------------------------------------------------
 UNIT 333   TYPE 9  Data Reader for EX2  PRESIM TYPE  1109
-* Auskommentieren, wenn nicht gebraucht, auch File beachten
-!TRACE START STOP
 PARAMS   206
 *         Data Reader mode
          1
@@ -2288,14 +2175,10 @@ PARAMS   206
     -49    1   0 0
     -50    1   0 0
 
-
-
 *   Data file logical unit #
         60
 *   Formatted reading
         -1
-
-assign "StrahlungBruck.txt" 60
 
 *------------------------------------------------------------------------------
 UNIT 334   TYPE 9  Data Reader for EX2  PRESIM TYPE  1109
@@ -2324,10 +2207,7 @@ PARAMS   30
 *   Formatted reading
         -1
 
-
-* Model "Type33e" (Type 33)
-* 
-
+*------------------------------------------------------------------------------
 UNIT 331 TYPE 33	 Type33e
 *$UNIT_NAME Type33e
 *$MODEL .\Physical Phenomena\Thermodynamic Properties\Psychrometrics\Dry Bulb and Relative Humidity Known\Type33e.tmf
@@ -2343,11 +2223,8 @@ INPUTS 3
 0,0		! [unconnected] Pressure
 *** INITIAL INPUT VALUES
 20 50 1 
+
 *------------------------------------------------------------------------------
-
-* Model "Type33e-2" (Type 33)
-* 
-
 UNIT 332 TYPE 33	 Type33e-2
 *$UNIT_NAME Type33e-2
 *$MODEL .\Physical Phenomena\Thermodynamic Properties\Psychrometrics\Dry Bulb and Relative Humidity Known\Type33e.tmf
@@ -2363,11 +2240,8 @@ relh2		! comf:relh2 ->Percent relative humidity
 0,0		! [unconnected] Pressure
 *** INITIAL INPUT VALUES
 20 50 1 
+
 *------------------------------------------------------------------------------
-
-* Model "Type56" (Type 56)
-* 
-
 UNIT 56 TYPE 56	 Type56
 *$UNIT_NAME Type56
 *$MODEL .\Loads and Structures\Multi-Zone Building\Type56.tmf
@@ -2427,11 +2301,8 @@ tinbtao1 tinbtao2 tinbtao3 INF4 VENT4 TZU4 ABSZU4 HEIZ4 HEIZMAX4 RELMIN4 TKUEHL4
 *** External files
 
 *|? Building description file (*.b17, *.bui) |1000
+
 *------------------------------------------------------------------------------
-
-* Model "Sommer" (Type 14)
-* 
-
 UNIT 10 TYPE 14	 Sommer
 *$UNIT_NAME Sommer
 *$MODEL .\Utility\Forcing Functions\General\Type14h.tmf
@@ -2450,11 +2321,8 @@ PARAMETERS 12
 0		! 10 Value at point -4
 8760		! 11 Time at point-5
 0		! 12 Value at point -5
+
 *------------------------------------------------------------------------------
-
-* Model "Winter" (Type 14)
-* 
-
 UNIT 11 TYPE 14	 Winter
 *$UNIT_NAME Winter
 *$MODEL .\Utility\Forcing Functions\General\Type14h.tmf
@@ -2473,11 +2341,8 @@ PARAMETERS 12
 1		! 10 Value at point -4
 8760		! 11 Time at point-5
 1		! 12 Value at point -5
+
 *------------------------------------------------------------------------------
-
-* Model "Ferien" (Type 14)
-* 
-
 UNIT 111 TYPE 14	 Ferien
 *$UNIT_NAME Ferien
 *$MODEL .\Utility\Forcing Functions\General\Type14h.tmf
@@ -2504,11 +2369,8 @@ PARAMETERS 20
 0		! 18 Value at point -8
 8760		! 19 Time at point-9
 0		! 20 Value at point -9
+
 *------------------------------------------------------------------------------
-
-* Model "Type14e Boden" (Type 14)
-* 
-
 UNIT 19 TYPE 14	 Type14e Boden
 *$UNIT_NAME Type14e Boden
 *$MODEL .\Utility\Forcing Functions\Temperature\Type14e.tmf
@@ -2523,11 +2385,8 @@ PARAMETERS 8
 1		! 6 Temperature at point -2
 8760		! 7 Time at point-3
 0.05		! 8 Temperature at point -3
+
 *------------------------------------------------------------------------------
-
-* Model "Type14e Boden-2" (Type 14)
-* 
-
 UNIT 18 TYPE 14	 Type14e Boden-2
 *$UNIT_NAME Type14e Boden-2
 *$MODEL .\Utility\Forcing Functions\Temperature\Type14e.tmf
@@ -2554,11 +2413,8 @@ PARAMETERS 20
 0		! 18 Temperature at point -8
 1		! 19 Time at point-9
 1		! 20 Temperature at point -9
+
 *------------------------------------------------------------------------------
-
-* Model "Type33c" (Type 33)
-* 
-
 UNIT 150 TYPE 33	 Type33c
 *$UNIT_NAME Type33c
 *$MODEL .\Physical Phenomena\Thermodynamic Properties\Psychrometrics\Dry Bulb and Humidity Ratio Known\Type33c.tmf
@@ -2574,11 +2430,8 @@ abszu		! Ventfeu:abszu ->Absolute humidity ratio
 0,0		! [unconnected] Pressure
 *** INITIAL INPUT VALUES
 0 0.006 1 
+
 *------------------------------------------------------------------------------
-
-* Model "Type33c-3" (Type 33)
-* 
-
 UNIT 151 TYPE 33	 Type33c-3
 *$UNIT_NAME Type33c-3
 *$MODEL .\Physical Phenomena\Thermodynamic Properties\Psychrometrics\Dry Bulb and Humidity Ratio Known\Type33c.tmf
@@ -2594,26 +2447,15 @@ absa		! Klima:absa ->Absolute humidity ratio
 0,0		! [unconnected] Pressure
 *** INITIAL INPUT VALUES
 0 0.006 1 
+
 *------------------------------------------------------------------------------
-
-* Model "inf1" (Type 2)
-* 
-
 UNIT 20 TYPE 2	 inf1
 *$UNIT_NAME inf1
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
 *$POSITION 498 501
 *$LAYER Main # # 
 *$# NOTE: This controller can only be used with Solver 0 (Successive substitution)
-*$# 
-*$# 
-*$# 
-*$# 
-*$# 
-*$# 
-*$# 
-*$# 
-*$# 
+
 PARAMETERS 2
 5		! 1 No. of oscillations
 100.0		! 2 High limit cut-out
@@ -2626,11 +2468,8 @@ querob		! Inf:querob ->Lower input value
 querhyst		! Inf:querhyst ->Lower dead band
 *** INITIAL INPUT VALUES
 -20 25 0 0 0 -2 
+
 *------------------------------------------------------------------------------
-
-* Model "inf2" (Type 2)
-* 
-
 UNIT 21 TYPE 2	 inf2
 *$UNIT_NAME inf2
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2658,11 +2497,8 @@ querob		! Inf:querob ->Lower input value
 querhyst		! Inf:querhyst ->Lower dead band
 *** INITIAL INPUT VALUES
 -20 25 0 0 0 -2 
+
 *------------------------------------------------------------------------------
-
-* Model "inf3" (Type 2)
-* 
-
 UNIT 22 TYPE 2	 inf3
 *$UNIT_NAME inf3
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2690,14 +2526,8 @@ querob		! Inf:querob ->Lower input value
 querhyst		! Inf:querhyst ->Lower dead band
 *** INITIAL INPUT VALUES
 -20 25 0 0 0 -2 
-*------------------------------------------------------------------------------
 
 *------------------------------------------------------------------------------
-*------------------------------------------------------------------------------
-
-* Model "schatt1" (Type 2)
-* 
-
 UNIT 40 TYPE 2	 schatt1
 *$UNIT_NAME schatt1
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2725,11 +2555,8 @@ TZone1		! comf:TZone1 ->Upper input value
 0,0		! [unconnected] Lower dead band
 *** INITIAL INPUT VALUES
 -20 25 0 0 0 -2 
+
 *------------------------------------------------------------------------------
-
-* Model "schatt2" (Type 2)
-* 
-
 UNIT 41 TYPE 2	 schatt2
 *$UNIT_NAME schatt2
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2757,11 +2584,8 @@ TZone2		! comf:TZone2 ->Upper input value
 0,0		! [unconnected] Lower dead band
 *** INITIAL INPUT VALUES
 -20 25 0 0 0 -2 
+
 *------------------------------------------------------------------------------
-
-* Model "schatt3" (Type 2)
-* 
-
 UNIT 42 TYPE 2	 schatt3
 *$UNIT_NAME schatt3
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2789,11 +2613,8 @@ TZone3		! comf:TZone3 ->Upper input value
 0,0		! [unconnected] Lower dead band
 *** INITIAL INPUT VALUES
 -20 25 0 0 0 -2 
+
 *------------------------------------------------------------------------------
-
-* Model "schatt4" (Type 2)
-* 
-
 UNIT 43 TYPE 2	 schatt4
 *$UNIT_NAME schatt4
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2821,11 +2642,8 @@ TZone4		! comf:TZone3 ->Upper input value
 0,0		! [unconnected] Lower dead band
 *** INITIAL INPUT VALUES
 -20 25 0 0 0 -2 
+
 *------------------------------------------------------------------------------
-
-* Model "bta1" (Type 2)
-* 
-
 UNIT 64 TYPE 2	 bta1
 *$UNIT_NAME bta1
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2853,11 +2671,8 @@ thsoll1		! [unconnected] Upper dead band
 thsoll1l		! Equa:tbtahys ->Lower dead band
 *** INITIAL INPUT VALUES
 21 0 0 0 21 21 
+
 *------------------------------------------------------------------------------
-
-* Model "bta2" (Type 2)
-* 
-
 UNIT 65 TYPE 2	 bta2
 *$UNIT_NAME bta2
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2885,11 +2700,8 @@ thsoll2		! [unconnected] Upper dead band
 thsoll2l		! Equa:tbtahys ->Lower dead band
 *** INITIAL INPUT VALUES
 21 0 0 0 21 21 
+
 *------------------------------------------------------------------------------
-
-* Model "bta3" (Type 2)
-* 
-
 UNIT 66 TYPE 2	 bta3
 *$UNIT_NAME bta3
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2917,11 +2729,8 @@ thsoll3		! [unconnected] Upper dead band
 thsoll3l		! Equa:tbtahys ->Lower dead band
 *** INITIAL INPUT VALUES
 21 0 0 0 21 21  
+
 *------------------------------------------------------------------------------
-
-* Model "bta4" (Type 2)
-* 
-
 UNIT 71 TYPE 2	 bta4
 *$UNIT_NAME bta4
 *$MODEL .\Controllers\Differential Controller w_ Hysteresis\generic\Solver 0 (Successive Substitution) Control Strategy\Type2d.tmf
@@ -2949,27 +2758,8 @@ thsoll4		! [unconnected] Upper dead band
 thsoll4l		! Equa:tbtahys ->Lower dead band
 *** INITIAL INPUT VALUES
 21 0 0 0 21 21  
-*------------------------------------------------------------------------------
-
-* EQUATIONS "Equa-24"
-* 
-EQUATIONS 5
-abs1g = absh1*1000
-
-licht1klein = Licht1/Anutz1
-absgzu = abszu*1000
-absgwrg = abswrg*1000
-absg2 = absh2*1000
-*$UNIT_NAME Equa-24
-*$LAYER Main
-*$POSITION 599 794
 
 *------------------------------------------------------------------------------
-
-
-* Model "Allgemein" (Type 65)
-* 
-
 UNIT 94 TYPE 65	 Allgemein
 *$UNIT_NAME Allgemein
 *$MODEL .\Output\Online Plotter\Online Plotter Without File\Type65d.tmf
@@ -3024,11 +2814,8 @@ LABELS  3
 "Temperatures                   [deg C]"
 "Temperatures                   [deg C]"
 "Allgemein"
+
 *------------------------------------------------------------------------------
-
-* Model "Temperature" (Type 65)
-* 
-
 UNIT 994 TYPE 65	 Temperature
 *$UNIT_NAME Temperature
 *$MODEL .\Output\Online Plotter\Online Plotter Without File\Type65d.tmf
@@ -3064,11 +2851,8 @@ LABELS  3
 "Temperatures                   [deg C]"
 "Temperatures                   [deg C]"
 "Temperatures"
+
 *------------------------------------------------------------------------------
-
-* Model "Temperature-2" (Type 65)
-* 
-
 UNIT 995 TYPE 65	 Temperature-2
 *$UNIT_NAME Temperature-2
 *$MODEL .\Output\Online Plotter\Online Plotter Without File\Type65d.tmf
@@ -3099,11 +2883,8 @@ LABELS  3
 "Temperatures                   [deg C]"
 "Leistung                  [kWh/m²a]"
 "BTA1"
+
 *------------------------------------------------------------------------------
-
-* Model "Komfort" (Type 46)
-* 
-
 UNIT 145 TYPE 46	 Komfort
 *$UNIT_NAME Komfort
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -3158,11 +2939,8 @@ ASSIGN "out1.txt" 33
 *|? Output file for integrated user-defined period results? |1000
 ASSIGN "***.month" -1
 *|? Output file for automatic monthly integrated results? |1000
+
 *------------------------------------------------------------------------------
-
-* Model "Komfort-2" (Type 46)
-* 
-
 UNIT 146 TYPE 46	 Komfort-2
 *$UNIT_NAME IW_Regelung
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -3209,11 +2987,8 @@ ASSIGN "out2.txt" 34
 *|? Output file for integrated user-defined period results? |1000
 ASSIGN "***.month" -1
 *|? Output file for automatic monthly integrated results? |1000
+
 *------------------------------------------------------------------------------
-
-* Model "Komfort-3" (Type 46)
-* 
-
 UNIT 147 TYPE 46	 Komfort-3
 *$UNIT_NAME Komfort-3
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -3257,7 +3032,7 @@ PEBel2
 PVprod2
 Qeleigen2 
 Qelnetz2
-Qelüberschuss2 
+Qelueberschuss2 
 PEBelnetz2 
 PEBelüberschuss2 
 PEB2
@@ -3278,8 +3053,6 @@ PEBelnetz3
 PEBelüberschuss3 
 PEB3
 PEB3akkum !18
-
-
 
 
 *** INITIAL INPUT VALUES
@@ -3313,7 +3086,7 @@ PEBel2
 PVprod2
 Qeleigen2 
 Qelnetz2
-Qelüberschuss2 
+Qelueberschuss2 
 PEBelnetz2 
 PEBelüberschuss2 
 PEB2
@@ -3342,11 +3115,8 @@ ASSIGN "out3.txt" 35
 *|? Output file for integrated user-defined period results? |1000
 ASSIGN "***.month" -1
 *|? Output file for automatic monthly integrated results? |1000
+
 *------------------------------------------------------------------------------
-
-* Model "Type25a" (Type 25)
-* 
-
 UNIT 149 TYPE 46	 Energie
 *$UNIT_NAME xxx
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -3367,11 +3137,8 @@ ta
 *** External files
 ASSIGN "out4.txt" 36
 *|? Output File for printed results |1000
+
 *------------------------------------------------------------------------------
-
-* Model "Type46b-3" (Type 46)
-* 
-
 UNIT 155 TYPE 46	 Type46b-3
 *$UNIT_NAME Klima
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -3460,17 +3227,14 @@ Z7_AI_SW_SHD
 
 wluft
 use
-lichtuse 
-wohnwoche
+label 
+label
 tkuehlsollminideal  
 tkuehlsollminidealcomf   
-wseminar 
-wkueche 
+label 
+label 
 wnatluft 
-BTA_Schedule
-
-
-
+label
 
 *** INITIAL INPUT VALUES
 ta 
@@ -3548,14 +3312,14 @@ Z7_AI_SW_SHD
 
 wluft
 use
-lichtuse 
-wohnwoche
+label 
+label
 tkuehlsollminideal  
 tkuehlsollminidealcomf   
-wseminar 
-wkueche 
+label 
+label 
 wnatluft 
-BTA_Schedule
+label
 
 LABELS 0
 
@@ -3564,10 +3328,8 @@ ASSIGN "sonne.txt" 37
 *|? Output file for integrated user-defined period results? |1000
 ASSIGN "***.month" -1
 *|? Output file for automatic monthly integrated results? |1000
-*------------------------------------------------------------------------------
-* Model "BTA" (Type 46)
-* 
 
+*------------------------------------------------------------------------------
 UNIT 156 TYPE 46	 Komfort-3
 *$UNIT_NAME BTA_out
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -3580,9 +3342,8 @@ PARAMETERS 5
 1		! 3 Relative or absolute start time
 1		! 4 Printing & integrating interval
 0		! 5 Number of inputs to avoid integration
-INPUTS 100
+INPUTS 99
 ta tzone1 tzone2 tzone3 top1 top2 top3 
-B2Grid_frei 
 tsystem 
 tinbta1 tinbta2 tinbta3
 ppd1 ppd2 ppd3
@@ -3623,7 +3384,6 @@ tzone1 56,126  relh3 vel3 clo3 met3 0,0
 
 
 ta tzone1 tzone2 tzone3 top1 top2 top3 
-B2Grid_frei 
 tsystem 
 tinbta1 tinbta2 tinbta3
 ppd1 ppd2 ppd3
@@ -3673,7 +3433,6 @@ ASSIGN "***.month" -1
 * Model "Printer-Diverses" (Type 25)
 * 
 *------------------------------------------------------------------------------
-*
 UNIT 157 TYPE 25	 Printer-Diverses
 PARAMETERS 10
 STEP		! 1 Printing interval
@@ -3686,9 +3445,8 @@ STOP		! 3 Stop time
 -1		! 8 Print header
 0		! 9 Delimiter
 1		! 10 Print labels
-INPUTS 68
-ta tzone1 tzone2 tzone3 tzone4 top1 top2 top3 top4
-B2Grid_frei 
+INPUTS 67
+ta tzone1 tzone2 tzone3 tzone4 top1 top2 top3 top4 
 tsystem 
 tinbta1 tinbta2 tinbta3 tinbta4
 tinbtao1 tinbtao2 tinbtao3 tinbtao4
@@ -3712,8 +3470,7 @@ qh1 qh2 qh3 qh4 qc1 qc2 qc3 qc4 qbtamax1 queber1  !27
 *Qelnetzges Qelüberschussges PEBelnetz PEBelüberschuss PEB PEBakkum 
 
 
-ta tzone1 tzone2 tzone3 tzone4 top1 top2 top3 top4 
-B2Grid_frei 
+ta tzone1 tzone2 tzone3 tzone4 top1 top2 top3 top4  
 tsystem 
 tinbta1 tinbta2 tinbta3 tinbta4
 tinbtao1 tinbtao2 tinbtao3 tinbtao4
@@ -3731,13 +3488,11 @@ qhend qwwend qendwaerme qcend qelges PVprod queber
 qh1 qh2 qh3 qh4 qc1 qc2 qc3 qc4 qbtamax1 queber1  !31
 
 
-
-
 *** EINHEITEN 
 *** External files
 ASSIGN "out6.txt" 39
 
-
+*------------------------------------------------------------------------------
 UNIT 158 TYPE 46	 Komfort-3
 *$UNIT_NAME BTA_out
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -3750,19 +3505,18 @@ PARAMETERS 5
 1		! 3 Relative or absolute start time
 1		! 4 Printing & integrating interval
 0		! 5 Number of inputs to avoid integration
-INPUTS 100
+INPUTS 96
 queber qbtamax qbtamaxs tofl1u0 tofl2u0 tofl3u0 minbta1 minbta2 minbta3 tsystemw
 tsystems tsystem1 tsystem qh1 qh2 qh3 qc1 qc2 qc3 tzone1
-tzone2 tzone3 top1 top2 top3  !25
-*WindPV CO2_2015 CO2_2050 QBedarf_2050 QWasPVWind_2050 QBiomasse_2050 QGeothermie_2050 QUeberschuss_2050 QUnterschuss_2050 
-WindstromvonAnlagen 
-Windnutzbar B2Grid_frei JAZh JAZc etaverth etavertc queberh queberhPV queberhwind queberc 
-quebercPV quebercwind qel
+tzone2 tzone3 top1 top2 top3
+costfunction
+JAZh JAZc etaverth etavertc queberh queberhPV queberc 
+quebercPV qel
 qhend qwwend qendwaerme qcend qelges PVprod queber
-Qelnutzereigen Qelnutzernetz Qelnutzernetzwind Qelnutzerüberschuss qhcstrom Qeleigenqhc Qelnetzhc Qelnetzhcwind Qelüberschusshc qstromrest Qeleigenww Qelnetzww Qelnetzwwwind 
-Qelüberschussww Qeleigenges Qelnetzges Qelnetzgeswind
+Qelnutzereigen Qelnutzernetz Qelnutzernetzcost Qelnutzerueberschuss qhcstrom Qeleigenqhc Qelnetzhc Qelnetzhccost Qelüberschusshc qstromrest Qeleigenww Qelnetzww Qelnetzwwcost 
+Qelüberschussww Qeleigenges Qelnetzges Qelnetzgescost
 
-relh1 relh2 relh3  absh1 absh2 absh3  pmv1 pmv2 pmv3  ppd1 ppd2 ppd3 clo1 clo2 clo3
+relh1 relh2 relh3 absh1 absh2 absh3 pmv1 pmv2 pmv3 ppd1 ppd2 ppd3 clo1 clo2 clo3
 deltatsiglueck1
 deltatsi77301
 deltatsiglueck3
@@ -3783,16 +3537,15 @@ nutzidealfrei
 
 queber qbtamax qbtamaxs tofl1u0 tofl2u0 tofl3u0 minbta1 minbta2 minbta3 tsystemw
 tsystems tsystem1 tsystem qh1 qh2 qh3 qc1 qc2 qc3 tzone1
-tzone2 tzone3 top1 top2 top3  !25
-*WindPV CO2_2015 CO2_2050 QBedarf_2050 QWasPVWind_2050 QBiomasse_2050 QGeothermie_2050 QUeberschuss_2050 QUnterschuss_2050 
-WindstromvonAnlagen 
-Windnutzbar B2Grid_frei JAZh JAZc etaverth etavertc queberh queberhPV queberhwind queberc 
-quebercPV quebercwind qel
+tzone2 tzone3 top1 top2 top3
+costfunction
+JAZh JAZc etaverth etavertc queberh queberhPV queberc 
+quebercPV qel
 qhend qwwend qendwaerme qcend qelges PVprod queber
-Qelnutzereigen Qelnutzernetz Qelnutzernetzwind Qelnutzerüberschuss qhcstrom Qeleigenqhc Qelnetzhc Qelnetzhcwind Qelüberschusshc qstromrest Qeleigenww Qelnetzww Qelnetzwwwind 
-Qelüberschussww Qeleigenges Qelnetzges Qelnetzgeswind
+Qelnutzereigen Qelnutzernetz Qelnutzernetzcost Qelnutzerueberschuss qhcstrom Qeleigenqhc Qelnetzhc Qelnetzhccost Qelüberschusshc qstromrest Qeleigenww Qelnetzww Qelnetzwwcost 
+Qelüberschussww Qeleigenges Qelnetzges Qelnetzgescost
 
-relh1 relh2 relh3  absh1 absh2 absh3  pmv1 pmv2 pmv3  ppd1 ppd2 ppd3 clo1 clo2 clo3
+relh1 relh2 relh3 absh1 absh2 absh3 pmv1 pmv2 pmv3 ppd1 ppd2 ppd3 clo1 clo2 clo3
 deltatsiglueck1
 deltatsi77301
 deltatsiglueck3
@@ -3808,7 +3561,6 @@ heizidealfrei
 kuehlidealfrei
 wwidealfrei
 nutzidealfrei
- 
 	
 LABELS 0
 
@@ -3819,7 +3571,7 @@ ASSIGN "***.month" -1
 *|? Output file for automatic monthly integrated results? |1000
 * Model "Printer-Diverses" (Type 25)
 
-
+*------------------------------------------------------------------------------
 UNIT 159 TYPE 25	 Printer-Diverses
 PARAMETERS 10
 STEP		! 1 Printing interval
@@ -3833,19 +3585,18 @@ STOP		! 3 Stop time
 0		! 9 Delimiter
 1		! 10 Print labels
 
-INPUTS 100
+INPUTS 96
 queber qbtamax qbtamaxs tofl1u0 tofl2u0 tofl3u0 minbta1 minbta2 minbta3 tsystemw
 tsystems tsystem1 tsystem qh1 qh2 qh3 qc1 qc2 qc3 tzone1
-tzone2 tzone3 top1 top2 top3  !25
-*WindPV CO2_2015 CO2_2050 QBedarf_2050 QWasPVWind_2050 QBiomasse_2050 QGeothermie_2050 QUeberschuss_2050 QUnterschuss_2050 
-WindstromvonAnlagen 
-Windnutzbar B2Grid_frei JAZh JAZc etaverth etavertc queberh queberhPV queberhwind queberc 
-quebercPV quebercwind qel
+tzone2 tzone3 top1 top2 top3
+costfunction
+JAZh JAZc etaverth etavertc queberh queberhPV queberc 
+quebercPV qel
 qhend qwwend qendwaerme qcend qelges PVprod queber
-Qelnutzereigen Qelnutzernetz Qelnutzernetzwind Qelnutzerüberschuss qhcstrom Qeleigenqhc Qelnetzhc Qelnetzhcwind Qelüberschusshc qstromrest Qeleigenww Qelnetzww Qelnetzwwwind 
-Qelüberschussww Qeleigenges Qelnetzges Qelnetzgeswind
+Qelnutzereigen Qelnutzernetz Qelnutzernetzcost Qelnutzerueberschuss qhcstrom Qeleigenqhc Qelnetzhc Qelnetzhccost Qelüberschusshc qstromrest Qeleigenww Qelnetzww Qelnetzwwcost 
+Qelüberschussww Qeleigenges Qelnetzges Qelnetzgescost
 
-relh1 relh2 relh3  absh1 absh2 absh3  pmv1 pmv2 pmv3  ppd1 ppd2 ppd3 clo1 clo2 clo3
+relh1 relh2 relh3 absh1 absh2 absh3 pmv1 pmv2 pmv3 ppd1 ppd2 ppd3 clo1 clo2 clo3
 deltatsiglueck1
 deltatsi77301
 deltatsiglueck3
@@ -3866,16 +3617,15 @@ nutzidealfrei
 
 queber qbtamax qbtamaxs tofl1u0 tofl2u0 tofl3u0 minbta1 minbta2 minbta3 tsystemw
 tsystems tsystem1 tsystem qh1 qh2 qh3 qc1 qc2 qc3 tzone1
-tzone2 tzone3 top1 top2 top3  !25
-*WindPV CO2_2015 CO2_2050 QBedarf_2050 QWasPVWind_2050 QBiomasse_2050 QGeothermie_2050 QUeberschuss_2050 QUnterschuss_2050 
-WindstromvonAnlagen 
-Windnutzbar B2Grid_frei JAZh JAZc etaverth etavertc queberh queberhPV queberhwind queberc 
-quebercPV quebercwind qel
+tzone2 tzone3 top1 top2 top3
+costfunction
+JAZh JAZc etaverth etavertc queberh queberhPV queberc 
+quebercPV qel
 qhend qwwend qendwaerme qcend qelges PVprod queber
-Qelnutzereigen Qelnutzernetz Qelnutzernetzwind Qelnutzerüberschuss qhcstrom Qeleigenqhc Qelnetzhc Qelnetzhcwind Qelüberschusshc qstromrest Qeleigenww Qelnetzww Qelnetzwwwind 
-Qelüberschussww Qeleigenges Qelnetzges Qelnetzgeswind
+Qelnutzereigen Qelnutzernetz Qelnutzernetzcost Qelnutzerueberschuss qhcstrom Qeleigenqhc Qelnetzhc Qelnetzhccost Qelüberschusshc qstromrest Qeleigenww Qelnetzww Qelnetzwwcost 
+Qelüberschussww Qeleigenges Qelnetzges Qelnetzgescost
 
-relh1 relh2 relh3  absh1 absh2 absh3  pmv1 pmv2 pmv3  ppd1 ppd2 ppd3 clo1 clo2 clo3
+relh1 relh2 relh3 absh1 absh2 absh3 pmv1 pmv2 pmv3 ppd1 ppd2 ppd3 clo1 clo2 clo3
 deltatsiglueck1
 deltatsi77301
 deltatsiglueck3
@@ -3894,9 +3644,7 @@ nutzidealfrei
 	
 ASSIGN "out8.txt" 41
 
-* Model "Type25c" (Type 25)
-* 
-
+*------------------------------------------------------------------------------
 UNIT 50 TYPE 25	 Type25c
 *$UNIT_NAME Type25c
 *$MODEL .\Output\Printer\No Units\Type25c.tmf
@@ -3919,11 +3667,11 @@ tWW_Speicher_t1
 deltatWWmax0 qwwwpmax qwwwpmaxges qwwmaxladenstep deltatWWmaxladen
 deltatWWmax1 deltatWWmin1 
 Qelüberschusshc
-queberwwPV deltatueberwwPVmax deltatueberwwPV deltatwwnachPVmax1 QPVeigen QelPVeigen Qelueberschusswwges queberwwwind deltatueberwwwindmax deltatueberwwwind Qeigenwwwindges
-Qeleigenwwwindges deltatwwueberPVundWind deltatwwnetz Qnetzwwges Qelnetzwwges Qeleigenwwges tWW_Speicher_t 
+queberwwPV deltatueberwwPVmax deltatueberwwPV deltatwwnachPVmax1 QPVeigen QelPVeigen Qelueberschusswwges queberwwcost deltatueberwwcostmax deltatueberwwcost Qeigenwwcostges
+Qeleigenwwcostges deltatwwueberPVundcost deltatwwnetz Qnetzwwges Qelnetzwwges Qeleigenwwges tWW_Speicher_t 
 
-QWW_gesm2 Qww_Speicherverlustm2 QPVeigenm2 Qeigenwwwindm2 Qnetzwwm2 Qww_BedarfVerlustem2 Qww_Deckungm2 Qelww_Deckungm2
-Qelüberschusshc QelPVeigenm2 Qeleigenwwwindm2 Qelnetzwwm2 Qelueberschusswwm2 
+QWW_gesm2 Qww_Speicherverlustm2 QPVeigenm2 Qeigenwwcostm2 Qnetzwwm2 Qww_BedarfVerlustem2 Qww_Deckungm2 Qelww_Deckungm2
+Qelüberschusshc QelPVeigenm2 Qeleigenwwcostm2 Qelnetzwwm2 Qelueberschusswwm2 
 
 
 
@@ -3963,11 +3711,11 @@ tWW_Speicher_t1
 deltatWWmax0 qwwwpmax qwwwpmaxges qwwmaxladenstep deltatWWmaxladen
 deltatWWmax1 deltatWWmin1 
 Qelüberschusshc
-queberwwPV deltatueberwwPVmax deltatueberwwPV deltatwwnachPVmax1 QPVeigen QelPVeigen Qelueberschusswwges queberwwwind deltatueberwwwindmax deltatueberwwwind Qeigenwwwindges
-Qeleigenwwwindges deltatwwueberPVundWind deltatwwnetz Qnetzwwges Qelnetzwwges Qeleigenwwges tWW_Speicher_t 
+queberwwPV deltatueberwwPVmax deltatueberwwPV deltatwwnachPVmax1 QPVeigen QelPVeigen Qelueberschusswwges queberwwcost deltatueberwwcostmax deltatueberwwcost Qeigenwwcostges
+Qeleigenwwcostges deltatwwueberPVundcost deltatwwnetz Qnetzwwges Qelnetzwwges Qeleigenwwges tWW_Speicher_t 
 
-QWW_gesm2 Qww_Speicherverlustm2 QPVeigenm2 Qeigenwwwindm2 Qnetzwwm2 Qww_BedarfVerlustem2 Qww_Deckungm2 Qelww_Deckungm2 
-Qelüberschusshc QelPVeigenm2 Qeleigenwwwindm2 Qelnetzwwm2 Qelueberschusswwm2
+QWW_gesm2 Qww_Speicherverlustm2 QPVeigenm2 Qeigenwwcostm2 Qnetzwwm2 Qww_BedarfVerlustem2 Qww_Deckungm2 Qelww_Deckungm2 
+Qelüberschusshc QelPVeigenm2 Qeleigenwwcostm2 Qelnetzwwm2 Qelueberschusswwm2
 
 
 
@@ -3982,6 +3730,8 @@ Qel PVprod Q_Speicher_tm2 Qdeckeneigendirm2 QUeberschussdirm2 QdeckenEigenspeich
 *** External files
 ASSIGN "Speicher1_step.out" 42
 ASSIGN "Speicher1_hour.out" 43
+
+*------------------------------------------------------------------------------
 UNIT 51 TYPE 46	 Komfort-3
 *$UNIT_NAME BTA_out
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -4000,11 +3750,11 @@ tWW_Speicher_t1
 deltatWWmax0 qwwwpmax qwwwpmaxges qwwmaxladenstep deltatWWmaxladen
 deltatWWmax1 deltatWWmin1 
 Qelüberschusshc
-queberwwPV deltatueberwwPVmax deltatueberwwPV deltatwwnachPVmax1 QPVeigen QelPVeigen Qelueberschusswwges queberwwwind deltatueberwwwindmax deltatueberwwwind Qeigenwwwindges
-Qeleigenwwwindges deltatwwueberPVundWind deltatwwnetz Qnetzwwges Qelnetzwwges Qeleigenwwges tWW_Speicher_t 
+queberwwPV deltatueberwwPVmax deltatueberwwPV deltatwwnachPVmax1 QPVeigen QelPVeigen Qelueberschusswwges queberwwcost deltatueberwwcostmax deltatueberwwcost Qeigenwwcostges
+Qeleigenwwcostges deltatwwueberPVundcost deltatwwnetz Qnetzwwges Qelnetzwwges Qeleigenwwges tWW_Speicher_t 
 
-QWW_gesm2 Qww_Speicherverlustm2 QPVeigenm2 Qeigenwwwindm2 Qnetzwwm2 Qww_BedarfVerlustem2 Qww_Deckungm2 Qelww_Deckungm2
-Qelüberschusshc QelPVeigenm2 Qeleigenwwwindm2 Qelnetzwwm2 Qelueberschusswwm2
+QWW_gesm2 Qww_Speicherverlustm2 QPVeigenm2 Qeigenwwcostm2 Qnetzwwm2 Qww_BedarfVerlustem2 Qww_Deckungm2 Qelww_Deckungm2
+Qelüberschusshc QelPVeigenm2 Qeleigenwwcostm2 Qelnetzwwm2 Qelueberschusswwm2
 
 
 Strom_ges		! Zaehler:Strom_ges ->Input to be printed-1
@@ -4042,11 +3792,11 @@ tWW_Speicher_t1
 deltatWWmax0 qwwwpmax qwwwpmaxges qwwmaxladenstep deltatWWmaxladen
 deltatWWmax1 deltatWWmin1 
 
-Qelüberschusshc queberwwPV deltatueberwwPVmax deltatueberwwPV deltatwwnachPVmax1 QPVeigen QelPVeigen Qelueberschusswwges queberwwwind deltatueberwwwindmax deltatueberwwwind Qeigenwwwindges
-Qeleigenwwwindges deltatwwueberPVundWind deltatwwnetz Qnetzwwges Qelnetzwwges Qeleigenwwges tWW_Speicher_t 
+Qelüberschusshc queberwwPV deltatueberwwPVmax deltatueberwwPV deltatwwnachPVmax1 QPVeigen QelPVeigen Qelueberschusswwges queberwwcost deltatueberwwcostmax deltatueberwwcost Qeigenwwcostges
+Qeleigenwwcostges deltatwwueberPVundcost deltatwwnetz Qnetzwwges Qelnetzwwges Qeleigenwwges tWW_Speicher_t 
 
-QWW_gesm2 Qww_Speicherverlustm2 QPVeigenm2 Qeigenwwwindm2 Qnetzwwm2 Qww_BedarfVerlustem2 Qww_Deckungm2 Qelww_Deckungm2 
-Qelüberschusshc QelPVeigenm2 Qeleigenwwwindm2 Qelnetzwwm2 Qelueberschusswwm2
+QWW_gesm2 Qww_Speicherverlustm2 QPVeigenm2 Qeigenwwcostm2 Qnetzwwm2 Qww_BedarfVerlustem2 Qww_Deckungm2 Qelww_Deckungm2 
+Qelüberschusshc QelPVeigenm2 Qeleigenwwcostm2 Qelnetzwwm2 Qelueberschusswwm2
 
 
 
@@ -4059,6 +3809,7 @@ Qmaxentladen Qdeckeneigendir QUeberschussdir QdeckenEigenspeicher
 QVerlustSpeicher QVerlustLaden QVerlustEntladen 
 Qel PVprod Q_Speicher_tm2 Qdeckeneigendirm2 QUeberschussdirm2 QdeckenEigenspeicherm2 Q_UeberschussinsNetzm2 Qverlustges Qverlustgesm2
 
+*------------------------------------------------------------------------------
 UNIT 52 TYPE 46	 Komfort-3
 *$UNIT_NAME BTA_out
 *$MODEL .\Output\Printegrator\Unformatted\User-Defined and Automatic Monthly Periods\Type46b.tmf
@@ -4159,7 +3910,6 @@ ASSIGN "***.month" -1
 * Model "Printer-Diverses" (Type 25)
 * 
 *------------------------------------------------------------------------------
-*
 UNIT 53 TYPE 25	 Printer-Diverses
 PARAMETERS 10
 STEP		! 1 Printing interval
