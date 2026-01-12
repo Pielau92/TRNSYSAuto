@@ -498,7 +498,7 @@ class Simulation:
 
         # replace parameter values
         if self.params.dck:
-            utils.replace_parameter_values(self.path_dck, self.params.dck)
+            utils.replace_parameter_values(self.path_dck, self.params.dck, mark=True)
 
         # enable/disable python coupling
         utils.find_and_replace(
