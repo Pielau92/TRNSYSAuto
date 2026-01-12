@@ -645,7 +645,7 @@ QUnterschuss_2050 = [131,25]	![???]
 *------------------------------------------------------------------------------
 * EQUATIONS "BTA"
 * 
-EQUATIONS 30
+EQUATIONS 29
 
 area_BTA1 = anutz1*0.9	![m2]
 area_BTA2 = anutz2*0.9	![m2]
@@ -686,8 +686,7 @@ tsystems = -qbtamaxs/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*(1-gt(queber,0
 tsystem1 = heizperiode1*tsystemw+(1-heizperiode1)*tsystems  ![°C]
 
 * TRNSYS-Python-Kopplung
-*INCLUDE "mpc_enabled.dck"
-Qheizbtapy = 0  ![-] !Manfred gehört dann raus
+INCLUDE "mpc_enabled.dck"
 
 *------------------------------------------------------------------------------
 * EQUATIONS "xxx"
