@@ -114,7 +114,7 @@ class SimulationSeries:
         self.logger.info(f'Importing simulation variants Excel file from {self.path.original_sim_variants_excel}.')
         self.excel_data = ExcelData(
             path_excel=self.path.original_sim_variants_excel,
-            sheet_name=self.configs.sheetnames.sim_variants
+            sheet_name=self.configs.sheetnames.sheet_name_sim_variants
         )
 
         variants = self.excel_data.parameters.keys()
@@ -327,7 +327,7 @@ class Simulation:
     @property
     def path_mpc_settings(self) -> str:
         """Path to settingsMPC.ini file."""
-        return os.path.join(self.path.sim_series_dir, self.name, 'settingsMPC.ini')
+        return os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.mpc_configs)
 
     @property
     def sim_hours(self) -> int:
@@ -498,7 +498,7 @@ class Simulation:
 
         # replace parameter values
         if self.params.dck:
-            utils.replace_parameter_values(self.path_dck, self.params.dck)
+            utils.replace_parameter_values(self.path_dck, self.params.dck, mark=True)
 
         # enable/disable python coupling
         utils.find_and_replace(

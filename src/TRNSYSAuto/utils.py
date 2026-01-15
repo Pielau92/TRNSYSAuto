@@ -35,7 +35,7 @@ def parent_dir(path: str, levels: int = 1) -> str:
     return path
 
 
-def replace_parameter_values(path_file: str, parameters: dict) -> None:
+def replace_parameter_values(path_file: str, parameters: dict, mark: bool = False) -> None:
     """Find and replace parameter values within a .txt file.
 
     Finds parameter values within a .txt file, replaces them and overwrites the .txt file. For this, the following must
@@ -61,21 +61,36 @@ def replace_parameter_values(path_file: str, parameters: dict) -> None:
 
     def replacer(match):
         parameter = match.group(1)  # parameter name
-        misc = match.group(3)  # miscellaneous characters after the number value (typically comments)
+        initial_value = match.group(2).strip()
+        comment = match.group(3)  # miscellaneous characters after the number value (typically comments)
+
+        if comment is None:
+            comment = ''
 
         if parameter in parameters.keys():
-            return f"{parameter} = {parameters[parameter]} {misc}"  # replace, if parameter name matches
+            new_value = str(parameters[parameter])
         else:
             return match.group(0)  # return unchanged text
+
+        if initial_value == new_value:
+            return match.group(0)  # return unchanged text
+
+        if mark:    # mark changed lines with comment
+            comment += f' ! *parameter changed from {initial_value} to {new_value}*'  # add remark
+
+        return f"{parameter} = {new_value} {comment}"  # replace, if parameter name matches
 
     with open(path_file, 'r') as file:
         text = file.read()
 
-    pattern = re.compile(r'^(\w*)'  # word at beginning of line
-                         + r'[\s\t]*=[\s\t]*'  # equal sign (=), with any number of white spaces/tabs before and after
-                         + r'(\d+\.?\d*)'  # number, which any number of decimal digits using '.' as delimiter
-                         + r'(.*)$',  # any characters, until the end of the line is reached (typically comments)
-                         re.MULTILINE)
+    pattern = re.compile(
+        r'^(\w*)'  # word at beginning of line
+        + r'[\s\t]*=[\s\t]*'  # equal sign (=), with any number of white spaces/tabs before and after
+        + r'([^\n!]*)'  # any number of characters, that are neither an exclamation mark nor the end of the line
+        + r'(?:(!.*))?'  # (optional) exclamation mark followed by any number of characters
+        + r'$',  # end of line
+        re.MULTILINE
+    )
 
     new_text = pattern.sub(replacer, text)
 
