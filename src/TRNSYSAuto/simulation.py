@@ -114,7 +114,7 @@ class SimulationSeries:
         self.logger.info(f'Importing simulation variants Excel file from {self.path.original_sim_variants_excel}.')
         self.excel_data = ExcelData(
             path_excel=self.path.original_sim_variants_excel,
-            sheet_name=self.configs.sheetnames.sim_variants
+            sheet_name=self.configs.sheetnames.sheet_name_sim_variants
         )
 
         variants = self.excel_data.parameters.keys()
