@@ -50,3 +50,17 @@ if __name__ == '__main__':
     data = read_out5(path=path_csv)
 
     print(data.head())
+
+    path_xlsx = os.path.join(
+        'C:/Users/pierre/Documents/TRNSYSAuto/36h test/1',
+        'Bewertung_Klein_ZQ3Demo_test.xlsx'
+    )
+
+    cell_insert_series_to_excel(
+        data=data['ta'],
+        path=path_xlsx,
+        sheet_name='Bewertung',
+        start_cell='W6',
+    )
+
+    ...
