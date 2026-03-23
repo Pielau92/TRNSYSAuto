@@ -11,7 +11,7 @@ class General:
     multiprocessing_max: int  # maximum number of simulations performed simultaneously
     multiprocessing_autodetect: bool  # if true, override multiprocessing_max with number of cpu cores
     conda_venv_name: str  # name of the conda virtual environment (venv) to be used
-    sheet_name_sim_variants: str    # name of sheet inside Excel input file containing the simulation definitions
+    sheet_name_sim_variants: str  # name of sheet inside Excel input file containing the simulation definitions
 
 
 @dataclass
