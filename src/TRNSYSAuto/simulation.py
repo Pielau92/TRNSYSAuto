@@ -25,7 +25,7 @@ class SimulationSeries:
     """A Simulation series is a series of TRNSYS simulations, which can be computed using multiprocessing."""
 
     def __init__(self, path_config: str, path_root: str, path_original_sim_variants_excel: str):
-        self.simulations: dict[Simulation] = {}  # simulations within simulation series
+        self.simulations: dict[str, Simulation] = {}  # simulations within simulation series
         self.excel_data: ExcelData | None = None
         self.configs = Configs(path_config)
         self.path = Paths(_configs=self.configs,

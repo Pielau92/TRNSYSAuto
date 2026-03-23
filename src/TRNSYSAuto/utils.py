@@ -8,6 +8,8 @@ import tkinter as tk
 
 from tkinter import filedialog  # explicit import required, as calling from tk.filedialog does not work properly
 from pandas import Series, DataFrame
+from openpyxl import load_workbook
+from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
 
 
 def get_root_dir() -> str:
@@ -75,7 +77,7 @@ def replace_parameter_values(path_file: str, parameters: dict, mark: bool = Fals
         if initial_value == new_value:
             return match.group(0)  # return unchanged text
 
-        if mark:    # mark changed lines with comment
+        if mark:  # mark changed lines with comment
             comment += f' ! *parameter changed from {initial_value} to {new_value}*'  # add remark
 
         return f"{parameter} = {new_value} {comment}"  # replace, if parameter name matches
@@ -327,3 +329,25 @@ def delete_files(paths: list[str]) -> None:
             os.remove(path)
         except FileNotFoundError:
             pass
+
+
+def cell_insert_series_to_excel(data: pd.Series, path: str, sheet_name: str, start_cell: str):
+    """Insert pandas Series into specific cell, inside a specific Excel sheet.
+
+    :param pd.Series data: data to be inserted into the Excel file
+    :param str path: path to excel file
+    :param str sheet_name: sheet name inside Excel file
+    :param str start_cell: starting cell inside Excel sheet for insertion
+    """
+
+    col_letters, start_row = coordinate_from_string(start_cell)
+    start_col = column_index_from_string(col_letters)
+    with pd.ExcelWriter(path, engine="openpyxl", mode="a", if_sheet_exists="overlay") as writer:
+        data.to_excel(
+            writer,
+            sheet_name=sheet_name,
+            startrow=start_row - 1,
+            startcol=start_col - 1,
+            header=False,
+            index=False,
+        )
