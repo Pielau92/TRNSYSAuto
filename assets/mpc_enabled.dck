@@ -27,12 +27,12 @@ cr4 = 200 * anutz4	![Wh/K]
 qheizmax_W = qheizmax*anutz1   ![W]
 qkuehlmax_W = qkuehlmax*anutz1 ![W]
 
-tbtasoll = kuehlperiode*tkuehlsollmin+heizperiode*theizsollmin   ![°C] hier nur die beiden Mindesttemperaturen, Einfluss Netzdienlichkeit müßte in MPC kommen
+tbtasoll = kuehlperiode*tkuehlsollmin+heizperiode*theizsollmin   ![°C] Soll-Raumlufttemperaturen bei BTA. Hier nur die beiden Mindesttemperaturen, Einfluss Netzdienlichkeit müßte in MPC kommen
 
-minbta1 = MBTAspez*(area_BTA1)	![kg/m2h] BUILDING-INPUT
-minbta2 = MBTAspez*(area_BTA2)	![kg/m2h] BUILDING-INPUT
-minbta3 = MBTAspez*(area_BTA3)	![kg/m2h] BUILDING-INPUT
-minbta4 = MBTAspez*(area_BTA4)	![kg/m2h] BUILDING-INPUT
+minbta1 = MBTAspez*area_BTA1	![kg/h] BUILDING-INPUT BTA-Massenstrom
+minbta2 = MBTAspez*area_BTA2	![kg/h] BUILDING-INPUT
+minbta3 = MBTAspez*area_BTA3	![kg/h] BUILDING-INPUT
+minbta4 = MBTAspez*area_BTA4	![kg/h] BUILDING-INPUT
 
 *------------------------------------------------------------------------------
 * Model "Type3157" (Type 3157)

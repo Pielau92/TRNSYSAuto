@@ -2,9 +2,9 @@ EQUATIONS 6
 
 Qheizbtapy = 0
 
-tbtasoll = tbtasoll1   ![°C]
+tbtasoll = tbtasoll1   ![°C] Soll-Raumlufttemperaturen bei BTA
 
-minbta1 = BTAmodellein*MBTAspez*(area_BTA1)*((bta1schalt)*heizperiode+bta1schalt*kuehlperiode)	![kg/m2h] BUILDING-INPUT
-minbta2 = BTAmodellein*MBTAspez*(area_BTA2)*((bta2schalt)*heizperiode+bta2schalt*kuehlperiode)	![kg/m2h] BUILDING-INPUT
-minbta3 = BTAmodellein*MBTAspez*(area_BTA3)*((bta3schalt)*heizperiode+bta3schalt*kuehlperiode)	![kg/m2h] BUILDING-INPUT
-minbta4 = BTAmodellein*MBTAspez*(area_BTA4)*((bta4schalt)*heizperiode+bta4schalt*kuehlperiode)	![kg/m2h] BUILDING-INPUT
+minbta1 = BTAmodellein*MBTAspez*area_BTA1*(bta1schalt*heizperiode+bta1schalt*kuehlperiode)*costfunction	![kg/h] BUILDING-INPUT BTA-Massenstrom
+minbta2 = BTAmodellein*MBTAspez*area_BTA2*(bta2schalt*heizperiode+bta2schalt*kuehlperiode)*costfunction	![kg/h] BUILDING-INPUT
+minbta3 = BTAmodellein*MBTAspez*area_BTA3*(bta3schalt*heizperiode+bta3schalt*kuehlperiode)*costfunction	![kg/h] BUILDING-INPUT
+minbta4 = BTAmodellein*MBTAspez*area_BTA4*(bta4schalt*heizperiode+bta4schalt*kuehlperiode)*costfunction	![kg/h] BUILDING-INPUT

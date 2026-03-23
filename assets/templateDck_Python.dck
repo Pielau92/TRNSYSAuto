@@ -470,14 +470,14 @@ abszu4 = abszu	![kg/kg] BUILDING-INPUT
 *
 Equations 6
 
-BTAmodellein = 0		![-] 1=BTA, 0=ideal
+BTAmodellein = 1		![-] 1=BTA, 0=ideal
 
 theizsollminideal = 21  ![°C] untere Heizgrenze (wird auch als fixe Solltemperatur für ideales Heizen verwendet)
 theizsollmaxideal = 25  ![°C] obere Heizgrenze
 tkuehlsollminideal = 50	![°C] untere Kuehlgrenze (wird auch indirekt, über tcomfneutr, als fixe Solltemperatur für ideales Kuehlen verwendet)
 tkuehlsollmaxideal = 50	![°C] obere Kuehlgrenze
 
-costfunction = 0	![-] hier noch Signal einbinden (wenn nicht über MPC), aktuell diskret als 0/1-Signal verwendet (0/1)
+costfunction = gt(Qklein,0)		![-] Signal, wenn nicht über MPC, aktuell diskret als 0/1-Signal verwendet
 
 *------------------------------------------------------------------------------
 * EQUATIONS "H ideal"
@@ -486,10 +486,10 @@ EQUATIONS 22
 
 sw_qmax = 1	![???] Switch, ob unlimitierte Leistung (0) oder limitierte Leistung (1) verwendet wird. Für H und K
 
-theiz = theizsollminideal*(1-BTAmodellein)+BTAmodellein*0	![°C]
+theiz = theizsollminideal*(1-BTAmodellein)		![°C]
 theizsom = 15*(1-BTAmodellein)+BTAmodellein*0	![°C]
 
-Heiz1 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
+Heiz1 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT Soll-Raumlufttemperatur bei idealer Heizung
 Heiz2 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
 Heiz3 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
 Heiz4 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
@@ -506,7 +506,7 @@ HEIZMAX2 = (1000*(1-sw_qmax)+33.75*sw_qmax)*anutz2	![W] BUILDING-INPUT
 HEIZMAX3 = (1000*(1-sw_qmax)+33.75*sw_qmax)*anutz3	![W] BUILDING-INPUT
 HEIZMAX4 = (1000*(1-sw_qmax)+33.75*sw_qmax)*anutz4	![W] BUILDING-INPUT
 
-relmin = 0   					![%???]
+relmin = 0   		![%???]
 
 relmin1 = relmin	![%???] BUILDING-INPUT
 relmin2 = relmin	![%???] BUILDING-INPUT
@@ -521,7 +521,7 @@ EQUATIONS 25
 tkuehlges = (tkuehlsollminideal*(1-heizperiode)+heizperiode*50)*(1-BTAmodellein)+BTAmodellein*50	![°C]
 tkuehlgesfb = 24*(1-BTAmodellein)+BTAmodellein*50	![°C]
 
-Tkuehl1 = tkuehlges	![°C] BUILDING-INPUT Solltemperaturen Kuehlen
+Tkuehl1 = tkuehlges	![°C] BUILDING-INPUT Soll-Raumlufttemperatur bei idealer Kuehlung
 Tkuehl2 = tkuehlges	![°C] BUILDING-INPUT
 Tkuehl3 = tkuehlges	![°C] BUILDING-INPUT
 Tkuehl4 = tkuehlges	![°C] BUILDING-INPUT
@@ -579,7 +579,7 @@ queber2 = queber1	![???]
 queber3 = queber1  	![???]
 queber4 = queber1  	![???]
 
-area_BTA1 = anutz1*0.9	![m2] Achtung, hier tatsaechliche Flaechen einstellen, wenn bekannt (ansonsten "anutz1*0.9")
+area_BTA1 = anutz1*0.9	![m2] Achtung, hier tatsaechliche Flaechen einstellen, wenn bekannt (ansonsten mit Faktor 0.9)
 area_BTA2 = anutz2*0.9	![m2]
 area_BTA3 = anutz3*0.9	![m2]
 area_BTA4 = anutz3*0.9	![m2]
@@ -588,12 +588,12 @@ tbtasoll1 = (kuehlperiode*tkuehlsollmin+heizperiode*theizsollmin)*(1-gt(queber,0
 !tbtasoll > in "mpc_enabled.dck" (Py_ein) bzw. in "mpc_disabled.dck" (1-Py_ein) verschoben
 tbtahys = kuehlperiode*tbtahysges+heizperiode*tbtahysges	![K]
 
-queberh = anutzges*Qelnutzerueberschuss*JAZh*etaverth    						![W] thermische Energie in Raum
-queberhPV = ge(queberh,qbtamax)*qbtamax+(1-ge(queberh,qbtamax))*(queberh)		![W]
-queberhcost = lt(queberhPV,qbtamax)*(qbtamax-queberhPV)*costfunction			![W]
-queberc = anutzges*Qelnutzerueberschuss*JAZc*etavertc							![W]
-quebercPV = ge(queberc,qbtamaxs)*qbtamaxs+(1-ge(queberc,qbtamaxs))*(queberc)	![W]
-queberccost = lt(quebercPV,qbtamaxs)*(qbtamaxs-quebercPV)*costfunction			![W]
+queberh = anutzges*Qelnutzerueberschuss*JAZh*etaverth    								![W] thermische Energie in Raum
+queberhPV = ge(queberh,qbtamax)*qbtamax+(1-ge(queberh,qbtamax))*(queberh)				![W]
+queberhcost = lt(queberhPV,qbtamax)*(qbtamax-queberhPV)*costfunction					![W]
+queberc = anutzges*Qelnutzerueberschuss*JAZc*etavertc									![W]
+quebercPV = ge(queberc,qbtamaxs)*qbtamaxs+(1-ge(queberc,qbtamaxs))*(queberc)			![W]
+queberccost = lt(quebercPV,qbtamaxs)*(qbtamaxs-quebercPV)*costfunction					![W]
 queber = heizperiode*(queberhPV+queberhcost)+(1-heizperiode)*(quebercPV+queberccost)	![W]
 
 tofl1u0 = [170,2]  ![°C] Ruecklauftemperatur
@@ -768,51 +768,52 @@ Qverlustgesm2 = Qverlustges/anutzges					![W/m2]
 * 
 EQUATIONS 30
 
-bedarf2050 = [132,1]		![???]
-biomasse2050 = [132,2]		![???]
-wasser2050 = [132,3]		![???]
-solar2050 = [132,4]			![???]
-wind2050 = [132,5]			![???]
-EEges2050 = [132,6]			![???]
-ueberschuss2050 = [132,7]	![???]
-unterschuss2050 = [132,8]	![???]
-bilanz2050 = [132,9]		![???]
-Kostideal = [132,10]		![???]
-Lastheizideal = [132,11]	![???]
-heiz24h = [132,12]			![???]
-heizWo = [132,13]			![???]
-heiz2Wo = [132,14]			![???]
-heiz4Wo = [132,15]			![???]
-Lastkuehlideal = [132,16]	![???]
-kuehl24h = [132,17]			![???]
-kuehlWo = [132,18]			![???]
-kuehl2Wo = [132,19]			![???]
-kuehl4Wo = [132,20]			![???]
-LastWWideal = [132,21]		![???]
-WW24h = [132,22]			![???]
-WWWo = [132,23]				![???]
-WW2Wo = [132,24]			![???]
-WW4Wo = [132,25]			![???]
-Lastnutzideal = [132,26]	![???]
-nutz24h = [132,27]			![???]
-nutzWo = [132,28]			![???]
-nutz2Wo = [132,29]			![???]
-nutz4Wo = [132,30]			![???]
+bedarf2050 = [132,1]		![GW]
+biomasse2050 = [132,2]		![GW]
+wasser2050 = [132,3]		![GW]
+solar2050 = [132,4]			![GW]
+wind2050 = [132,5]			![GW]
+EEges2050 = [132,6]			![GW]
+ueberschuss2050 = [132,7]	![GW]
+unterschuss2050 = [132,8]	![GW]
+bilanz2050 = [132,9]		![GW]
+Kostideal = [132,10]		![GW]
+Lastheizideal = [132,11]	![kW/kWmax]
+heiz24h = [132,12]			![kW/kWmax]
+heizWo = [132,13]			![kW/kWmax]
+heiz2Wo = [132,14]			![kW/kWmax]
+heiz4Wo = [132,15]			![kW/kWmax]
+Lastkuehlideal = [132,16]	![kW/kWmax]
+kuehl24h = [132,17]			![kW/kWmax]
+kuehlWo = [132,18]			![kW/kWmax]
+kuehl2Wo = [132,19]			![kW/kWmax]
+kuehl4Wo = [132,20]			![kW/kWmax]
+LastWWideal = [132,21]		![kW/kWmax]
+WW24h = [132,22]			![kW/kWmax]
+WWWo = [132,23]				![kW/kWmax]
+WW2Wo = [132,24]			![kW/kWmax]
+WW4Wo = [132,25]			![kW/kWmax]
+Lastnutzideal = [132,26]	![kW/kWmax]
+nutz24h = [132,27]			![kW/kWmax]
+nutzWo = [132,28]			![kW/kWmax]
+nutz2Wo = [132,29]			![kW/kWmax]
+nutz4Wo = [132,30]			![kW/kWmax]
 
 *------------------------------------------------------------------------------
 * EQUATIONS "Signale"
 * 
-EQUATIONS 9
+EQUATIONS 10
 
 WindPV = [131,11] ![MW] 2015 Hagenbrunn und Seyring
 CO2_2015 = [131,13] ![g/kWh]
 CO2_2050 = [131,14] ![g/kWh]
-QBedarf_2050 = [131,18]	![???]
-QWasPVWind_2050 = [131,15]+[131,16]+[131,17]	![???] 
-QBiomasse_2050 = [131,20]		![???]
-QGeothermie_2050 = [131,22]		![???]
-QUeberschuss_2050 = [131,24]	![???]
-QUnterschuss_2050 = [131,25]	![???]
+QBedarf_2050 = [131,18]	![GW]
+QWasPVWind_2050 = [131,15]+[131,16]+[131,17]	![GW] 
+QBiomasse_2050 = [131,20]		![GW]
+QGeothermie_2050 = [131,22]		![GW]
+QUeberschuss_2050 = [131,24]	![GW]
+QUnterschuss_2050 = [131,25]	![GW]
+Qklein = [131,29]				![W]
 
 *------------------------------------------------------------------------------
 * EQUATIONS "Komfort - Fanger"
@@ -1266,10 +1267,10 @@ UNIT 131 TYPE 9	 Type9e
 *$POSITION 752 127
 *$LAYER Weather - Data Files # 
 !TRACE START STOP
-PARAMETERS 106
+PARAMETERS 122
 5		! 1 Mode
 4		! 2 Header Lines to Skip
-25		! 3 No. of values to read
+29		! 3 No. of values to read
 1.0		! 4 Time interval of data
 -1		! 5 Interpolate or not-1
 1.0		! 6 Multiplication factor-1
@@ -1371,6 +1372,22 @@ PARAMETERS 106
 1.0		! 102 Multiplication factor-25
 0		! 103 Addition factor-25
 1		! 104 Average or instantaneous value-25
+-1		! 105 Interpolate or not-26
+1.0		! 106 Multiplication factor-26
+0		! 107 Addition factor-26
+1		! 108 Average or instantaneous value-26
+-1		! 109 Interpolate or not-27
+1.0		! 110 Multiplication factor-27
+0		! 111 Addition factor-27
+1		! 112 Average or instantaneous value-27
+-1		! 113 Interpolate or not-28
+1.0		! 114 Multiplication factor-28
+0		! 115 Addition factor-28
+1		! 116 Average or instantaneous value-28
+-1		! 117 Interpolate or not-29
+1.0		! 118 Multiplication factor-29
+0		! 119 Addition factor-29
+1		! 120 Average or instantaneous value-29
 134		! 121 Logical unit for input file
 -1		! 65 Free format mode
 *** External files
