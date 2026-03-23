@@ -77,7 +77,7 @@ def replace_parameter_values(path_file: str, parameters: dict, mark: bool = Fals
         if initial_value == new_value:
             return match.group(0)  # return unchanged text
 
-        if mark:    # mark changed lines with comment
+        if mark:  # mark changed lines with comment
             comment += f' ! *parameter changed from {initial_value} to {new_value}*'  # add remark
 
         return f"{parameter} = {new_value} {comment}"  # replace, if parameter name matches
