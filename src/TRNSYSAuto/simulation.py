@@ -123,7 +123,7 @@ class SimulationSeries:
                 name=variant,
                 params=self.excel_data.parameters[variant],
                 configs=self.configs,
-                paths=self.path,
+                path_parent_dir=self.path.sim_series_dir,
                 logger=self.logger
             )
 
@@ -308,13 +308,14 @@ class SimulationSeries:
 
 class Simulation:
 
-    def __init__(self, name: str, params: SimParameters, configs: Configs, paths: Paths, logger: logging.Logger):
+    def __init__(self,
+                 name: str, params: SimParameters, configs: Configs, path_parent_dir: str, logger: logging.Logger):
         self.name = name  # name of simulation
         self.params = params
-        self.path = paths
+        self.path_parent_dir = path_parent_dir
         self.configs = configs
         self.logger = logger
-        self.b18_data = B18Data(path_b18=os.path.join(self.path.sim_series_dir, self.name, params.b18))
+        self.b18_data = B18Data(path_b18=os.path.join(self.path_parent_dir, self.name, params.b18))
 
         self.success: bool = False  # True, if simulated successfully
         self.ignore: bool = False  # if True, do not simulate
@@ -322,12 +323,12 @@ class Simulation:
     @property
     def path_dck(self) -> str:
         """Path to dck file."""
-        return os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.dck_template)
+        return os.path.join(self.path_parent_dir, self.name, self.configs.filenames.dck_template)
 
     @property
     def path_mpc_settings(self) -> str:
         """Path to settingsMPC.ini file."""
-        return os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.mpc_configs)
+        return os.path.join(self.path_parent_dir, self.name, self.configs.filenames.mpc_configs)
 
     @property
     def sim_hours(self) -> int:
@@ -407,7 +408,7 @@ class Simulation:
         :return: success flag as boolean
         """
         # path of output file
-        path_output = os.path.join(self.path.sim_series_dir, self.name, self.configs.filenames.trnsys_output)
+        path_output = os.path.join(self.path_parent_dir, self.name, self.configs.filenames.trnsys_output)
 
         try:
             with open(path_output) as f:
