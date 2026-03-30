@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pywinauto import Application
 
 from TRNSYSAuto import utils as utils
-from TRNSYSAuto.datalayer import SimParameters, B18Data
+from trnsys_simulation.datalayer import B18Data, SimParameters
 
 
 class Simulation:
