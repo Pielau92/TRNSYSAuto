@@ -123,10 +123,8 @@ class SimulationSeries:
             path_sim = os.path.join(self.path.sim_series_dir, variant)
             self.simulations[variant] = Simulation(
                 path_dir=path_sim,
-                name=variant,
                 params=self.excel_data.parameters[variant],
                 configs=self.configs,
-                path_parent_dir=self.path.sim_series_dir,
                 logger=self.logger
             )
 
@@ -318,20 +316,19 @@ class Simulation:
         mpc: str
 
     def __init__(self, path_dir: str,
-                 name: str, params: SimParameters, configs: Configs, path_parent_dir: str, logger: logging.Logger):
+                 params: SimParameters, configs: Configs, logger: logging.Logger):
 
         self.configs = configs
 
         self.path = Simulation.Paths(  # todo: change (Simulation.Paths > Paths) asap
             root=path_dir,
-            parent=path_parent_dir,
+            parent=utils.parent_dir(path_dir),
             dck=os.path.join(path_dir, self.configs.filenames.dck_template),
             mpc=os.path.join(path_dir, self.configs.filenames.mpc_configs),
         )
 
-        self.name = name  # name of simulation
+        self.name = os.path.basename(self.path.root)  # name of simulation
         self.params = params
-        # self.path_parent_dir = path_parent_dir
         self.logger = logger
         self.b18_data = B18Data(path_b18=os.path.join(self.path.root, params.b18))
 
