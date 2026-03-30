@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from pywinauto import Application
 
-from TRNSYSAuto import utils as utils
+from trnsys_simulation.utils import parent_dir, delete_files, find_and_replace, replace_parameter_values
 from trnsys_simulation.datalayer import B18Data, SimParameters
 
 
@@ -45,7 +45,7 @@ class Simulation:
 
         self.path = Simulation.Paths(
             root=path_dir,
-            parent=utils.parent_dir(path_dir),
+            parent=parent_dir(path_dir),
             dck=os.path.join(path_dir, self.configs.filenames.dck_template),
             exe=path_exe,
             mpc=os.path.join(path_dir, self.configs.filenames.mpc_configs),
@@ -129,7 +129,7 @@ class Simulation:
         # delete redundant files
         path_sim = os.path.dirname(self.path.dck)
         redundant_file_paths = [os.path.join(path_sim, file) for file in self.configs.filenames.redundant]
-        utils.delete_files(redundant_file_paths)
+        delete_files(redundant_file_paths)
 
     def check_success(self) -> bool:
         """Check if simulation was calculated successfully, based on the TRNSYS output file(s).
@@ -219,19 +219,19 @@ class Simulation:
         """
 
         # replace weather data file name inside .dck file
-        utils.find_and_replace(
+        find_and_replace(
             self.path.dck, pattern=r'ASSIGN\s+"[^\.]*\.tm2"', replacement=r'ASSIGN "' + self.params.weather + '"')
 
         # replace .b17/.b18 file name inside .dck file
-        utils.find_and_replace(
+        find_and_replace(
             self.path.dck, pattern=r'ASSIGN\s+"[^\.]*\.b(17|18)"', replacement=r'ASSIGN "' + self.params.b18 + '"')
 
         # replace parameter values
         if self.params.dck:
-            utils.replace_parameter_values(self.path.dck, self.params.dck, mark=True)
+            replace_parameter_values(self.path.dck, self.params.dck, mark=True)
 
         # enable/disable python coupling
-        utils.find_and_replace(
+        find_and_replace(
             self.path.dck, pattern=r'INCLUDE\s+"[^\.]*\.dck"', replacement=r'INCLUDE "' + self.params.mpc + '"')
 
     def _overwrite_mpc_settings_parameters(self):
@@ -242,7 +242,7 @@ class Simulation:
         """
 
         if self.params.mpc_settings:
-            utils.replace_parameter_values(self.path.mpc, self.params.mpc_settings)
+            replace_parameter_values(self.path.mpc, self.params.mpc_settings)
 
     def _overwrite_floor_area(self):
         """Read floor areas from b17/18 file and overwrite floor area values inside dck file."""
