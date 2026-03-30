@@ -120,7 +120,9 @@ class SimulationSeries:
 
         variants = self.excel_data.parameters.keys()
         for variant in variants:
+            path_sim = os.path.join(self.path.sim_series_dir, variant)
             self.simulations[variant] = Simulation(
+                path_dir=path_sim,
                 name=variant,
                 params=self.excel_data.parameters[variant],
                 configs=self.configs,
@@ -310,34 +312,31 @@ class SimulationSeries:
 class Simulation:
     @dataclass
     class Paths:
+        root: str
         parent: str
+        dck: str
+        mpc: str
 
-    def __init__(self,
+    def __init__(self, path_dir: str,
                  name: str, params: SimParameters, configs: Configs, path_parent_dir: str, logger: logging.Logger):
 
+        self.configs = configs
+
         self.path = Simulation.Paths(  # todo: change (Simulation.Paths > Paths) asap
+            root=path_dir,
             parent=path_parent_dir,
+            dck=os.path.join(path_dir, self.configs.filenames.dck_template),
+            mpc=os.path.join(path_dir, self.configs.filenames.mpc_configs),
         )
 
         self.name = name  # name of simulation
         self.params = params
-        self.path_parent_dir = path_parent_dir
-        self.configs = configs
+        # self.path_parent_dir = path_parent_dir
         self.logger = logger
-        self.b18_data = B18Data(path_b18=os.path.join(self.path.parent, self.name, params.b18))
+        self.b18_data = B18Data(path_b18=os.path.join(self.path.root, params.b18))
 
         self.success: bool = False  # True, if simulated successfully
         self.ignore: bool = False  # if True, do not simulate
-
-    @property
-    def path_dck(self) -> str:
-        """Path to dck file."""
-        return os.path.join(self.path.parent, self.name, self.configs.filenames.dck_template)
-
-    @property
-    def path_mpc_settings(self) -> str:
-        """Path to settingsMPC.ini file."""
-        return os.path.join(self.path.parent, self.name, self.configs.filenames.mpc_configs)
 
     @property
     def sim_hours(self) -> int:
@@ -394,7 +393,7 @@ class Simulation:
         if lock is not None:
             lock.release()
 
-        window_title = 'TRNSYS: ' + self.path_dck
+        window_title = 'TRNSYS: ' + self.path.dck
         window_title = window_title.replace('documents', 'Documents')  # workaround, as search is case-sensitive
 
         success_message = app.window(title=window_title)  # .window(control_type="Text")
@@ -407,7 +406,7 @@ class Simulation:
         time.sleep(5)
 
         # delete redundant files
-        path_sim = os.path.dirname(self.path_dck)
+        path_sim = os.path.dirname(self.path.dck)
         redundant_file_paths = [os.path.join(path_sim, file) for file in self.configs.filenames.redundant]
         utils.delete_files(redundant_file_paths)
 
@@ -460,7 +459,7 @@ class Simulation:
 
         # insert .dck file path
         try:
-            app.Öffnen.FileNameEdit.set_edit_text(self.path_dck)
+            app.Öffnen.FileNameEdit.set_edit_text(self.path.dck)
         except Exception as e:
             self.logger.error(f'{e} error occurred while inserting .dck file path for simulation {self.name}.')
             app.kill()  # close window
@@ -500,19 +499,19 @@ class Simulation:
 
         # replace weather data file name inside .dck file
         utils.find_and_replace(
-            self.path_dck, pattern=r'ASSIGN\s+"[^\.]*\.tm2"', replacement=r'ASSIGN "' + self.params.weather + '"')
+            self.path.dck, pattern=r'ASSIGN\s+"[^\.]*\.tm2"', replacement=r'ASSIGN "' + self.params.weather + '"')
 
         # replace .b17/.b18 file name inside .dck file
         utils.find_and_replace(
-            self.path_dck, pattern=r'ASSIGN\s+"[^\.]*\.b(17|18)"', replacement=r'ASSIGN "' + self.params.b18 + '"')
+            self.path.dck, pattern=r'ASSIGN\s+"[^\.]*\.b(17|18)"', replacement=r'ASSIGN "' + self.params.b18 + '"')
 
         # replace parameter values
         if self.params.dck:
-            utils.replace_parameter_values(self.path_dck, self.params.dck, mark=True)
+            utils.replace_parameter_values(self.path.dck, self.params.dck, mark=True)
 
         # enable/disable python coupling
         utils.find_and_replace(
-            self.path_dck, pattern=r'INCLUDE\s+"[^\.]*\.dck"', replacement=r'INCLUDE "' + self.params.mpc + '"')
+            self.path.dck, pattern=r'INCLUDE\s+"[^\.]*\.dck"', replacement=r'INCLUDE "' + self.params.mpc + '"')
 
     def _overwrite_mpc_settings_parameters(self):
         """Overwrite parameters inside settingsMPC.ini File.
@@ -522,7 +521,7 @@ class Simulation:
         """
 
         if self.params.mpc_settings:
-            utils.replace_parameter_values(self.path_mpc_settings, self.params.mpc_settings)
+            utils.replace_parameter_values(self.path.mpc, self.params.mpc_settings)
 
     def _overwrite_floor_area(self):
         """Read floor areas from b17/18 file and overwrite floor area values inside dck file."""
@@ -535,7 +534,7 @@ class Simulation:
         self.b18_data.read_ref_areas()
 
         # read content of dck file
-        with open(self.path_dck, 'r') as file:
+        with open(self.path.dck, 'r') as file:
             dck_content = file.read()
 
         # create new content for dck file by overwriting floor area values
@@ -549,5 +548,5 @@ class Simulation:
             new_dck_content = pattern.sub(replacer, new_dck_content)
 
         # overwrite dck file
-        with open(self.path_dck, 'w') as file:
+        with open(self.path.dck, 'w') as file:
             file.write(new_dck_content)
