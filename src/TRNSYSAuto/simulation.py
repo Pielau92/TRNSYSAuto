@@ -123,6 +123,7 @@ class SimulationSeries:
             path_sim = os.path.join(self.path.sim_series_dir, variant)
             self.simulations[variant] = Simulation(
                 path_dir=path_sim,
+                path_exe=self.configs.general.path_exe,
                 params=self.excel_data.parameters[variant],
                 configs=self.configs,
                 logger=self.logger
@@ -313,10 +314,10 @@ class Simulation:
         root: str
         parent: str
         dck: str
+        exe: str
         mpc: str
 
-    def __init__(self, path_dir: str,
-                 params: SimParameters, configs: Configs, logger: logging.Logger):
+    def __init__(self, path_dir: str, path_exe: str, params: SimParameters, configs: Configs, logger: logging.Logger):
 
         self.configs = configs
 
@@ -324,6 +325,7 @@ class Simulation:
             root=path_dir,
             parent=utils.parent_dir(path_dir),
             dck=os.path.join(path_dir, self.configs.filenames.dck_template),
+            exe=path_exe,
             mpc=os.path.join(path_dir, self.configs.filenames.mpc_configs),
         )
 
@@ -437,7 +439,7 @@ class Simulation:
 
         # start application
         app = Application(backend='uia')
-        app.start(self.configs.general.path_exe)
+        app.start(self.path.exe)
 
         # open .dck file selection window
         try:
