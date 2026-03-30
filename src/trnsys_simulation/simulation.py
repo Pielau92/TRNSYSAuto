@@ -1,15 +1,16 @@
-import csv
-import logging
-import multiprocessing
 import os
 import re
+import csv
 import time
+import logging
+import multiprocessing
+
 from dataclasses import dataclass
 
 from pywinauto import Application
 
-from trnsys_simulation.utils import parent_dir, delete_files, find_and_replace, replace_parameter_values
 from trnsys_simulation.datalayer import B18Data, SimParameters
+from trnsys_simulation.utils import parent_dir, delete_files, find_and_replace, replace_parameter_values
 
 
 class Simulation:
