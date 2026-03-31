@@ -151,57 +151,38 @@ class Simulation:
         :return: Application object
         """
 
+        def open_dck_window():
+            app.connect(title="Öffnen", timeout=self.configs.timeout_open_dck_window)
+            app.Öffnen.wait('visible')
+            app.Öffnen.set_focus()
+
+        def insert_dck_path():
+            app.Öffnen.FileNameEdit.set_edit_text(self.path.dck)
+
+        def press_button():
+            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1",
+                                             control_type="Button").wrapper_object()
+            Button.click_input()
+
+        def wait_for_start():
+            app.Öffnen.wait_not('visible', timeout=self.configs.timeout_open_sim_window)
+
         # start application
         app = Application(backend='uia')
         app.start(self.path.exe)
 
-        # open .dck file selection window
         try:
-            app.connect(title="Öffnen", timeout=self.configs.timeout_open_dck_window)
-            app.Öffnen.wait('visible')
-            app.Öffnen.set_focus()
-        except Exception as e:  # if error occurs, abort
-            msg = f'{e} error occurred while opening .dck file selection window for simulation {self.name}.'
 
-            if isinstance(e, TimeoutError):
-                msg += f' Timeout is set to {self.configs.timeout_open_dck_window} sec.'
+            open_dck_window()  # open .dck file selection window
+            insert_dck_path()  # insert .dck file path
+            press_button()  # press start button
+            wait_for_start()  # wait for the simulation window to open
 
-            self.logger.error(msg=msg)  # log error message
-            app.kill()  # close window
-            return None
+            return app
 
-        # insert .dck file path
-        try:
-            app.Öffnen.FileNameEdit.set_edit_text(self.path.dck)
         except Exception as e:
-            self.logger.error(f'{e} error occurred while inserting .dck file path for simulation {self.name}.')
             app.kill()  # close window
             return None
-
-        # press start button
-        try:
-            Button = app.Öffnen.child_window(title="Öffnen", auto_id="1", control_type="Button").wrapper_object()
-            Button.click_input()
-        except Exception as e:
-            self.logger.error(f'{e} error occurred while pressing confirmation button of .dck file selection window for'
-                              f' simulation {self.name}.')
-            app.kill()  # close window
-            return None
-
-        # wait for the simulation window to open
-        try:
-            app.Öffnen.wait_not('visible', timeout=self.configs.timeout_open_sim_window)
-        except Exception as e:  # if error occurs, abort
-            msg = f'{e} error occurred while waiting for simulation window to open for simulation {self.name}.'
-
-            if isinstance(e, TimeoutError):
-                msg += f' Timeout is set to {self.configs.timeout_open_sim_window} sec.'
-
-            self.logger.error(msg=msg)  # log error message
-            app.kill()  # close window
-            return None
-
-        return app
 
     def _overwrite_dck_file_parameters(self):
         """Overwrite parameters inside .dck File.
