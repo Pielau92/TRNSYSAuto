@@ -64,21 +64,9 @@ class Simulation:
     def sim_hours(self) -> int:
         """Number of simulated hours."""
 
-        # find simulation start parameter, if set by user, otherwise start = 0 (start of year)
-        start = 0
-        for key in list(self.params.dck.keys()):
-            if str.lower(key) == 'start':
-                start = self.params.dck[key]
-                break
+        params = {key.lower(): value for key, value in self.params.dck.items()}
 
-        # find simulation stop parameter, if set by user, otherwise stop = 8760 (end of year)
-        stop = 8760
-        for key in list(self.params.dck.keys()):
-            if str.lower(key) == 'stop':
-                stop = self.params.dck[key]
-                break
-
-        return stop - start
+        return params.get('stop', 8760) - params.get('start', 0)
 
     def setup(self):
         """Setup simulation.
