@@ -115,9 +115,12 @@ class Simulation:
         app.kill()  # close window
         time.sleep(5)
 
-        # delete redundant files
-        path_sim = os.path.dirname(self.path.dck)
-        redundant_file_paths = [os.path.join(path_sim, file) for file in self.configs.filenames.redundant]
+        self.delete_redundant_files()
+
+    def delete_redundant_files(self):
+        """Delete redundant files after Simulation, to free storage space."""
+
+        redundant_file_paths = [os.path.join(self.path.root, file) for file in self.configs.filenames.redundant]
         delete_files(redundant_file_paths)
 
     def check_success(self) -> bool:
