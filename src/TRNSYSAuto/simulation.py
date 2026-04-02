@@ -210,7 +210,45 @@ class SimulationSeries:
         with open(self.path.savefile, 'wb') as file:
             pickle.dump(self, file)
 
-    def simulate(self):
+    def simulate(self, sim:Simulation, lock: multiprocessing.Lock = None):
+        """Start simulation.
+
+        Starts a TRNSYS simulation and uses a specified dck-file as input. If multiprocessing is used, a lock is passed
+        which ensures no other simulation starts until a specific point is reached. In this case, the lock is released
+        as soon as the TRNSYS simulation window opens.
+        Optionally, start_time_buffer acts as a time buffer before releasing the lock (see self.configs).
+
+        :param multiprocessing.Lock lock:  lock object from the multiprocessing module.
+        """
+
+        app = sim.start_application()
+
+        if not app:  # if an exception/error occurs, abort (and release any lock so the next simulation may start)
+
+            if lock is not None:
+                lock.release()
+            return
+
+        # add a time buffer before releasing the lock, which delays the next simulation
+        time.sleep(sim.configs.buffer_sim_start)
+        if lock is not None:
+            lock.release()
+
+        window_title = 'TRNSYS: ' + sim.path.dck
+        window_title = window_title.replace('documents', 'Documents')  # workaround, as search is case-sensitive
+
+        success_message = app.window(title=window_title)  # .window(control_type="Text")
+        try:
+            success_message.wait('visible', timeout=sim.configs.timeout_sim)
+        except TimeoutError:
+            pass  # goes ahead and closes window after time out
+
+        app.kill()  # close window
+        time.sleep(5)
+
+        sim.delete_redundant_files()
+
+    def simulate_series(self):
         """Start simulation series.
 
         Calculates all simulations that were neither already simulated not marked to be ignored. Then, checks if all
@@ -257,8 +295,8 @@ class SimulationSeries:
                     if lock:
 
                         # create a new process instance
-                        process = multiprocessing.Process(target=sim.simulate,
-                                                          args=(lock,))
+                        process = multiprocessing.Process(target=self.simulate,
+                                                          args=(sim,lock,))
                         with lock:
                             start_time = time.time()
                             while len(multiprocessing.active_children()) >= self.configs.general.multiprocessing_max:

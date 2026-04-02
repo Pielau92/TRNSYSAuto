@@ -1,12 +1,9 @@
 import os
 import re
 import csv
-import time
 import logging
-import multiprocessing
 
 from dataclasses import dataclass
-
 from pywinauto import Application
 
 from trnsys_simulation.datalayer import B18Data, SimParameters
@@ -79,44 +76,6 @@ class Simulation:
         self._overwrite_floor_area()
         self._overwrite_mpc_settings_parameters()
 
-    def simulate(self, lock: multiprocessing.Lock = None):
-        """Start simulation.
-
-        Starts a TRNSYS simulation and uses a specified dck-file as input. If multiprocessing is used, a lock is passed
-        which ensures no other simulation starts until a specific point is reached. In this case, the lock is released
-        as soon as the TRNSYS simulation window opens.
-        Optionally, start_time_buffer acts as a time buffer before releasing the lock (see self.configs).
-
-        :param multiprocessing.Lock lock:  lock object from the multiprocessing module.
-        """
-
-        app = self._start_application()
-
-        if not app:  # if an exception/error occurs, abort (and release any lock so the next simulation may start)
-
-            if lock is not None:
-                lock.release()
-            return
-
-        # add a time buffer before releasing the lock, which delays the next simulation
-        time.sleep(self.configs.buffer_sim_start)
-        if lock is not None:
-            lock.release()
-
-        window_title = 'TRNSYS: ' + self.path.dck
-        window_title = window_title.replace('documents', 'Documents')  # workaround, as search is case-sensitive
-
-        success_message = app.window(title=window_title)  # .window(control_type="Text")
-        try:
-            success_message.wait('visible', timeout=self.configs.timeout_sim)
-        except TimeoutError:
-            pass  # goes ahead and closes window after time out
-
-        app.kill()  # close window
-        time.sleep(5)
-
-        self.delete_redundant_files()
-
     def delete_redundant_files(self):
         """Delete redundant files after Simulation, to free storage space."""
 
@@ -142,7 +101,7 @@ class Simulation:
 
         return self.success
 
-    def _start_application(self) -> Application | None:
+    def start_application(self) -> Application | None:
         """Start simulation application and return Application object.
 
         Performs all necessary steps to start the simulation application. If an error occurs, log error message and

@@ -19,7 +19,7 @@ def gui(root_dir: str) -> None:
         # for each simulation series in the queue...
         for sim_series in create_sim_queue(root_dir):
             sim_series.setup()  # start simulation
-            sim_series.simulate()  # start simulation series
+            sim_series.simulate_series()  # start simulation series
 
         window.quit()
 
@@ -27,7 +27,7 @@ def gui(root_dir: str) -> None:
         sim_series = load_sim_series()
 
         sim_series.check_sim_success(reset=True)
-        sim_series.simulate()
+        sim_series.simulate_series()
 
         window.quit()
 
