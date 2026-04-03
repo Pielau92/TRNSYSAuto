@@ -552,7 +552,7 @@ absmax4 = absmax	![g/kg] BUILDING-INPUT
 *------------------------------------------------------------------------------
 * EQUATIONS "BTA"
 * 
-EQUATIONS 81
+EQUATIONS 84
 
 qheizmax = 50					![W/m2] maximale BTA-Heizleistung
 qkuehlmax = 40 					![W/m2] maximale BTA-Kuehlleistung
@@ -615,27 +615,30 @@ tsystemw = qbtamax/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*(1-gt(queber,0))
 tsystems = -qbtamaxs/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*(1-gt(queber,0))-queber/(minbta1+minbta2+minbta3+minbta4+1)/4.18*3.6*gt(queber,0)+(tofl1u0*minbta1+tofl2u0*minbta2+tofl3u0*minbta3+tofl4u0*minbta4)/(minbta1+minbta2+minbta3+minbta4+0.001) ![°C]	
 tsystem1 = heizperiode*tsystemw+(1-heizperiode)*tsystems  ![°C]
 
-tsystem = Qheizbtapy/((minbta1+0.0001)*(4.18/3.6))+tofl1u0	![°C] Qheizbtapy in W, minbta1 in kg/h, Umrechnung Waermekapazitaet 4.18 kJ/kg K von Wasser in Wh/kg K
+tsystem_1 = Qheizbtapy1/((minbta1+0.0001)*(4.18/3.6))+tofl1u0	![°C] Qheizbtapy in W, minbta1 in kg/h, Umrechnung Waermekapazitaet 4.18 kJ/kg K von Wasser in Wh/kg K
+tsystem_2 = Qheizbtapy2/((minbta2+0.0001)*(4.18/3.6))+tofl2u0	![°C]
+tsystem_3 = Qheizbtapy3/((minbta3+0.0001)*(4.18/3.6))+tofl3u0	![°C]
+tsystem_4 = Qheizbtapy4/((minbta4+0.0001)*(4.18/3.6))+tofl4u0	![°C]
 
 tinbta1v = qbtamax1/MBTAspez/4.18*3.6*(1-gt(queber1,0))+qbtamax1/MBTAspez/4.18*3.6*gt(queber1,0)+tofl1u0  ![°C]
 tinbta2v = qbtamax2/MBTAspez/4.18*3.6*(1-gt(queber2,0))+qbtamax2/MBTAspez/4.18*3.6*gt(queber2,0)+tofl2u0  ![°C]
 tinbta3v = qbtamax3/MBTAspez/4.18*3.6*(1-gt(queber3,0))+qbtamax3/MBTAspez/4.18*3.6*gt(queber3,0)+tofl3u0  ![°C]
 tinbta4v = qbtamax4/MBTAspez/4.18*3.6*(1-gt(queber4,0))+qbtamax4/MBTAspez/4.18*3.6*gt(queber4,0)+tofl4u0  ![°C] 
 
-tinbta1 = tsystem  ![°C] BUILDING-INPUT
-tinbta2 = tsystem  ![°C] BUILDING-INPUT
-tinbta3 = tsystem  ![°C] BUILDING-INPUT
-tinbta4 = tsystem  ![°C] BUILDING-INPUT
+tinbta1 = tsystem_1  ![°C] BUILDING-INPUT
+tinbta2 = tsystem_2  ![°C] BUILDING-INPUT
+tinbta3 = tsystem_3  ![°C] BUILDING-INPUT
+tinbta4 = tsystem_4  ![°C] BUILDING-INPUT
 
 tinbta1ov = qbtamax1/MBTAspez/4.18*3.6*(1-gt(queber1,0))+qbtamax1/MBTAspez/4.18*3.6*gt(queber1,0)+tofl1o0  ![°C]
 tinbta2ov = qbtamax2/MBTAspez/4.18*3.6*(1-gt(queber2,0))+qbtamax2/MBTAspez/4.18*3.6*gt(queber2,0)+tofl2o0  ![°C]
 tinbta3ov = qbtamax3/MBTAspez/4.18*3.6*(1-gt(queber3,0))+qbtamax3/MBTAspez/4.18*3.6*gt(queber3,0)+tofl3o0  ![°C]
 tinbta4ov = qbtamax4/MBTAspez/4.18*3.6*(1-gt(queber4,0))+qbtamax4/MBTAspez/4.18*3.6*gt(queber4,0)+tofl4o0  ![°C]
 
-tinbtao1 = tsystem  ![°C] BUILDING-INPUT
-tinbtao2 = tsystem  ![°C] BUILDING-INPUT
-tinbtao3 = tsystem  ![°C] BUILDING-INPUT
-tinbtao4 = tsystem  ![°C] BUILDING-INPUT
+tinbtao1 = tsystem_1  ![°C] BUILDING-INPUT
+tinbtao2 = tsystem_2  ![°C] BUILDING-INPUT
+tinbtao3 = tsystem_3  ![°C] BUILDING-INPUT
+tinbtao4 = tsystem_4  ![°C] BUILDING-INPUT
 
 bta1schalt = heizperiode*(1-[64,1])+kuehlperiode*[64,1]	![-]
 bta2schalt = heizperiode*(1-[65,1])+kuehlperiode*[65,1]	![-]
@@ -3222,7 +3225,7 @@ PARAMETERS 5
 0		! 5 Number of inputs to avoid integration
 INPUTS 99
 ta tzone1 tzone2 tzone3 top1 top2 top3 
-tsystem 
+tsystem_1
 tinbta1 tinbta2 tinbta3
 ppd1 ppd2 ppd3
 minbta1 minbta2 minbta3 
@@ -3262,7 +3265,7 @@ tzone1 56,126  relh3 vel3 clo3 met3 0,0
 
 
 ta tzone1 tzone2 tzone3 top1 top2 top3 
-tsystem 
+tsystem_1
 tinbta1 tinbta2 tinbta3
 ppd1 ppd2 ppd3
 minbta1 minbta2 minbta3 
@@ -3325,7 +3328,7 @@ STOP		! 3 Stop time
 1		! 10 Print labels
 INPUTS 67
 ta tzone1 tzone2 tzone3 tzone4 top1 top2 top3 top4 
-tsystem 
+tsystem_1
 tinbta1 tinbta2 tinbta3 tinbta4
 tinbtao1 tinbtao2 tinbtao3 tinbtao4
 minbta1 minbta2 minbta3 minbta4
@@ -3349,7 +3352,7 @@ qh1 qh2 qh3 qh4 qc1 qc2 qc3 qc4 qbtamax1 queber1  !27
 
 
 ta tzone1 tzone2 tzone3 tzone4 top1 top2 top3 top4  
-tsystem 
+tsystem_1
 tinbta1 tinbta2 tinbta3 tinbta4
 tinbtao1 tinbtao2 tinbtao3 tinbtao4
 minbta1 minbta2 minbta3 minbta4 
@@ -3385,7 +3388,7 @@ PARAMETERS 5
 0		! 5 Number of inputs to avoid integration
 INPUTS 96
 queber qbtamax qbtamaxs tofl1u0 tofl2u0 tofl3u0 minbta1 minbta2 minbta3 tsystemw
-tsystems tsystem1 tsystem qh1 qh2 qh3 qc1 qc2 qc3 tzone1
+tsystems tsystem1 tsystem_1 qh1 qh2 qh3 qc1 qc2 qc3 tzone1
 tzone2 tzone3 top1 top2 top3
 costfunction
 JAZh JAZc etaverth etavertc queberh queberhPV queberc 
@@ -3414,7 +3417,7 @@ label
 
 
 queber qbtamax qbtamaxs tofl1u0 tofl2u0 tofl3u0 minbta1 minbta2 minbta3 tsystemw
-tsystems tsystem1 tsystem qh1 qh2 qh3 qc1 qc2 qc3 tzone1
+tsystems tsystem1 tsystem_1 qh1 qh2 qh3 qc1 qc2 qc3 tzone1
 tzone2 tzone3 top1 top2 top3
 costfunction
 JAZh JAZc etaverth etavertc queberh queberhPV queberc 
@@ -3464,7 +3467,7 @@ STOP		! 3 Stop time
 
 INPUTS 96
 queber qbtamax qbtamaxs tofl1u0 tofl2u0 tofl3u0 minbta1 minbta2 minbta3 tsystemw
-tsystems tsystem1 tsystem qh1 qh2 qh3 qc1 qc2 qc3 tzone1
+tsystems tsystem1 tsystem_1 qh1 qh2 qh3 qc1 qc2 qc3 tzone1
 tzone2 tzone3 top1 top2 top3
 costfunction
 JAZh JAZc etaverth etavertc queberh queberhPV queberc 
@@ -3493,7 +3496,7 @@ label
 
 
 queber qbtamax qbtamaxs tofl1u0 tofl2u0 tofl3u0 minbta1 minbta2 minbta3 tsystemw
-tsystems tsystem1 tsystem qh1 qh2 qh3 qc1 qc2 qc3 tzone1
+tsystems tsystem1 tsystem_1 qh1 qh2 qh3 qc1 qc2 qc3 tzone1
 tzone2 tzone3 top1 top2 top3
 costfunction
 JAZh JAZc etaverth etavertc queberh queberhPV queberc 
@@ -3720,7 +3723,7 @@ qbef1 qbef2 qbef3  qbefgesraum
 qentf1 qentf2 qentf3  qentfgesraum !48
 
 BTAmodellein
-tsystem 
+tsystem_1
 tinbta1 tinbta2 tinbta3
 tinbtao1 tinbtao2 tinbtao3
 minbta1 minbta2 minbta3 
@@ -3758,7 +3761,7 @@ qbef1 qbef2 qbef3  qbefgesraum
 qentf1 qentf2 qentf3  qentfgesraum !48
 
 BTAmodellein 
-tsystem 
+tsystem_1
 tinbta1 tinbta2 tinbta3
 tinbtao1 tinbtao2 tinbtao3
 minbta1 minbta2 minbta3 
@@ -3819,7 +3822,7 @@ qbef1 qbef2 qbef3  qbefgesraum
 qentf1 qentf2 qentf3  qentfgesraum !48
 
 BTAmodellein 
-tsystem 
+tsystem_1
 tinbta1 tinbta2 tinbta3
 tinbtao1 tinbtao2 tinbtao3
 minbta1 minbta2 minbta3 
@@ -3856,7 +3859,7 @@ qbef1 qbef2 qbef3  qbefgesraum
 qentf1 qentf2 qentf3  qentfgesraum !48
 
 BTAmodellein 
-tsystem 
+tsystem_1
 tinbta1 tinbta2 tinbta3
 tinbtao1 tinbtao2 tinbtao3
 minbta1 minbta2 minbta3 

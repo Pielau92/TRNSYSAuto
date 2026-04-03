@@ -1,6 +1,9 @@
-EQUATIONS 6
+EQUATIONS 9
 
-Qheizbtapy = 0
+Qheizbtapy1 = 0
+Qheizbtapy2 = 0
+Qheizbtapy3 = 0
+Qheizbtapy4 = 0
 
 tbtasoll = tbtasoll1   ![°C] Soll-Raumlufttemperaturen bei BTA
 
