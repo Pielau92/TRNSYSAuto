@@ -53,11 +53,11 @@ ASSIGN "StrahlungBruck.txt" 60		! Unit 333, ???
 * 
 EQUATIONS 79
 
-ta = [109,1]	![°C] BUILDING-INPUT
-relha = [109,7]	![%] BUILDING-INPUT
-absa = [109,6]	![kg/kg]
-tsky = [109,4]	![°C] BUILDING-INPUT
-tsgrd = ta	![°C] BUILDING-INPUT
+ta = [109,1]		![°C] BUILDING-INPUT
+relha = [109,7]		![%] BUILDING-INPUT
+absa = [109,6]		![kg/kg]
+tsky = [109,4]		![°C] BUILDING-INPUT
+tsgrd = ta			![°C] BUILDING-INPUT
 twasgrd = [109,5]	![°C]
 Ttau = [109,2]		![°C]
 Twetbaulb = [109,3]	![°C]
@@ -77,15 +77,15 @@ HEMISPHERE = 1 ![-] northern hemisphere: 1  - southern hemisphere: -1
 
 AA_H_0_0 = 0  ![°] azimuth angle of orientation
 AA_S_0_90 = (0+TURN)*GT(HEMISPHERE,0)+(180-0 -TURN)*NOT(GT(HEMISPHERE,0)) 		![°] azimuth angle of orientation
-AA_SW_45_90 = (90+TURN)*GT(HEMISPHERE,0)+(180-45-TURN)*NOT(GT(HEMISPHERE,0)) 			![°] azimuth angle of orientation
+AA_SW_45_90 = (90+TURN)*GT(HEMISPHERE,0)+(180-45-TURN)*NOT(GT(HEMISPHERE,0)) 	![°] azimuth angle of orientation
 AA_W_90_90 = (90+TURN)*GT(HEMISPHERE,0)+(180-90-TURN)*NOT(GT(HEMISPHERE,0)) 	![°] azimuth angle of orientation
-AA_NW_135_90 = (180+TURN)*GT(HEMISPHERE,0)+(180-135-TURN)*NOT(GT(HEMISPHERE,0)) 		![°] azimuth angle of orientation
+AA_NW_135_90 = (180+TURN)*GT(HEMISPHERE,0)+(180-135-TURN)*NOT(GT(HEMISPHERE,0)) ![°] azimuth angle of orientation
 AA_N_180_90 = (180+TURN)*GT(HEMISPHERE,0)+(180-180-TURN)*NOT(GT(HEMISPHERE,0)) 	![°] azimuth angle of orientation
-AA_NE_225_90 = (270+TURN)*GT(HEMISPHERE,0)+(180-225-TURN)*NOT(GT(HEMISPHERE,0)) 		![°] azimuth angle of orientation
+AA_NE_225_90 = (270+TURN)*GT(HEMISPHERE,0)+(180-225-TURN)*NOT(GT(HEMISPHERE,0)) ![°] azimuth angle of orientation
 AA_E_270_90 = (270+TURN)*GT(HEMISPHERE,0)+(180-270-TURN)*NOT(GT(HEMISPHERE,0)) 	![°] azimuth angle of orientation
-AA_SE_315_90 = (0+TURN)*GT(HEMISPHERE,0)+(180-315-TURN)*NOT(GT(HEMISPHERE,0)) 			![°] azimuth angle of orientation
+AA_SE_315_90 = (0+TURN)*GT(HEMISPHERE,0)+(180-315-TURN)*NOT(GT(HEMISPHERE,0)) 	![°] azimuth angle of orientation
 
-AAZM_CORR_HEM = AAZM*GT(HEMISPHERE,0) +  NOT(GT(HEMISPHERE,0))*((180-AAZM)*GT(AAZM,0)*LE(AAZM,180) + (-180-AAZM)*NOT(GT(AAZM,0)*LE(AAZM,180))) ![°] solar azimuth corrected for southern hemisphere such that north = 180, south = 0, west = 90, east = -90
+AAZM_CORR_HEM = AAZM*GT(HEMISPHERE,0)+NOT(GT(HEMISPHERE,0))*((180-AAZM)*GT(AAZM,0)*LE(AAZM,180)+(-180-AAZM)*NOT(GT(AAZM,0)*LE(AAZM,180))) ![°] solar azimuth corrected for southern hemisphere such that north = 180, south = 0, west = 90, east = -90
 AAZM_TYPE56 = (AAZM_CORR_HEM - TURN) ![°] solar azimuth corrected by building rotation - Input for Type 56 sun position for SHM and ISM
 AZEN = [109,16]	![°] BUILDING-INPUT
 AAZM = [109,17]	![°] BUILDING-INPUT
@@ -225,17 +225,19 @@ Schatto4 = (1-(1-schattzu*windauf*(somm*gt(ige,strahlungsgrenze)+(1-somm)*tschat
 *------------------------------------------------------------------------------
 * EQUATIONS "Geometrie"
 * 
-EQUATIONS 10
+EQUATIONS 11
 
 Vol1 = max([56,210],1)	![m3]
 Vol2 = max([56,211],1)	![m3]
 Vol3 = max([56,212],1)	![m3]
 Vol4 = max([56,213],1)	![m3]
+Volges = Vol1+Vol2+Vol3+Vol4
+
 Anutz1 = 40.99	![m2]
 Anutz2 = 11.35	![m2]
 Anutz3 = 11.26	![m2]
 Anutz4 = 5.99	![m2]
-anutzges = Anutz1 + Anutz2 + Anutz3 + Anutz4	![m2]
+Anutzges = Anutz1+Anutz2+Anutz3+Anutz4	![m2]
 
 label = 0	![-] Platzhalter zur Verwendung bei Printern, um Reihenfolge beizubehalten
 
@@ -256,7 +258,7 @@ hour_of_day = MOD(TIME,24)  ![h]
 *
 Equations 51  		! Varianten Arbeitshilfen, Beleuchtung, Personen
 
-use = [3,77] 			![-] Nutzungs-Schedule
+use = [3,77] 		![-] Nutzungs-Schedule
 
 *Personen
 Persanz1 = 2		![-] absolute Anzahl Personen
@@ -325,7 +327,7 @@ QelflexHH = [334,2]*1000/anutzges			![W/m2]
 QelabwteilHH = [334,3]*1000/anutzges		![W/m2]
 QelabwHH = [334,4]*1000/anutzges			![W/m2]
 QWW_HH = [334,5]*4.19/3.6*(38-10)/anutzges	![W/m2]
-PersHH = [334,6]	![???]
+PersHH = [334,6]							![???]
 
 *------------------------------------------------------------------------------
 * EQUATIONS "Fensterlueftung/Infiltration"
@@ -489,10 +491,10 @@ sw_qmax = 1	![???] Switch, ob unlimitierte Leistung (0) oder limitierte Leistung
 theiz = theizsollminideal*(1-BTAmodellein)		![°C]
 theizsom = 15*(1-BTAmodellein)+BTAmodellein*0	![°C]
 
-Heiz1 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT Soll-Raumlufttemperatur bei idealer Heizung
-Heiz2 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
-Heiz3 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
-Heiz4 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
+Theiz1 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT Soll-Raumlufttemperatur bei idealer Heizung
+Theiz2 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
+Theiz3 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
+Theiz4 = Theiz*heizperiode+(1-heizperiode)*theizsom*0	![°C] BUILDING-INPUT
 
 mheiz = 7			![???]
 dheiz = -5			![???]
@@ -1270,10 +1272,10 @@ UNIT 131 TYPE 9	 Type9e
 *$POSITION 752 127
 *$LAYER Weather - Data Files # 
 !TRACE START STOP
-PARAMETERS 122
+PARAMETERS 134
 5		! 1 Mode
 4		! 2 Header Lines to Skip
-29		! 3 No. of values to read
+32		! 3 No. of values to read
 1.0		! 4 Time interval of data
 -1		! 5 Interpolate or not-1
 1.0		! 6 Multiplication factor-1
@@ -1391,8 +1393,20 @@ PARAMETERS 122
 1.0		! 118 Multiplication factor-29
 0		! 119 Addition factor-29
 1		! 120 Average or instantaneous value-29
-134		! 121 Logical unit for input file
--1		! 65 Free format mode
+-1		! 121 Interpolate or not-30
+1.0		! 122 Multiplication factor-30
+0		! 123 Addition factor-30
+1		! 124 Average or instantaneous value-30
+-1		! 125 Interpolate or not-31
+1.0		! 126 Multiplication factor-31
+0		! 127 Addition factor-31
+1		! 128 Average or instantaneous value-31
+-1		! 129 Interpolate or not-32
+1.0		! 130 Multiplication factor-32
+0		! 131 Addition factor-32
+1		! 132 Average or instantaneous value-32
+134		! 133 Logical unit for input file
+-1		! 134 Free format mode
 *** External files
 
 *------------------------------------------------------------------------------
@@ -2024,10 +2038,10 @@ GRD_REFL		! Klima:GRD_REFL -> 34- GRDREF
 
 int01 int02 int03 TERD1 TERD2 TERD3 pers1 pers2 pers3 COMP1 COMP2 COMP3 LICHT1 LICHT2 LICHT3  ILF1 ILF2 ILF3  INF1 INF2 INF3  VENT1 VENT2 VENT3  TZU1 TZU2
  TZU3 ABSZU1 ABSZU2 ABSZU3  SCHATTS1 SCHATTS2 SCHATTS3 SCHATTW1 SCHATTW2 SCHATTW3 SCHATTO1 SCHATTO2 SCHATTO3  SCHATTN1 SCHATTN2 SCHATTN3  
- SCHATTI1 SCHATTI2 SCHATTI3  CLO1 CLO2 CLO3  MET1 MET2 MET3  VEL1 VEL2 VEL3  HEIZ1 HEIZ2 HEIZ3  HEIZMAX1 HEIZMAX2 HEIZMAX3  TKUEHL1 TKUEHL2 
+ SCHATTI1 SCHATTI2 SCHATTI3  CLO1 CLO2 CLO3  MET1 MET2 MET3  VEL1 VEL2 VEL3  THEIZ1 THEIZ2 THEIZ3 HEIZMAX1 HEIZMAX2 HEIZMAX3  TKUEHL1 TKUEHL2 
  TKUEHL3 KUEHLMAX1 KUEHLMAX2 KUEHLMAX3  RELMIN1 RELMIN2 RELMIN3  ABSMAX1 ABSMAX2 ABSMAX3  TINBTA1 TINBTA2 TINBTA3  MINBTA1 MINBTA2 MINBTA3  
  WIND DRUCK QDAMPF
-tinbtao1 tinbtao2 tinbtao3 INF4 VENT4 TZU4 ABSZU4 HEIZ4 HEIZMAX4 RELMIN4 TKUEHL4 KUEHLMAX4 ABSMAX4 CLO4 MET4 VEL4 int04 PERS4 COMP4 LICHT4 ILF4 TINBTAO4 MINBTA4 TINBTA4 TERD4 SCHATTS4 SCHATTW4 SCHATTO4 SCHATTN4 SCHATTI4 
+tinbtao1 tinbtao2 tinbtao3 INF4 VENT4 TZU4 ABSZU4 THEIZ4 HEIZMAX4 RELMIN4 TKUEHL4 KUEHLMAX4 ABSMAX4 CLO4 MET4 VEL4 int04 PERS4 COMP4 LICHT4 ILF4 TINBTAO4 MINBTA4 TINBTA4 TERD4 SCHATTS4 SCHATTW4 SCHATTO4 SCHATTN4 SCHATTI4 
 *** INITIAL INPUT VALUES
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
