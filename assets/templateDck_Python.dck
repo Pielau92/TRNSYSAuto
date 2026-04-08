@@ -662,7 +662,7 @@ thsoll4 = tbtasoll+tbtahys	![°C]
 thsoll4l = tbtasoll			![°C]
 
 * TRNSYS-Python-Kopplung
-INCLUDE "mpc_disabled.dck"
+INCLUDE "mpc_enabled.dck"
 
 *------------------------------------------------------------------------------
 * EQUATIONS "WW-Speicher"
