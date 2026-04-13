@@ -26,6 +26,7 @@ class Filenames:
     redundant: list[str]
     templates: list[str]
     templates_assets: list[str]
+    windetc: str
 
 
 @dataclass
