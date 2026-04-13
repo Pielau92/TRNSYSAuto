@@ -21,6 +21,7 @@ class Simulation:
         dck: str
         exe: str
         mpc: str
+        windetc: str
 
     @dataclass
     class Configs:
@@ -31,6 +32,7 @@ class Simulation:
             trnsys_output: str
             mpc_configs: str
             redundant: list[str]
+            windetc: str
 
         path_exe: str
         timeout_sim: int
@@ -50,6 +52,7 @@ class Simulation:
             dck=os.path.join(path_dir, self.configs.filenames.dck_template),
             exe=path_exe,
             mpc=os.path.join(path_dir, self.configs.filenames.mpc_configs),
+            windetc=os.path.join(path_dir, self.configs.filenames.windetc),
         )
 
         self.name = os.path.basename(self.path.root)  # name of simulation

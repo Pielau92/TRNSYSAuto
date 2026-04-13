@@ -120,6 +120,7 @@ class SimulationSeries:
             trnsys_output=self.configs.filenames.trnsys_output,
             mpc_configs=self.configs.filenames.mpc_configs,
             redundant=self.configs.filenames.redundant,
+            windetc=self.configs.filenames.windetc,
         )
 
         configs = Simulation.Configs(
